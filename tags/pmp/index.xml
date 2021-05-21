@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>pmp on In the Road</title>
+    <link>https://songchunbo.github.io/tags/pmp/</link>
+    <description>Recent content in pmp on In the Road</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 13 Dec 2020 21:00:00 +0800</lastBuildDate><atom:link href="https://songchunbo.github.io/tags/pmp/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>PMBOK</title>
+      <link>https://songchunbo.github.io/post/second/</link>
+      <pubDate>Sun, 13 Dec 2020 21:00:00 +0800</pubDate>
+      
+      <guid>https://songchunbo.github.io/post/second/</guid>
+      <description>1 引论   项目组合管理通过选择正确的项目集或项目，对工作进行优先排序，以及提供所需资源，来与组织战略保持一致
+Portfolio management aligns portfolios with orgnizational strategies by selecting the right programs or projects, prioritizing the work, and providing the needed resources.
+  项目集管理对其组成部分进行协调，对他们之间的依赖关系进行控制，从而实现既定收益
+  Program management harmonizes its program components and controls interdependencies in order to realize specified benefits.
+ 项目管理使组织的目的和目标得以实现  Project management enables the achievement of orgnizational goals and objectives.
+The purpose of OPM is to ensure that the orgnaization undertakes the right projects and allocates the resources appropriately.</description>
+    </item>
+    
+  </channel>
+</rss>
