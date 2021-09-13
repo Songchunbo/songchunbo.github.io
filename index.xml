@@ -6,7 +6,24 @@
     <description>Recent content on 心在路上</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Mon, 10 Aug 2020 16:02:03 +0800</lastBuildDate><atom:link href="https://songchunbo.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sun, 12 Sep 2021 05:20:19 +0800</lastBuildDate><atom:link href="https://songchunbo.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Test</title>
+      <link>https://songchunbo.github.io/post/test/</link>
+      <pubDate>Sun, 12 Sep 2021 05:20:19 +0800</pubDate>
+      
+      <guid>https://songchunbo.github.io/post/test/</guid>
+      <description>This h1 header I want a coffe
+h2 header hello word
+h3 header hello word
+h4 header hello dart
+h5 header hello dart2
+This h1 header I want a coffe
+h2 header hello word
+h3 header hello word
+$ dart hello.dart sum is 105 //hello.dart  int add(int a, int b) { return a + b; } void main() { var sum = add(5,100); print(&amp;#34;sum is $sum&amp;#34;); } h4 header hello dart</description>
+    </item>
+    
     <item>
       <title>关于我</title>
       <link>https://songchunbo.github.io/about/</link>
