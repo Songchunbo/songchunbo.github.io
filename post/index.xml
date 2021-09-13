@@ -25,6 +25,17 @@ $ dart hello.dart sum is 105 //hello.dart  int add(int a, int b) { return a + b;
     </item>
     
     <item>
+      <title>Dart VM命令行工具</title>
+      <link>https://songchunbo.github.io/post/dart_vm_quick_start/</link>
+      <pubDate>Fri, 10 Sep 2021 15:30:24 +0800</pubDate>
+      
+      <guid>https://songchunbo.github.io/post/dart_vm_quick_start/</guid>
+      <description>Dart命令支持JIT和AOT模式 1. JIT模式支持两种方式，   直接在dart VM中运行dart source code
+//hello.dart  int add(int a, int b) { return a + b; } void main() { var sum = add(5,100); print(&amp;#34;sum is $sum&amp;#34;); } $ dart hello.dart sum is 105   先把dart source code编译成dill binary，然后在dart VM中运行dill binary , 生成的dill文件中包含经过词法分析，语法分析和语义分析后的带标记的抽象语法树AST，dart称之为Kernel AST, dill binary是跨平台的格式, 可以在不同平台的dart VM中运行。
+$ dart compile kernel hello.dart # generate hello.dill $ dart run hello.dill   2. AOT模式支持两种方式   直接把dart source code编译成可执行文件，可执行文件包含source code的机器码，以及简化版的dart runtime</description>
+    </item>
+    
+    <item>
       <title>X86 and ARM Call Convention</title>
       <link>https://songchunbo.github.io/post/x86_arm_callconvention/</link>
       <pubDate>Mon, 10 Aug 2020 16:02:03 +0800</pubDate>

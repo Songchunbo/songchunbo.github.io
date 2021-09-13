@@ -46,7 +46,7 @@
                         心在路上
                     </a>
                 
-                <p class="description">专注于移动安全，虚拟机技术, Android沙箱，病毒检测，逆向; Framework, ART Runtime, Dart Runtime</p>
+                <p class="description">专注于移动安全，虚拟机技术, Android沙箱，Android Framework, ART Runtime, Dart Runtime 病毒检测，逆向</p>
             </div>
             <div>
                 <nav id="nav-menu" class="clearfix">
@@ -93,6 +93,26 @@ h3 header hello word
 $ dart hello.dart sum is 105 //hello.dart  int add(int a, int b) { return a + b; } void main() { var sum = add(5,100); print(&#34;sum is $sum&#34;); } h4 header hello dart……
         </div>
         <p class="readmore"><a href="https://songchunbo.github.io/post/test/">阅读全文</a></p>
+    </article>
+    
+    
+    
+    <article class="post">
+        <header>
+            <h1 class="post-title">
+                <a href="https://songchunbo.github.io/post/dart_vm_quick_start/" title="Dart VM命令行工具">Dart VM命令行工具</a>
+            </h1>
+        </header>
+        <date class="post-meta meta-date">
+            2021年9月10日
+        </date>
+        
+        <div class="post-content">
+            Dart命令支持JIT和AOT模式 1. JIT模式支持两种方式，   直接在dart VM中运行dart source code
+//hello.dart  int add(int a, int b) { return a + b; } void main() { var sum = add(5,100); print(&#34;sum is $sum&#34;); } $ dart hello.dart sum is 105   先把dart source code编译成dill binary，然后在dart VM中运行dill binary , 生成的dill文件中包含经过词法分析，语法分析和语义分析后的带标记的抽象语法树AST，dart称之为Kernel AST, dill binary是跨平台的格式, 可以在不同平台的dart VM中运行。
+$ dart compile kernel hello.dart # generate hello.dill $ dart run hello.dill   2. AOT模式支持两种方式   直接把dart source code编译成可执行文件，可执行文件包含source code的机器码，以及简化版的dart runtime……
+        </div>
+        <p class="readmore"><a href="https://songchunbo.github.io/post/dart_vm_quick_start/">阅读全文</a></p>
     </article>
     
     
@@ -171,6 +191,10 @@ https://android.googlesource.com/platform/art/+/refs/tags/android-11.0.0_r35/run
     
     <li>
         <a href="https://songchunbo.github.io/post/test/" title="Test">Test</a>
+    </li>
+    
+    <li>
+        <a href="https://songchunbo.github.io/post/dart_vm_quick_start/" title="Dart VM命令行工具">Dart VM命令行工具</a>
     </li>
     
     <li>
