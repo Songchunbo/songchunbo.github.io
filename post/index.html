@@ -7,8 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
 
-    <title>Posts | In the Road</title>
-    <meta property="og:title" content="Posts - In the Road">
+    <title>Posts | 心在路上</title>
+    <meta property="og:title" content="Posts - 心在路上">
     <meta property="og:type" content="article">
         
         
@@ -21,7 +21,10 @@
 
     <link rel="stylesheet" href='/css/normalize.css'>
     <link rel="stylesheet" href='/css/style.css'>
-    <link rel="alternate" type="application/rss+xml" href="https://songchunbo.github.io/post/index.xml" title="In the Road" />
+    
+    
+    
+    <link rel="alternate" type="application/rss+xml" href="https://songchunbo.github.io/post/index.xml" title="心在路上" />
     <script type="text/javascript" src="//cdn.bootcdn.net/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 
     
@@ -40,14 +43,18 @@
             <div class="site-name ">
                 
                     <a id="logo" href="https://songchunbo.github.io/">
-                        In the Road
+                        心在路上
                     </a>
                 
-                <p class="description">专注于Android、Java、Go语言(golang)、移动互联网、项目管理、软件架构</p>
+                <p class="description">专注于移动安全，虚拟机技术, Android沙箱，病毒检测，逆向; Framework, ART Runtime, Dart Runtime</p>
             </div>
             <div>
                 <nav id="nav-menu" class="clearfix">
                     <a class="current" href="https://songchunbo.github.io/">首页</a>
+                    
+                    <a  href="https://songchunbo.github.io/archives/" title="存档">存档</a>
+                    
+                    <a  href="https://songchunbo.github.io/about/" title="关于">关于</a>
                     
                 </nav>
             </div>
@@ -67,134 +74,19 @@
     <article class="post">
         <header>
             <h1 class="post-title">
-                <a href="https://songchunbo.github.io/post/my-first-post/" title="My First Post">My First Post</a>
+                <a href="https://songchunbo.github.io/post/x86_arm_callconvention/" title="X86 and ARM Call Convention">X86 and ARM Call Convention</a>
             </h1>
         </header>
         <date class="post-meta meta-date">
-            2021年5月20日
+            2020年8月10日
         </date>
         
         <div class="post-content">
-            Hello Hugo……
+            ARM64 call convention
+https://android.googlesource.com/platform/art/+/refs/tags/android-11.0.0_r35/runtime/interpreter/mterp/arm64/main.S
+/* ARM64 Runtime register usage conventions. r0 : w0 is 32-bit return register and x0 is 64-bit. r0-r7 : Argument registers. r8-r15 : Caller save registers (used as temporary registers). r16-r17: Also known as ip0-ip1, respectively. Used as scratch registers by the linker, by the trampolines and other stubs (the backend uses these as temporary registers). r18 : Caller save register (used as temporary register).……
         </div>
-        <p class="readmore"><a href="https://songchunbo.github.io/post/my-first-post/">阅读全文</a></p>
-    </article>
-    
-    
-    
-    <article class="post">
-        <header>
-            <h1 class="post-title">
-                <a href="https://songchunbo.github.io/post/second/" title="PMBOK">PMBOK</a>
-            </h1>
-        </header>
-        <date class="post-meta meta-date">
-            2020年12月13日
-        </date>
-        
-        <div class="post-meta">
-            <span>|</span>
-            
-            <span class="meta-category"><a href='/categories/pmp'>pmp</a></span>
-            
-        </div>
-        
-        <div class="post-content">
-            1 引论   项目组合管理通过选择正确的项目集或项目，对工作进行优先排序，以及提供所需资源，来与组织战略保持一致
-Portfolio management aligns portfolios with orgnizational strategies by selecting the right programs or projects, prioritizing the work, and providing the needed resources.
-  项目集管理对其组成部分进行协调，对他们之间的依赖关系进行控制，从而实现既定收益
-  Program management harmonizes its program components and controls interdependencies in order to realize specified benefits.
- 项目管理使组织的目的和目标得以实现  Project management enables the achievement of orgnizational goals and objectives.
-The purpose of OPM is to ensure that the orgnaization undertakes the right projects and allocates the resources appropriately.……
-        </div>
-        <p class="readmore"><a href="https://songchunbo.github.io/post/second/">阅读全文</a></p>
-    </article>
-    
-    
-    
-    <article class="post">
-        <header>
-            <h1 class="post-title">
-                <a href="https://songchunbo.github.io/2019/12/18/golang-gin-query-parameters-array-map.html" title="Golang Gin 实战（五）| 接收数组和 Map">Golang Gin 实战（五）| 接收数组和 Map</a>
-            </h1>
-        </header>
-        <date class="post-meta meta-date">
-            2019年12月18日
-        </date>
-        
-        <div class="post-meta">
-            <span>|</span>
-            
-            <span class="meta-category"><a href='/categories/golang'>Golang</a></span>
-            
-        </div>
-        
-        <div class="post-content">
-            标题 段落内容
-标题 段落内容
-标题 段落内容
-标题 段落内容
-标题 段落内容……
-        </div>
-        <p class="readmore"><a href="https://songchunbo.github.io/2019/12/18/golang-gin-query-parameters-array-map.html">阅读全文</a></p>
-    </article>
-    
-    
-    
-    <article class="post">
-        <header>
-            <h1 class="post-title">
-                <a href="https://songchunbo.github.io/post/2019-12-15-golang-gin-query-parameters-source-code-analysis/" title="Golang Gin 实战（三）| 路由参数">Golang Gin 实战（三）| 路由参数</a>
-            </h1>
-        </header>
-        <date class="post-meta meta-date">
-            2019年12月13日
-        </date>
-        
-        <div class="post-meta">
-            <span>|</span>
-            
-            <span class="meta-category"><a href='/categories/golang'>Golang</a></span>
-            
-        </div>
-        
-        <div class="post-content">
-            标题 段落内容
-标题 段落内容
-标题 段落内容
-标题 段落内容
-标题 段落内容……
-        </div>
-        <p class="readmore"><a href="https://songchunbo.github.io/post/2019-12-15-golang-gin-query-parameters-source-code-analysis/">阅读全文</a></p>
-    </article>
-    
-    
-    
-    <article class="post">
-        <header>
-            <h1 class="post-title">
-                <a href="https://songchunbo.github.io/post/2019-12-13-golang-gin-parameters-in-path/" title="Golang Gin 实战（三）| 路由参数">Golang Gin 实战（三）| 路由参数</a>
-            </h1>
-        </header>
-        <date class="post-meta meta-date">
-            2019年12月13日
-        </date>
-        
-        <div class="post-meta">
-            <span>|</span>
-            
-            <span class="meta-category"><a href='/categories/golang'>Golang</a></span>
-            
-        </div>
-        
-        <div class="post-content">
-            标题 段落内容
-标题 段落内容
-标题 段落内容
-标题 段落内容
-标题 段落内容……
-        </div>
-        <p class="readmore"><a href="https://songchunbo.github.io/post/2019-12-13-golang-gin-parameters-in-path/">阅读全文</a></p>
+        <p class="readmore"><a href="https://songchunbo.github.io/post/x86_arm_callconvention/">阅读全文</a></p>
     </article>
     
     
@@ -208,7 +100,7 @@ The purpose of OPM is to ensure that the orgnaization undertakes the right proje
 
                     <footer id="footer">
     <div>
-        &copy; 2021 <a href="https://songchunbo.github.io/">In the Road By 心在路上</a>
+        &copy; 2021 <a href="https://songchunbo.github.io/">心在路上 By 心在路上</a>
         
     </div>
     <br />
@@ -252,23 +144,7 @@ The purpose of OPM is to ensure that the orgnaization undertakes the right proje
 <ul class="widget-list">
     
     <li>
-        <a href="https://songchunbo.github.io/post/my-first-post/" title="My First Post">My First Post</a>
-    </li>
-    
-    <li>
-        <a href="https://songchunbo.github.io/post/second/" title="PMBOK">PMBOK</a>
-    </li>
-    
-    <li>
-        <a href="https://songchunbo.github.io/2019/12/18/golang-gin-query-parameters-array-map.html" title="Golang Gin 实战（五）| 接收数组和 Map">Golang Gin 实战（五）| 接收数组和 Map</a>
-    </li>
-    
-    <li>
-        <a href="https://songchunbo.github.io/post/2019-12-13-golang-gin-parameters-in-path/" title="Golang Gin 实战（三）| 路由参数">Golang Gin 实战（三）| 路由参数</a>
-    </li>
-    
-    <li>
-        <a href="https://songchunbo.github.io/post/2019-12-15-golang-gin-query-parameters-source-code-analysis/" title="Golang Gin 实战（三）| 路由参数">Golang Gin 实战（三）| 路由参数</a>
+        <a href="https://songchunbo.github.io/post/x86_arm_callconvention/" title="X86 and ARM Call Convention">X86 and ARM Call Convention</a>
     </li>
     
 </ul>
@@ -311,20 +187,12 @@ The purpose of OPM is to ensure that the orgnaization undertakes the right proje
         <h3 class="widget-title"><a href='/categories/'>分类</a></h3>
 <ul class="widget-list">
     
-    <li><a href="https://songchunbo.github.io/categories/golang/">Golang (3)</a></li>
-    
-    <li><a href="https://songchunbo.github.io/categories/pmp/">pmp (1)</a></li>
-    
 </ul>
     </section>
 
     <section class="widget">
         <h3 class="widget-title"><a href='/tags/'>标签</a></h3>
 <div class="tagcloud">
-    
-    <a href="https://songchunbo.github.io/tags/golang/">golang</a>
-    
-    <a href="https://songchunbo.github.io/tags/pmp/">pmp</a>
     
 </div>
     </section>
@@ -335,11 +203,11 @@ The purpose of OPM is to ensure that the orgnaization undertakes the right proje
     <ul class="widget-list">
         
         <li>
-            <a target="_blank" href="http://yuedu.baidu.com/ebook/14a722970740be1e640e9a3e" title="Android Gradle权威指南">Android Gradle权威指南</a>
+            <a target="_blank" href="https://android.googlesource.com/" title="AOSP">AOSP</a>
         </li>
         
         <li>
-            <a target="_blank" href="http://mirrors.flysnow.org/" title="常用开发工具CDN镜像">常用开发工具CDN镜像</a>
+            <a target="_blank" href="https://android.googlesource.com/platform/art/" title="ART mirror">ART mirror</a>
         </li>
         
     </ul>
