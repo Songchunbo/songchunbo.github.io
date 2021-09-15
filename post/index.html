@@ -82,11 +82,11 @@
         </date>
         
         <div class="post-content">
-            一、Dart VM概述 Dart VM是运行dart的虚拟机，由多个isolate组成，每个isolate提供dart的运行环境，类似ART中的Zygote提供的Java运行环境，Dart VM包含下面几个重要的isolate
+            一、Dart VM概述 Dart VM是运行dart的虚拟机，由多个isolate组成，每个isolate提供dart的运行环境，类似Android/ART中Zygote提供的Java运行环境，Dart VM包含下面几个重要的isolate
   vm isolate
 负责维持系统中基础的heap object如null,class_, true, false，供各个isolate共享
   kernel isolate
-主要用于执行CFE代码，CFE使用dart语言开发，实现了dart的语法分析，词法分析和语义分析，生成kernel AST并写入dill文件。
+主要用于执行CFE代码，CFE使用dart语言开发，实现了dart的语法分析，词法分析和语义分析，生成kernel AST
   service isolate
 主要用于执行其他isolate发起的service请求，service包括debug相关，compile相关等，具体列表： https://github.com/dart-lang/sdk/blob/main/runtime/vm/service.cc#L5254
   dartdev isolate
