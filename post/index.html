@@ -74,7 +74,7 @@
     <article class="post">
         <header>
             <h1 class="post-title">
-                <a href="https://songchunbo.github.io/post/test/" title="Test">Test</a>
+                <a href="https://songchunbo.github.io/post/dart_vm_how_compile_works/" title="Dart VM源码分析之编译dill">Dart VM源码分析之编译dill</a>
             </h1>
         </header>
         <date class="post-meta meta-date">
@@ -82,17 +82,23 @@
         </date>
         
         <div class="post-content">
-            This h1 header I want a coffe
-h2 header hello word
-h3 header hello word
-h4 header hello dart
-h5 header hello dart2
-This h1 header I want a coffe
-h2 header hello word
-h3 header hello word
-$ dart hello.dart sum is 105 //hello.dart  int add(int a, int b) { return a + b; } void main() { var sum = add(5,100); print(&#34;sum is $sum&#34;); } h4 header hello dart……
+            一、Dart VM概述 Dart VM是运行dart的虚拟机，由多个isolate组成，每个isolate提供dart的运行环境，类似ART中的Zygote提供的Java运行环境，Dart VM包含下面几个重要的isolate
+  vm isolate
+负责维持系统中基础的heap object如null,class_, true, false，供各个isolate共享
+  kernel isolate
+主要用于执行CFE代码，CFE使用dart语言开发，实现了dart的语法分析，词法分析和语义分析，生成kernel AST并写入dill文件。
+  service isolate
+主要用于执行其他isolate发起的service请求，service包括debug相关，compile相关等，具体列表： https://github.com/dart-lang/sdk/blob/main/runtime/vm/service.cc#L5254
+  dartdev isolate
+主要用于执行用户命令，如dart run/compile等命令，最终会转换为后端命令。
+用户命令: dart compile kernel hello.dart 后端命令: dart --snapshot-kind=kernel --snapshot=hello.dill --verbosity=all hello.dart   main isolate
+主要用来执行用户开发的dart code。
+  更多关于Dart VM的基础原理可参见dart作者的blog，网上很多blog来自这篇文章，这篇文章还在持续完善中
+https://mrale.ph/dartvm/
+二、Dart VM各个isolate在main函数中的启动和初始化过程   5个isolate在main中的初始化和启动过程
+int main(int argc, char* argv[]) { Dart_Initialize(&amp;init_params) { Dart::Init(..) { Dart::DartInit(...) { //各种初始化,线程池，heap,zone,object(null_,class_),stub code等  // create_group_ = CreateIsolateGroupAndSetup();  Isolate::SetCreateGroupCallback(create_group); // 创建&#34;vm-isolate&#34; isolate  vm_isolate_ = Isolate::InitIsolate(&#34;vm-isolate&#34;, .……
         </div>
-        <p class="readmore"><a href="https://songchunbo.github.io/post/test/">阅读全文</a></p>
+        <p class="readmore"><a href="https://songchunbo.github.io/post/dart_vm_how_compile_works/">阅读全文</a></p>
     </article>
     
     
@@ -190,7 +196,7 @@ https://android.googlesource.com/platform/art/+/refs/tags/android-11.0.0_r35/run
 <ul class="widget-list">
     
     <li>
-        <a href="https://songchunbo.github.io/post/test/" title="Test">Test</a>
+        <a href="https://songchunbo.github.io/post/dart_vm_how_compile_works/" title="Dart VM源码分析之编译dill">Dart VM源码分析之编译dill</a>
     </li>
     
     <li>
@@ -205,37 +211,6 @@ https://android.googlesource.com/platform/art/+/refs/tags/android-11.0.0_r35/run
     </section>
 
     
-<section class="widget">
-    <h3 class="widget-title" style="color:red">福利派送</h3>
-    <ul class="widget-list">
-        
-        <li>
-            <a href="https://promotion.aliyun.com/ntms/yunparter/invite.html?userCode=jdg9oj97" title="领取￥1888阿里云产品通用代金券" target="_blank" style="color:red">
-                
-                    领取￥1888阿里云产品通用代金券
-                
-            </a>
-        </li>
-        
-        <li>
-            <a href="https://promotion.aliyun.com/ntms/act/vmpt/aliyun-group/home.html?userCode=jdg9oj97" title="领取￥1888阿里云产品通用代金券" target="_blank" style="color:red">
-                
-                    <img src="https://img.alicdn.com/tfs/TB17qJhXpzqK1RjSZFvXXcB7VXa-200-126.jpg">
-                
-            </a>
-        </li>
-        
-        <li>
-            <a href="https://promotion.aliyun.com/ntms/act/enterprise-discount.html?userCode=jdg9oj97" title="领取￥1888阿里云产品通用代金券" target="_blank" style="color:red">
-                
-                    <img src="https://img.alicdn.com/tfs/TB1aDXhXpzqK1RjSZFvXXcB7VXa-259-194.jpg">
-                
-            </a>
-        </li>
-        
-    </ul>
-</section>
-
 
     <section class="widget">
         <h3 class="widget-title"><a href='/categories/'>分类</a></h3>

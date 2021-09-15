@@ -6,22 +6,28 @@
     <description>Recent content on 心在路上</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 12 Sep 2021 05:20:19 +0800</lastBuildDate><atom:link href="https://songchunbo.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sun, 12 Sep 2021 20:37:39 +0800</lastBuildDate><atom:link href="https://songchunbo.github.io/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>Test</title>
-      <link>https://songchunbo.github.io/post/test/</link>
-      <pubDate>Sun, 12 Sep 2021 05:20:19 +0800</pubDate>
+      <title>Dart VM源码分析之编译dill</title>
+      <link>https://songchunbo.github.io/post/dart_vm_how_compile_works/</link>
+      <pubDate>Sun, 12 Sep 2021 20:37:39 +0800</pubDate>
       
-      <guid>https://songchunbo.github.io/post/test/</guid>
-      <description>This h1 header I want a coffe
-h2 header hello word
-h3 header hello word
-h4 header hello dart
-h5 header hello dart2
-This h1 header I want a coffe
-h2 header hello word
-h3 header hello word
-$ dart hello.dart sum is 105 //hello.dart  int add(int a, int b) { return a + b; } void main() { var sum = add(5,100); print(&amp;#34;sum is $sum&amp;#34;); } h4 header hello dart</description>
+      <guid>https://songchunbo.github.io/post/dart_vm_how_compile_works/</guid>
+      <description>一、Dart VM概述 Dart VM是运行dart的虚拟机，由多个isolate组成，每个isolate提供dart的运行环境，类似ART中的Zygote提供的Java运行环境，Dart VM包含下面几个重要的isolate
+  vm isolate
+负责维持系统中基础的heap object如null,class_, true, false，供各个isolate共享
+  kernel isolate
+主要用于执行CFE代码，CFE使用dart语言开发，实现了dart的语法分析，词法分析和语义分析，生成kernel AST并写入dill文件。
+  service isolate
+主要用于执行其他isolate发起的service请求，service包括debug相关，compile相关等，具体列表： https://github.com/dart-lang/sdk/blob/main/runtime/vm/service.cc#L5254
+  dartdev isolate
+主要用于执行用户命令，如dart run/compile等命令，最终会转换为后端命令。
+用户命令: dart compile kernel hello.dart 后端命令: dart --snapshot-kind=kernel --snapshot=hello.dill --verbosity=all hello.dart   main isolate
+主要用来执行用户开发的dart code。
+  更多关于Dart VM的基础原理可参见dart作者的blog，网上很多blog来自这篇文章，这篇文章还在持续完善中
+https://mrale.ph/dartvm/
+二、Dart VM各个isolate在main函数中的启动和初始化过程   5个isolate在main中的初始化和启动过程
+int main(int argc, char* argv[]) { Dart_Initialize(&amp;amp;init_params) { Dart::Init(..) { Dart::DartInit(...) { //各种初始化,线程池，heap,zone,object(null_,class_),stub code等  // create_group_ = CreateIsolateGroupAndSetup();  Isolate::SetCreateGroupCallback(create_group); // 创建&amp;#34;vm-isolate&amp;#34; isolate  vm_isolate_ = Isolate::InitIsolate(&amp;#34;vm-isolate&amp;#34;, .</description>
     </item>
     
     <item>
@@ -41,10 +47,8 @@ $ dart compile kernel hello.dart # generate hello.dill $ dart run hello.dill   2
       <pubDate>Wed, 10 Mar 2021 00:13:27 +0000</pubDate>
       
       <guid>https://songchunbo.github.io/about/</guid>
-      <description>专注于移动安全，虚拟机技术, Android沙箱，病毒检测，逆向; Framework, ART Runtime, Dart
-test
-公众号，扫码关注
- </description>
+      <description>专注于移动安全，虚拟机技术, Android沙箱，Android Framework, ART Runtime, Dart Runtime 病毒检测，逆向
+ 扫码关注   </description>
     </item>
     
     <item>
