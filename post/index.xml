@@ -42,6 +42,17 @@ $ dart compile kernel hello.dart # generate hello.dill $ dart run hello.dill   2
     </item>
     
     <item>
+      <title>Art_commit_history</title>
+      <link>https://songchunbo.github.io/post/art_commit_history/</link>
+      <pubDate>Wed, 16 Dec 2020 15:55:19 +0800</pubDate>
+      
+      <guid>https://songchunbo.github.io/post/art_commit_history/</guid>
+      <description>1 runtime雏形 ART inital code
+https://android.googlesource.com/platform/art/+/3ee755da5c1c17b6a29052d171a8a63c0eb0b052 https://android.googlesource.com/platform/art/+/3ee755da5c1c17b6a29052d171a8a63c0eb0b052/src/runtime.cc
+commit 3ee755da5c1c17b6a29052d171a8a63c0eb0b052 Author: Carl Shapiro &amp;lt;cshapiro@google.com&amp;gt; Date: Tue Jun 28 12:11:04 2011 -0700 Complete support for loading classes from a DEX file. Change-Id: I1b9aa105fc78df170e83b259d8d04317c296a1b5 Android.common.mk | 1 + src/dex_file.cc | 105 ++++++++++++++++++++++++------- src/dex_file.h | 12 +--- src/dex_file_test.cc | 6 ++ src/object.cc | 23 +++++++ src/object.h | 175 ++++++++++++++++++++++++++++++++++++++++++++++----- src/raw_dex_file.h | 79 +++++++++++++++++++---- 7 files changed, 339 insertions(+), 62 deletions(-) 2 class_linker init https://android.googlesource.com/platform/art/+/0e5d75d5ca2b8a44fab0c862276a466cbab39859</description>
+    </item>
+    
+    <item>
       <title>X86 and ARM Call Convention</title>
       <link>https://songchunbo.github.io/post/x86_arm_callconvention/</link>
       <pubDate>Mon, 10 Aug 2020 16:02:03 +0800</pubDate>

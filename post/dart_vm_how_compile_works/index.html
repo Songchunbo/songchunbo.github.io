@@ -212,75 +212,75 @@
 <p>用户命令在dartdev isolate中执行</p>
 <p>dartdev isolate入口在dartdev.dart，dartdev.dart是一个dart开发工具包，可以处理各种用户命令，包括analyzer, create, compile, run等命令</p>
 <p><a href="https://github.com/dart-lang/sdk/blob/main/pkg/dartdev/bin/dartdev.dart">https://github.com/dart-lang/sdk/blob/main/pkg/dartdev/bin/dartdev.dart</a></p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// 支持的命令 
-</span><span style="color:#75715e"></span><span style="color:#a6e22e">addCommand</span>(<span style="color:#a6e22e">AnalyzeCommand</span>(<span style="color:#a6e22e">verbose</span>: <span style="color:#a6e22e">verbose</span>));
-<span style="color:#a6e22e">addCommand</span>(<span style="color:#a6e22e">CreateCommand</span>(<span style="color:#a6e22e">verbose</span>: <span style="color:#a6e22e">verbose</span>));
-<span style="color:#a6e22e">addCommand</span>(<span style="color:#a6e22e">CompileCommand</span>(<span style="color:#a6e22e">verbose</span>: <span style="color:#a6e22e">verbose</span>));
-<span style="color:#a6e22e">addCommand</span>(<span style="color:#a6e22e">FixCommand</span>(<span style="color:#a6e22e">verbose</span>: <span style="color:#a6e22e">verbose</span>));
-<span style="color:#a6e22e">addCommand</span>(<span style="color:#a6e22e">FormatCommand</span>(<span style="color:#a6e22e">verbose</span>: <span style="color:#a6e22e">verbose</span>));
-<span style="color:#a6e22e">addCommand</span>(<span style="color:#a6e22e">LanguageServerCommand</span>(<span style="color:#a6e22e">verbose</span>: <span style="color:#a6e22e">verbose</span>));
-<span style="color:#a6e22e">addCommand</span>(<span style="color:#a6e22e">MigrateCommand</span>(<span style="color:#a6e22e">verbose</span>: <span style="color:#a6e22e">verbose</span>));
-<span style="color:#a6e22e">addCommand</span>(<span style="color:#a6e22e">pubCommand</span>());
-<span style="color:#a6e22e">addCommand</span>(<span style="color:#a6e22e">RunCommand</span>(<span style="color:#a6e22e">verbose</span>: <span style="color:#a6e22e">verbose</span>));
-<span style="color:#a6e22e">addCommand</span>(<span style="color:#a6e22e">TestCommand</span>())
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-dart" data-lang="dart"><span style="color:#75715e">// 支持的命令 
+</span><span style="color:#75715e"></span>addCommand(AnalyzeCommand(verbose: verbose));
+addCommand(CreateCommand(verbose: verbose));
+addCommand(CompileCommand(verbose: verbose));
+addCommand(FixCommand(verbose: verbose));
+addCommand(FormatCommand(verbose: verbose));
+addCommand(LanguageServerCommand(verbose: verbose));
+addCommand(MigrateCommand(verbose: verbose));
+addCommand(pubCommand());
+addCommand(RunCommand(verbose: verbose));
+addCommand(TestCommand())
 </code></pre></div></li>
 <li>
 <p>dartdev入口，以及调用流程</p>
 <ol>
 <li>The entry point for dartdev</li>
 </ol>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#a6e22e">Future</span>&lt;<span style="color:#a6e22e">void</span>&gt; <span style="color:#a6e22e">main</span>(<span style="color:#a6e22e">List</span>&lt;<span style="color:#a6e22e">String</span>&gt;<span style="color:#a6e22e">args</span>, <span style="color:#a6e22e">SendPort</span> )
-    <span style="color:#a6e22e">runDartdev</span>(<span style="color:#a6e22e">args</span>, <span style="color:#a6e22e">port</span>)
-       <span style="color:#a6e22e">DartdevRunner</span>.<span style="color:#a6e22e">run</span>(<span style="color:#a6e22e">args</span>)
-          <span style="color:#a6e22e">DartdevRunner</span>::<span style="color:#a6e22e">runCommand</span>(<span style="color:#a6e22e">args</span>)
-             <span style="color:#a6e22e">super</span>.<span style="color:#a6e22e">runCommand</span>(<span style="color:#a6e22e">args</span>)
-                <span style="color:#a6e22e">CompileCommand</span>.<span style="color:#a6e22e">runCommand</span>(..)
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-dart" data-lang="dart">Future<span style="color:#f92672">&lt;</span><span style="color:#66d9ef">void</span><span style="color:#f92672">&gt;</span> main(List<span style="color:#f92672">&lt;</span><span style="color:#66d9ef">String</span><span style="color:#f92672">&gt;</span>args, SendPort )
+    runDartdev(args, port)
+       DartdevRunner.run(args)
+          DartdevRunner:<span style="color:#f92672">:</span>runCommand(args)
+             <span style="color:#66d9ef">super</span>.runCommand(args)
+                CompileCommand.runCommand(..)
 </code></pre></div><ol start="2">
-<li>CompileComand有四个子命令进行js，aot，exe，jit编译</li>
+<li>CompileComand有四个子命令进行js，aot，exe，jit编译，最终会调用native函数执行dart后端编译命令</li>
 </ol>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#a6e22e">CompileCommand</span>.<span style="color:#a6e22e">runCommand</span>(..)
-    <span style="color:#a6e22e">CompileSnapshotCommand</span>.<span style="color:#a6e22e">run</span> {
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-dart" data-lang="dart">CompileCommand.runCommand(..)
+    CompileSnapshotCommand.run {
        <span style="color:#75715e">// Compiling hello.dart to kernel file hello.dill
-</span><span style="color:#75715e"></span>       <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">stdout</span>(<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#a6e22e">Compiling</span> <span style="color:#960050;background-color:#1e0010">$</span><span style="color:#a6e22e">sourcePath</span> <span style="color:#a6e22e">to</span> <span style="color:#960050;background-color:#1e0010">$</span><span style="color:#a6e22e">commandName</span> <span style="color:#a6e22e">file</span> <span style="color:#960050;background-color:#1e0010">$</span><span style="color:#a6e22e">outputFile</span>.<span style="color:#960050;background-color:#1e0010">&#39;</span>);
-       <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">startDartProcess</span>(<span style="color:#a6e22e">sdk</span>, <span style="color:#a6e22e">args</span>);
-          <span style="color:#a6e22e">Process</span>.<span style="color:#a6e22e">start</span>(<span style="color:#a6e22e">sdk</span>.<span style="color:#a6e22e">dart</span>, <span style="color:#a6e22e">arguments</span>, <span style="color:#a6e22e">workingDirectory</span>: <span style="color:#a6e22e">cwd</span>);
+</span><span style="color:#75715e"></span>       log.stdout(<span style="color:#e6db74">&#39;Compiling </span><span style="color:#e6db74">$</span>sourcePath<span style="color:#e6db74"> to </span><span style="color:#e6db74">$</span>commandName<span style="color:#e6db74"> file </span><span style="color:#e6db74">$</span>outputFile<span style="color:#e6db74">.&#39;</span>);
+       <span style="color:#66d9ef">await</span> startDartProcess(sdk, args);
+          external Process.start(sdk.dart, arguments, workingDirectory: cwd);
           <span style="color:#75715e">//调用native函数dart::bin::Builtin_Process_Start()
 </span><span style="color:#75715e"></span>          <span style="color:#75715e">//最终会fork出一个子进程，执行dart编译命令
 </span><span style="color:#75715e"></span>    }
 
-   .<span style="color:#a6e22e">dart</span>::<span style="color:#a6e22e">bin</span>::<span style="color:#a6e22e">Builtin_Process_Start调用栈如下</span><span style="color:#960050;background-color:#1e0010">：</span>
+   .dart:<span style="color:#f92672">:</span>bin:<span style="color:#f92672">:</span>Builtin_Process_Start调用栈如下<span style="color:#960050;background-color:#1e0010">：</span>
 
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">0</span>  <span style="color:#a6e22e">dart</span>::<span style="color:#a6e22e">bin</span>::<span style="color:#a6e22e">ProcessStarter</span>::<span style="color:#a6e22e">ProcessStarter</span> (<span style="color:#a6e22e">this</span>=<span style="color:#ae81ff">0x7ffff39fde38</span>, <span style="color:#a6e22e">namespc</span>=<span style="color:#ae81ff">0x555558973740</span>,
-    <span style="color:#a6e22e">path</span>=<span style="color:#ae81ff">0x5555589ed180</span> <span style="color:#e6db74">&#34;/data/chunbo/aosp/dart-sdk/sdk/out/DebugX64/dart-sdk/bin/dartdebug&#34;</span>, <span style="color:#a6e22e">arguments</span>=<span style="color:#ae81ff">0x5555589ed210</span>,
-    <span style="color:#a6e22e">arguments_length</span>=<span style="color:#ae81ff">4</span>, <span style="color:#a6e22e">working_directory</span>=<span style="color:#ae81ff">0x0</span>, <span style="color:#a6e22e">environment</span>=<span style="color:#ae81ff">0x5555589ed3c0</span>, <span style="color:#a6e22e">environment_length</span>=<span style="color:#ae81ff">31</span>, <span style="color:#a6e22e">mode</span>=<span style="color:#a6e22e">dart</span>::<span style="color:#a6e22e">bin</span>::<span style="color:#a6e22e">kNormal</span>,
-    <span style="color:#a6e22e">in</span>=<span style="color:#ae81ff">0x7ffff39fe068</span>, <span style="color:#a6e22e">out</span>=<span style="color:#ae81ff">0x7ffff39fe070</span>, <span style="color:#a6e22e">err</span>=<span style="color:#ae81ff">0x7ffff39fe060</span>, <span style="color:#a6e22e">id</span>=<span style="color:#ae81ff">0x7ffff39fdfc0</span>, <span style="color:#a6e22e">exit_event</span>=<span style="color:#ae81ff">0x7ffff39fe058</span>,
-    <span style="color:#a6e22e">os_error_message</span>=<span style="color:#ae81ff">0x7ffff39fdfb8</span>) <span style="color:#a6e22e">at</span> ..<span style="color:#f92672">/</span>..<span style="color:#f92672">/</span><span style="color:#a6e22e">runtime</span><span style="color:#f92672">/</span><span style="color:#a6e22e">bin</span><span style="color:#f92672">/</span><span style="color:#a6e22e">process_linux</span>.<span style="color:#a6e22e">cc</span>:<span style="color:#ae81ff">270</span>
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">1</span>  <span style="color:#ae81ff">0x000055555748a5b9</span> <span style="color:#a6e22e">in</span> <span style="color:#a6e22e">dart</span>::<span style="color:#a6e22e">bin</span>::<span style="color:#a6e22e">Process</span>::<span style="color:#a6e22e">Start</span> (<span style="color:#a6e22e">namespc</span>=<span style="color:#ae81ff">0x555558973740</span>,
-    <span style="color:#a6e22e">path</span>=<span style="color:#ae81ff">0x5555589ed180</span> <span style="color:#e6db74">&#34;/data/chunbo/aosp/dart-sdk/sdk/out/DebugX64/dart-sdk/bin/dartdebug&#34;</span>, <span style="color:#a6e22e">arguments</span>=<span style="color:#ae81ff">0x5555589ed210</span>,
-    <span style="color:#a6e22e">arguments_length</span>=<span style="color:#ae81ff">4</span>, <span style="color:#a6e22e">working_directory</span>=<span style="color:#ae81ff">0x0</span>, <span style="color:#a6e22e">environment</span>=<span style="color:#ae81ff">0x5555589ed3c0</span>, <span style="color:#a6e22e">environment_length</span>=<span style="color:#ae81ff">31</span>, <span style="color:#a6e22e">mode</span>=<span style="color:#a6e22e">dart</span>::<span style="color:#a6e22e">bin</span>::<span style="color:#a6e22e">kNormal</span>,
-    <span style="color:#a6e22e">in</span>=<span style="color:#ae81ff">0x7ffff39fe068</span>, <span style="color:#a6e22e">out</span>=<span style="color:#ae81ff">0x7ffff39fe070</span>, <span style="color:#a6e22e">err</span>=<span style="color:#ae81ff">0x7ffff39fe060</span>, <span style="color:#a6e22e">id</span>=<span style="color:#ae81ff">0x7ffff39fdfc0</span>, <span style="color:#a6e22e">exit_event</span>=<span style="color:#ae81ff">0x7ffff39fe058</span>,
-    <span style="color:#a6e22e">os_error_message</span>=<span style="color:#ae81ff">0x7ffff39fdfb8</span>) <span style="color:#a6e22e">at</span> ..<span style="color:#f92672">/</span>..<span style="color:#f92672">/</span><span style="color:#a6e22e">runtime</span><span style="color:#f92672">/</span><span style="color:#a6e22e">bin</span><span style="color:#f92672">/</span><span style="color:#a6e22e">process_linux</span>.<span style="color:#a6e22e">cc</span>:<span style="color:#ae81ff">809</span>
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">2</span>  <span style="color:#ae81ff">0x0000555557489688</span> <span style="color:#a6e22e">in</span> <span style="color:#a6e22e">dart</span>::<span style="color:#a6e22e">bin</span>::<span style="color:#a6e22e">Builtin_Process_Start</span> (<span style="color:#a6e22e">args</span>=<span style="color:#ae81ff">0x7ffff39fe1a0</span>) <span style="color:#a6e22e">at</span> ..<span style="color:#f92672">/</span>..<span style="color:#f92672">/</span><span style="color:#a6e22e">runtime</span><span style="color:#f92672">/</span><span style="color:#a6e22e">bin</span><span style="color:#f92672">/</span><span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">cc</span>:<span style="color:#ae81ff">144</span>
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">3</span>  <span style="color:#ae81ff">0x00005555577dd42c</span> <span style="color:#a6e22e">in</span> <span style="color:#a6e22e">dart</span>::<span style="color:#a6e22e">NativeEntry</span>::<span style="color:#a6e22e">AutoScopeNativeCallWrapperNoStackCheck</span> (<span style="color:#a6e22e">args</span>=<span style="color:#ae81ff">0x7ffff39fe1a0</span>,
-    <span style="color:#66d9ef">func</span>=<span style="color:#ae81ff">0x555557489300</span> &lt;<span style="color:#a6e22e">dart</span>::<span style="color:#a6e22e">bin</span>::<span style="color:#a6e22e">Builtin_Process_Start</span>(<span style="color:#a6e22e">_Dart_NativeArguments</span><span style="color:#f92672">*</span>)&gt;) <span style="color:#a6e22e">at</span> ..<span style="color:#f92672">/</span>..<span style="color:#f92672">/</span><span style="color:#a6e22e">runtime</span><span style="color:#f92672">/</span><span style="color:#a6e22e">vm</span><span style="color:#f92672">/</span><span style="color:#a6e22e">native_entry</span>.<span style="color:#a6e22e">cc</span>:<span style="color:#ae81ff">217</span>
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">4</span>  <span style="color:#ae81ff">0x00005555577dd309</span> <span style="color:#a6e22e">in</span> <span style="color:#a6e22e">dart</span>::<span style="color:#a6e22e">NativeEntry</span>::<span style="color:#a6e22e">AutoScopeNativeCallWrapper</span> (<span style="color:#a6e22e">args</span>=<span style="color:#ae81ff">0x7ffff39fe1a0</span>,
-    <span style="color:#66d9ef">func</span>=<span style="color:#ae81ff">0x555557489300</span> &lt;<span style="color:#a6e22e">dart</span>::<span style="color:#a6e22e">bin</span>::<span style="color:#a6e22e">Builtin_Process_Start</span>(<span style="color:#a6e22e">_Dart_NativeArguments</span><span style="color:#f92672">*</span>)&gt;) <span style="color:#a6e22e">at</span> ..<span style="color:#f92672">/</span>..<span style="color:#f92672">/</span><span style="color:#a6e22e">runtime</span><span style="color:#f92672">/</span><span style="color:#a6e22e">vm</span><span style="color:#f92672">/</span><span style="color:#a6e22e">native_entry</span>.<span style="color:#a6e22e">cc</span>:<span style="color:#ae81ff">198</span>
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">5</span>  <span style="color:#ae81ff">0x00007ffff7682a44</span> <span style="color:#a6e22e">in</span> <span style="color:#960050;background-color:#1e0010">??</span> ()
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">6</span>  <span style="color:#ae81ff">0x00005555589b1000</span> <span style="color:#a6e22e">in</span> <span style="color:#960050;background-color:#1e0010">??</span> ()
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">7</span>  <span style="color:#ae81ff">0x000000000100000c</span> <span style="color:#a6e22e">in</span> <span style="color:#960050;background-color:#1e0010">??</span> ()
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">8</span>  <span style="color:#ae81ff">0x00007ffff39fe240</span> <span style="color:#a6e22e">in</span> <span style="color:#960050;background-color:#1e0010">??</span> ()
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">9</span>  <span style="color:#ae81ff">0x00007ffff39fe1e0</span> <span style="color:#a6e22e">in</span> <span style="color:#960050;background-color:#1e0010">??</span> ()
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">10</span> <span style="color:#ae81ff">0x00007ffff3472c21</span> <span style="color:#a6e22e">in</span> <span style="color:#960050;background-color:#1e0010">??</span> ()
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">11</span> <span style="color:#ae81ff">0x00007ffff778d501</span> <span style="color:#a6e22e">in</span> <span style="color:#960050;background-color:#1e0010">??</span> ()
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">12</span> <span style="color:#ae81ff">0x00007ffff39fe268</span> <span style="color:#a6e22e">in</span> <span style="color:#960050;background-color:#1e0010">??</span> ()
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">13</span> <span style="color:#ae81ff">0x00007ffff3b2b164</span> <span style="color:#a6e22e">in</span> <span style="color:#960050;background-color:#1e0010">??</span> ()
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">14</span> <span style="color:#ae81ff">0x00007ffff7788041</span> <span style="color:#a6e22e">in</span> <span style="color:#960050;background-color:#1e0010">??</span> ()
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">15</span> <span style="color:#ae81ff">0x00007ffff3af1639</span> <span style="color:#a6e22e">in</span> <span style="color:#960050;background-color:#1e0010">??</span> ()
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">16</span> <span style="color:#ae81ff">0x00007ffff3aed079</span> <span style="color:#a6e22e">in</span> <span style="color:#960050;background-color:#1e0010">??</span> ()
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">17</span> <span style="color:#ae81ff">0x00007ffff3aec7d9</span> <span style="color:#a6e22e">in</span> <span style="color:#960050;background-color:#1e0010">??</span> ()
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">18</span> <span style="color:#ae81ff">0x00007ffff3aebf59</span> <span style="color:#a6e22e">in</span> <span style="color:#960050;background-color:#1e0010">??</span> ()
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">19</span> <span style="color:#ae81ff">0x00007ffff3aea2b9</span> <span style="color:#a6e22e">in</span> <span style="color:#960050;background-color:#1e0010">??</span> ()
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">20</span> <span style="color:#ae81ff">0x0000000000000000</span> <span style="color:#a6e22e">in</span> <span style="color:#960050;background-color:#1e0010">??</span> ()
+<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">0</span>  dart:<span style="color:#f92672">:</span>bin:<span style="color:#f92672">:</span>ProcessStarter:<span style="color:#f92672">:</span>ProcessStarter (<span style="color:#66d9ef">this</span><span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fde38</span>, namespc<span style="color:#f92672">=</span><span style="color:#ae81ff">0x555558973740</span>,
+    path<span style="color:#f92672">=</span><span style="color:#ae81ff">0x5555589ed180</span> <span style="color:#e6db74">&#34;/data/chunbo/aosp/dart-sdk/sdk/out/DebugX64/dart-sdk/bin/dartdebug&#34;</span>, arguments<span style="color:#f92672">=</span><span style="color:#ae81ff">0x5555589ed210</span>,
+    arguments_length<span style="color:#f92672">=</span><span style="color:#ae81ff">4</span>, working_directory<span style="color:#f92672">=</span><span style="color:#ae81ff">0x0</span>, environment<span style="color:#f92672">=</span><span style="color:#ae81ff">0x5555589ed3c0</span>, environment_length<span style="color:#f92672">=</span><span style="color:#ae81ff">31</span>, mode<span style="color:#f92672">=</span>dart:<span style="color:#f92672">:</span>bin:<span style="color:#f92672">:</span>kNormal,
+    <span style="color:#66d9ef">in</span><span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fe068</span>, out<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fe070</span>, err<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fe060</span>, id<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fdfc0</span>, exit_event<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fe058</span>,
+    os_error_message<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fdfb8</span>) at ..<span style="color:#f92672">/</span>..<span style="color:#f92672">/</span>runtime<span style="color:#f92672">/</span>bin<span style="color:#f92672">/</span>process_linux.cc:<span style="color:#ae81ff">270</span>
+<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">1</span>  <span style="color:#ae81ff">0x000055555748a5b9</span> <span style="color:#66d9ef">in</span> dart:<span style="color:#f92672">:</span>bin:<span style="color:#f92672">:</span>Process:<span style="color:#f92672">:</span>Start (namespc<span style="color:#f92672">=</span><span style="color:#ae81ff">0x555558973740</span>,
+    path<span style="color:#f92672">=</span><span style="color:#ae81ff">0x5555589ed180</span> <span style="color:#e6db74">&#34;/data/chunbo/aosp/dart-sdk/sdk/out/DebugX64/dart-sdk/bin/dartdebug&#34;</span>, arguments<span style="color:#f92672">=</span><span style="color:#ae81ff">0x5555589ed210</span>,
+    arguments_length<span style="color:#f92672">=</span><span style="color:#ae81ff">4</span>, working_directory<span style="color:#f92672">=</span><span style="color:#ae81ff">0x0</span>, environment<span style="color:#f92672">=</span><span style="color:#ae81ff">0x5555589ed3c0</span>, environment_length<span style="color:#f92672">=</span><span style="color:#ae81ff">31</span>, mode<span style="color:#f92672">=</span>dart:<span style="color:#f92672">:</span>bin:<span style="color:#f92672">:</span>kNormal,
+    <span style="color:#66d9ef">in</span><span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fe068</span>, out<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fe070</span>, err<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fe060</span>, id<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fdfc0</span>, exit_event<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fe058</span>,
+    os_error_message<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fdfb8</span>) at ..<span style="color:#f92672">/</span>..<span style="color:#f92672">/</span>runtime<span style="color:#f92672">/</span>bin<span style="color:#f92672">/</span>process_linux.cc:<span style="color:#ae81ff">809</span>
+<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">2</span>  <span style="color:#ae81ff">0x0000555557489688</span> <span style="color:#66d9ef">in</span> dart:<span style="color:#f92672">:</span>bin:<span style="color:#f92672">:</span>Builtin_Process_Start (args<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fe1a0</span>) at ..<span style="color:#f92672">/</span>..<span style="color:#f92672">/</span>runtime<span style="color:#f92672">/</span>bin<span style="color:#f92672">/</span>process.cc:<span style="color:#ae81ff">144</span>
+<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">3</span>  <span style="color:#ae81ff">0x00005555577dd42c</span> <span style="color:#66d9ef">in</span> dart:<span style="color:#f92672">:</span>NativeEntry:<span style="color:#f92672">:</span>AutoScopeNativeCallWrapperNoStackCheck (args<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fe1a0</span>,
+    func<span style="color:#f92672">=</span><span style="color:#ae81ff">0x555557489300</span> <span style="color:#f92672">&lt;</span>dart:<span style="color:#f92672">:</span>bin:<span style="color:#f92672">:</span>Builtin_Process_Start(_Dart_NativeArguments<span style="color:#f92672">*</span>)<span style="color:#f92672">&gt;</span>) at ..<span style="color:#f92672">/</span>..<span style="color:#f92672">/</span>runtime<span style="color:#f92672">/</span>vm<span style="color:#f92672">/</span>native_entry.cc:<span style="color:#ae81ff">217</span>
+<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">4</span>  <span style="color:#ae81ff">0x00005555577dd309</span> <span style="color:#66d9ef">in</span> dart:<span style="color:#f92672">:</span>NativeEntry:<span style="color:#f92672">:</span>AutoScopeNativeCallWrapper (args<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fe1a0</span>,
+    func<span style="color:#f92672">=</span><span style="color:#ae81ff">0x555557489300</span> <span style="color:#f92672">&lt;</span>dart:<span style="color:#f92672">:</span>bin:<span style="color:#f92672">:</span>Builtin_Process_Start(_Dart_NativeArguments<span style="color:#f92672">*</span>)<span style="color:#f92672">&gt;</span>) at ..<span style="color:#f92672">/</span>..<span style="color:#f92672">/</span>runtime<span style="color:#f92672">/</span>vm<span style="color:#f92672">/</span>native_entry.cc:<span style="color:#ae81ff">198</span>
+<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">5</span>  <span style="color:#ae81ff">0x00007ffff7682a44</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
+<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">6</span>  <span style="color:#ae81ff">0x00005555589b1000</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
+<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">7</span>  <span style="color:#ae81ff">0x000000000100000c</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
+<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">8</span>  <span style="color:#ae81ff">0x00007ffff39fe240</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
+<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">9</span>  <span style="color:#ae81ff">0x00007ffff39fe1e0</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
+<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">10</span> <span style="color:#ae81ff">0x00007ffff3472c21</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
+<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">11</span> <span style="color:#ae81ff">0x00007ffff778d501</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
+<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">12</span> <span style="color:#ae81ff">0x00007ffff39fe268</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
+<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">13</span> <span style="color:#ae81ff">0x00007ffff3b2b164</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
+<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">14</span> <span style="color:#ae81ff">0x00007ffff7788041</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
+<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">15</span> <span style="color:#ae81ff">0x00007ffff3af1639</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
+<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">16</span> <span style="color:#ae81ff">0x00007ffff3aed079</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
+<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">17</span> <span style="color:#ae81ff">0x00007ffff3aec7d9</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
+<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">18</span> <span style="color:#ae81ff">0x00007ffff3aebf59</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
+<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">19</span> <span style="color:#ae81ff">0x00007ffff3aea2b9</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
+<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">20</span> <span style="color:#ae81ff">0x0000000000000000</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
 </code></pre></div><ol start="3">
 <li>fork的子进程会实际执行编译动作</li>
 </ol>
@@ -423,9 +423,9 @@ dart<span style="color:#f92672">::</span>bin<span style="color:#f92672">::</span
 </div></li>
 <li>
 <p>kernel isolate接收来自的main isolate的编译请求</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C++" data-lang="C++"><span style="color:#75715e">// kernel_service.dart
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-dart" data-lang="dart"><span style="color:#75715e">// kernel_service.dart
 </span><span style="color:#75715e"></span>main([args]) {
-  <span style="color:#66d9ef">if</span> ((args<span style="color:#f92672">?</span>.length <span style="color:#f92672">??</span> <span style="color:#ae81ff">0</span>) <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">&amp;&amp;</span> args[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">==</span> <span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">--</span>train<span style="color:#960050;background-color:#1e0010">&#39;</span>) {
+  <span style="color:#66d9ef">if</span> ((args<span style="color:#f92672">?</span>.length <span style="color:#f92672">??</span> <span style="color:#ae81ff">0</span>) <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">&amp;&amp;</span> args[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;--train&#39;</span>) {
     <span style="color:#75715e">// This entry point is used when creating an app snapshot.
 </span><span style="color:#75715e"></span>    <span style="color:#75715e">// It takes the following extra arguments:
 </span><span style="color:#75715e"></span>    <span style="color:#75715e">// 1) Script to compile.
@@ -435,23 +435,23 @@ dart<span style="color:#f92672">::</span>bin<span style="color:#f92672">::</span
           _processLoadRequest(request)
   } <span style="color:#66d9ef">else</span> {
     <span style="color:#75715e">// Entry point for the Kernel isolate.
-</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">RawReceivePort</span>()..handler <span style="color:#f92672">=</span> _processLoadRequest;
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> RawReceivePort()..handler <span style="color:#f92672">=</span> _processLoadRequest;
   }
 }
 </code></pre></div></li>
 <li>
 <p>编译dart code，词法分析，语法分析和语义分析并返回结果给main isolate</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C++" data-lang="C++">_processLoadRequest(request) {
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-dart" data-lang="dart">_processLoadRequest(request) {
     Compiler<span style="color:#f92672">?</span> compiler;
     <span style="color:#66d9ef">if</span> (incremental) {
-       compiler <span style="color:#f92672">=</span> await lookupOrBuildNewIncrementalCompiler(..)
+       compiler <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> lookupOrBuildNewIncrementalCompiler(..)
     } <span style="color:#66d9ef">else</span> {
        compiler <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> SingleShotCompilerWrapper(..);
     }
-    CompilerResult compilerResult <span style="color:#f92672">=</span> await compiler.compile(script<span style="color:#f92672">!</span>);
-       SingleShotCompilerWrapper<span style="color:#f92672">::</span>compileInternal(Uri script) async 
-          kernelForProgram(Uri source, ..)
-            kernelForProgramInternal(source, ...);
+    CompilerResult compilerResult <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> compiler.compile(script<span style="color:#f92672">!</span>);
+       SingleShotCompilerWrapper:<span style="color:#f92672">:</span>compileInternal(Uri script) <span style="color:#66d9ef">async</span> 
+          kernelForProgram(Uri <span style="color:#66d9ef">source</span>, ..)
+            kernelForProgramInternal(<span style="color:#66d9ef">source</span>, ...);
             ....
 }
 </code></pre></div></li>
@@ -461,15 +461,15 @@ dart<span style="color:#f92672">::</span>bin<span style="color:#f92672">::</span
     ...
     RunMainIsolate(script_name, package_config_override, <span style="color:#f92672">&amp;</span>dart_options) {
         <span style="color:#66d9ef">if</span> (Options<span style="color:#f92672">::</span>gen_snapshot_kind() <span style="color:#f92672">==</span> kKernel) {
-<span style="display:block;width:100%;background-color:#3c3d38">            Snapshot<span style="color:#f92672">::</span>GenerateKernel(Options<span style="color:#f92672">::</span>snapshot_filename(), script_name, ..) {
-</span>                dfe.ReadScript(script_name, kernel_buffer,..);
+            Snapshot<span style="color:#f92672">::</span>GenerateKernel(Options<span style="color:#f92672">::</span>snapshot_filename(), script_name, ..) {
+                dfe.ReadScript(script_name, kernel_buffer,..);
                 <span style="color:#66d9ef">if</span> (kernel_buffer <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nullptr</span>) {
                     WriteSnapshotFile(snapshot_filename, kernel_buffer,..);
                 } <span style="color:#66d9ef">else</span> {
                     <span style="color:#75715e">// 向kernel isolate(CFE)发起dart编译请求
-</span><span style="display:block;width:100%;background-color:#3c3d38"><span style="color:#75715e"></span>                    Dart_KernelCompilationResult result <span style="color:#f92672">=</span>
-</span><span style="display:block;width:100%;background-color:#3c3d38">                         dfe.CompileScript(script_name, false, package_config, true);
-</span>
+</span><span style="color:#75715e"></span>                    Dart_KernelCompilationResult result <span style="color:#f92672">=</span>
+                         dfe.CompileScript(script_name, false, package_config, true);
+
                     <span style="color:#75715e">// 请求成功后把编译结果写入dill文件
 </span><span style="display:block;width:100%;background-color:#3c3d38"><span style="color:#75715e"></span>                    WriteSnapshotFile(snapshot_filename, result.kernel, result.kernel_size);
 </span>                }
@@ -573,6 +573,10 @@ dart<span style="color:#f92672">::</span>bin<span style="color:#f92672">::</span
     
     <li>
         <a href="https://songchunbo.github.io/post/dart_vm_quick_start/" title="Dart VM命令行工具">Dart VM命令行工具</a>
+    </li>
+    
+    <li>
+        <a href="https://songchunbo.github.io/post/art_commit_history/" title="Art_commit_history">Art_commit_history</a>
     </li>
     
     <li>
