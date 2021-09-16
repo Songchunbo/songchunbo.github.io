@@ -52,7 +52,7 @@ $ dart compile kernel hello.dart # generate hello.dill $ dart run hello.dill   2
     </item>
     
     <item>
-      <title>Art_commit_history</title>
+      <title>Art Commit History</title>
       <link>https://songchunbo.github.io/post/art_commit_history/</link>
       <pubDate>Wed, 16 Dec 2020 15:55:19 +0800</pubDate>
       
