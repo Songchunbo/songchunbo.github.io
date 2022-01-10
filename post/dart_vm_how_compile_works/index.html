@@ -84,7 +84,8 @@
         
         
         <div class="post-content">
-            <h3 id="一dart-vm概述">一、Dart VM概述</h3>
+            <p>Dart VM是运行dart的虚拟机，由多个isolate组成，每个isolate提供dart的运行环境，类似Android/ART中Zygote提供的Java运行环境，Dart VM包含下面几个重要的isolate</p>
+<h3 id="一dart-vm概述">一、Dart VM概述</h3>
 <p>Dart VM是运行dart的虚拟机，由多个isolate组成，每个isolate提供dart的运行环境，类似Android/ART中Zygote提供的Java运行环境，Dart VM包含下面几个重要的isolate</p>
 <ul>
 <li>
@@ -103,7 +104,7 @@
 <li>
 <p>dartdev isolate</p>
 <p>主要用于执行用户命令，如dart run/compile等命令，最终会转换为后端命令。</p>
-<pre><code>用户命令: dart compile kernel hello.dart 
+<pre tabindex="0"><code>用户命令: dart compile kernel hello.dart 
  后端命令: dart --snapshot-kind=kernel --snapshot=hello.dill --verbosity=all hello.dart
 </code></pre></li>
 <li>
@@ -117,7 +118,7 @@
 <ul>
 <li>
 <p>5个isolate在main中的初始化和启动过程</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C++" data-lang="C++"><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">int</span> argc, <span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> argv[]) {
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C++" data-lang="C++"><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">int</span> argc, <span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> argv[]) {
     Dart_Initialize(<span style="color:#f92672">&amp;</span>init_params) {
         Dart<span style="color:#f92672">::</span>Init(..) {
            Dart<span style="color:#f92672">::</span>DartInit(...) {
@@ -212,7 +213,7 @@
 <p>用户命令在dartdev isolate中执行</p>
 <p>dartdev isolate入口在dartdev.dart，dartdev.dart是一个dart开发工具包，可以处理各种用户命令，包括analyzer, create, compile, run等命令</p>
 <p><a href="https://github.com/dart-lang/sdk/blob/main/pkg/dartdev/bin/dartdev.dart">https://github.com/dart-lang/sdk/blob/main/pkg/dartdev/bin/dartdev.dart</a></p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-dart" data-lang="dart"><span style="color:#75715e">// 支持的命令 
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-dart" data-lang="dart"><span style="color:#75715e">// 支持的命令 
 </span><span style="color:#75715e"></span>addCommand(AnalyzeCommand(verbose: verbose));
 addCommand(CreateCommand(verbose: verbose));
 addCommand(CompileCommand(verbose: verbose));
@@ -229,7 +230,7 @@ addCommand(TestCommand())
 <ol>
 <li>The entry point for dartdev</li>
 </ol>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-dart" data-lang="dart">Future<span style="color:#f92672">&lt;</span><span style="color:#66d9ef">void</span><span style="color:#f92672">&gt;</span> main(List<span style="color:#f92672">&lt;</span><span style="color:#66d9ef">String</span><span style="color:#f92672">&gt;</span>args, SendPort )
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-dart" data-lang="dart">Future<span style="color:#f92672">&lt;</span><span style="color:#66d9ef">void</span><span style="color:#f92672">&gt;</span> main(List<span style="color:#f92672">&lt;</span><span style="color:#66d9ef">String</span><span style="color:#f92672">&gt;</span>args, SendPort )
     runDartdev(args, port)
        DartdevRunner.run(args)
           DartdevRunner:<span style="color:#f92672">:</span>runCommand(args)
@@ -238,7 +239,7 @@ addCommand(TestCommand())
 </code></pre></div><ol start="2">
 <li>CompileComand有四个子命令进行js，aot，exe，jit编译，最终会调用native函数执行dart后端编译命令</li>
 </ol>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-dart" data-lang="dart">CompileCommand.runCommand(..)
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-dart" data-lang="dart">CompileCommand.runCommand(..)
     CompileSnapshotCommand.run {
        <span style="color:#75715e">// Compiling hello.dart to kernel file hello.dill
 </span><span style="color:#75715e"></span>       log.stdout(<span style="color:#e6db74">&#39;Compiling </span><span style="color:#e6db74">$</span>sourcePath<span style="color:#e6db74"> to </span><span style="color:#e6db74">$</span>commandName<span style="color:#e6db74"> file </span><span style="color:#e6db74">$</span>outputFile<span style="color:#e6db74">.&#39;</span>);
@@ -284,7 +285,7 @@ addCommand(TestCommand())
 </code></pre></div><ol start="3">
 <li>fork的子进程会实际执行编译动作</li>
 </ol>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C++" data-lang="C++">CMD<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;$DART_BIN/dart --snapshot-kind=kernel --snapshot=hello.dill --verbosity=all $DART_SOURCE/hello.dart</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C++" data-lang="C++">CMD<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;$DART_BIN/dart --snapshot-kind=kernel --snapshot=hello.dill --verbosity=all $DART_SOURCE/hello.dart</span>
 dart<span style="color:#f92672">::</span>bin<span style="color:#f92672">::</span>Builtin_Process_Start(...)
   ....
   dart<span style="color:#f92672">::</span>bin<span style="color:#f92672">::</span>ProcessStarter starter(namespc, path, arguments, arguments_length,...)
@@ -304,11 +305,11 @@ dart<span style="color:#f92672">::</span>bin<span style="color:#f92672">::</span
 <h3 id="三-转换后的dart命令执行流程">三、 转换后的dart命令执行流程</h3>
 <ul>
 <li>
-<pre><code>dart --snapshot-kind=kernel --snapshot=hello.dill --verbosity=all hello.dart
+<pre tabindex="0"><code>dart --snapshot-kind=kernel --snapshot=hello.dill --verbosity=all hello.dart
 </code></pre></li>
 <li>
 <p>在main isolate中启动kernel isolate(CFE)并初始化，同时向kernel isolate发起编译请求，把生成的AST写入dill文件。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C++" data-lang="C++"><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">int</span> argc, <span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> argv[]) {
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C++" data-lang="C++"><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">int</span> argc, <span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> argv[]) {
     ...
     RunMainIsolate(script_name, package_config_override, <span style="color:#f92672">&amp;</span>dart_options) {
         <span style="color:#66d9ef">if</span> (Options<span style="color:#f92672">::</span>gen_snapshot_kind() <span style="color:#f92672">==</span> kKernel) {
@@ -331,7 +332,7 @@ dart<span style="color:#f92672">::</span>bin<span style="color:#f92672">::</span
 </code></pre></div></li>
 <li>
 <p>启动kernel isolate，向kernel isolate CFE模块发起dart编译请求</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C++" data-lang="C++"> dfe.CompileScript(script_name, false, package_config, true);
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C++" data-lang="C++"> dfe.CompileScript(script_name, false, package_config, true);
    Dart_CompileToKernel(sanitized_uri, platform_strong_dill,platform_strong_dill_size,...);
       KernelIsolate<span style="color:#f92672">::</span>CompileToKernel(script_uri, platform_kernel, platform_kernel_size,..) {
           <span style="color:#75715e">// Start the kernel Isolate if it is not already running.
@@ -358,7 +359,7 @@ dart<span style="color:#f92672">::</span>bin<span style="color:#f92672">::</span
 <p>kernel isolate启动和初始化</p>
 <div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
 <table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
@@ -389,7 +390,7 @@ dart<span style="color:#f92672">::</span>bin<span style="color:#f92672">::</span
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C++" data-lang="C++"> KernelIsolate<span style="color:#f92672">::</span>Start() {
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C++" data-lang="C++"> KernelIsolate<span style="color:#f92672">::</span>Start() {
       Dart<span style="color:#f92672">::</span>thread_pool()<span style="color:#f92672">-&gt;</span>Run<span style="color:#f92672">&lt;</span>RunKernelTask<span style="color:#f92672">&gt;</span>();
          <span style="color:#66d9ef">new</span> <span style="color:#66d9ef">thread</span><span style="color:#f92672">::</span>RunKernelTask<span style="color:#f92672">::</span>run() {
               create_group_callback <span style="color:#f92672">=</span> KernelIsolate<span style="color:#f92672">::</span>create_group_callback() <span style="color:#75715e">// CreateIsolateGroupAndSetup;
@@ -423,7 +424,7 @@ dart<span style="color:#f92672">::</span>bin<span style="color:#f92672">::</span
 </div></li>
 <li>
 <p>kernel isolate接收来自的main isolate的编译请求</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-dart" data-lang="dart"><span style="color:#75715e">// kernel_service.dart
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-dart" data-lang="dart"><span style="color:#75715e">// kernel_service.dart
 </span><span style="color:#75715e"></span>main([args]) {
   <span style="color:#66d9ef">if</span> ((args<span style="color:#f92672">?</span>.length <span style="color:#f92672">??</span> <span style="color:#ae81ff">0</span>) <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">&amp;&amp;</span> args[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;--train&#39;</span>) {
     <span style="color:#75715e">// This entry point is used when creating an app snapshot.
@@ -441,7 +442,7 @@ dart<span style="color:#f92672">::</span>bin<span style="color:#f92672">::</span
 </code></pre></div></li>
 <li>
 <p>编译dart code，词法分析，语法分析和语义分析并返回结果给main isolate</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-dart" data-lang="dart">_processLoadRequest(request) {
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-dart" data-lang="dart">_processLoadRequest(request) {
     Compiler<span style="color:#f92672">?</span> compiler;
     <span style="color:#66d9ef">if</span> (incremental) {
        compiler <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> lookupOrBuildNewIncrementalCompiler(..)
@@ -457,7 +458,7 @@ dart<span style="color:#f92672">::</span>bin<span style="color:#f92672">::</span
 </code></pre></div></li>
 <li>
 <p>main isolate收到编译好的Kernel AST写入dill文件</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C++" data-lang="C++"><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">int</span> argc, <span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> argv[]) {
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C++" data-lang="C++"><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">int</span> argc, <span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> argv[]) {
     ...
     RunMainIsolate(script_name, package_config_override, <span style="color:#f92672">&amp;</span>dart_options) {
         <span style="color:#66d9ef">if</span> (Options<span style="color:#f92672">::</span>gen_snapshot_kind() <span style="color:#f92672">==</span> kKernel) {
@@ -514,7 +515,7 @@ dart<span style="color:#f92672">::</span>bin<span style="color:#f92672">::</span
 
                     <footer id="footer">
     <div>
-        &copy; 2021 <a href="https://songchunbo.github.io/">心在路上 By 心在路上</a>
+        &copy; 2022 <a href="https://songchunbo.github.io/">心在路上 By 心在路上</a>
         
     </div>
     <br />
@@ -568,6 +569,10 @@ dart<span style="color:#f92672">::</span>bin<span style="color:#f92672">::</span
 <ul class="widget-list">
     
     <li>
+        <a href="https://songchunbo.github.io/post/dart_vm_lex_syntax/" title="Dart VM源码分析之CFE">Dart VM源码分析之CFE</a>
+    </li>
+    
+    <li>
         <a href="https://songchunbo.github.io/post/dart_vm_how_compile_works/" title="Dart VM源码分析之编译dill">Dart VM源码分析之编译dill</a>
     </li>
     
@@ -581,6 +586,18 @@ dart<span style="color:#f92672">::</span>bin<span style="color:#f92672">::</span
     
     <li>
         <a href="https://songchunbo.github.io/post/x86_arm_callconvention/" title="X86 and ARM Call Convention">X86 and ARM Call Convention</a>
+    </li>
+    
+    <li>
+        <a href="https://songchunbo.github.io/post/andorid_file_io/" title="Android文件IO路径小记">Android文件IO路径小记</a>
+    </li>
+    
+    <li>
+        <a href="https://songchunbo.github.io/post/galois_math/" title="纠删码基础知识">纠删码基础知识</a>
+    </li>
+    
+    <li>
+        <a href="https://songchunbo.github.io/post/primitive_poly/" title="本原多项式的生成方法">本原多项式的生成方法</a>
     </li>
     
 </ul>

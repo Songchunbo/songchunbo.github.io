@@ -6,28 +6,24 @@
     <description>Recent content on 心在路上</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 12 Sep 2021 20:37:39 +0800</lastBuildDate><atom:link href="https://songchunbo.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Tue, 14 Sep 2021 09:57:43 +0800</lastBuildDate><atom:link href="https://songchunbo.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Dart VM源码分析之CFE</title>
+      <link>https://songchunbo.github.io/post/dart_vm_lex_syntax/</link>
+      <pubDate>Tue, 14 Sep 2021 09:57:43 +0800</pubDate>
+      
+      <guid>https://songchunbo.github.io/post/dart_vm_lex_syntax/</guid>
+      <description>CFE全称Common Front End, 主要把负责dart源码翻译成kernel AST，中间会经过词法分析，语法分析和语义分析，最终把分析结果写入dill文件，CFE使用Dart开发的，运行在kernel isolate中，由于生成的dill与平台无关，在x86上生成的dill在arm平台上可以加载运行</description>
+    </item>
+    
     <item>
       <title>Dart VM源码分析之编译dill</title>
       <link>https://songchunbo.github.io/post/dart_vm_how_compile_works/</link>
       <pubDate>Sun, 12 Sep 2021 20:37:39 +0800</pubDate>
       
       <guid>https://songchunbo.github.io/post/dart_vm_how_compile_works/</guid>
-      <description>一、Dart VM概述 Dart VM是运行dart的虚拟机，由多个isolate组成，每个isolate提供dart的运行环境，类似Android/ART中Zygote提供的Java运行环境，Dart VM包含下面几个重要的isolate
-  vm isolate
-负责维持系统中基础的heap object如null,class_, true, false，供各个isolate共享
-  kernel isolate
-主要用于执行CFE代码，CFE使用dart语言开发，实现了dart的语法分析，词法分析和语义分析，生成kernel AST
-  service isolate
-主要用于执行其他isolate发起的service请求，service包括debug相关，compile相关等，具体列表： https://github.com/dart-lang/sdk/blob/main/runtime/vm/service.cc#L5254
-  dartdev isolate
-主要用于执行用户命令，如dart run/compile等命令，最终会转换为后端命令。
-用户命令: dart compile kernel hello.dart 后端命令: dart --snapshot-kind=kernel --snapshot=hello.dill --verbosity=all hello.dart   main isolate
-主要用来执行用户开发的dart code。
-  更多关于Dart VM的基础原理可参见dart作者的blog，网上很多blog来自这篇文章，这篇文章还在持续完善中
-https://mrale.ph/dartvm/
-二、Dart VM各个isolate在main函数中的启动和初始化过程   5个isolate在main中的初始化和启动过程
-int main(int argc, char* argv[]) { Dart_Initialize(&amp;amp;init_params) { Dart::Init(..) { Dart::DartInit(...) { //各种初始化,线程池，heap,zone,object(null_,class_),stub code等  // create_group_ = CreateIsolateGroupAndSetup();  Isolate::SetCreateGroupCallback(create_group); // 创建&amp;#34;vm-isolate&amp;#34; isolate  vm_isolate_ = Isolate::InitIsolate(&amp;#34;vm-isolate&amp;#34;, .</description>
+      <description>Dart VM是运行dart的虚拟机，由多个isolate组成，每个isolate提供dart的运行环境，类似Android/ART中Zygote提供的Java运行环境，Dart VM包含下面几个重要的isolate
+一、Dart VM概述 Dart VM是运行dart的虚拟机，由多个isolate组成，每个isolate提供dart的运行环境，类似Android/ART中Zygote提供的Java运行环境，Dart VM包含下面几个重要的isolate</description>
     </item>
     
     <item>
@@ -36,9 +32,7 @@ int main(int argc, char* argv[]) { Dart_Initialize(&amp;amp;init_params) { Dart:
       <pubDate>Fri, 10 Sep 2021 15:30:24 +0800</pubDate>
       
       <guid>https://songchunbo.github.io/post/dart_vm_quick_start/</guid>
-      <description>Dart命令支持JIT和AOT模式 1. JIT模式支持两种方式，   直接在dart VM中运行dart source code
-//hello.dart  int add(int a, int b) { return a + b; } void main() { var sum = add(5,100); print(&amp;#34;sum is $sum&amp;#34;); } $ dart hello.dart sum is 105   先把dart source code编译成dill binary，然后在dart VM中运行dill binary , 生成的dill文件中包含经过词法分析，语法分析和语义分析后的带标记的抽象语法树AST，dart称之为Kernel AST, dill binary是跨平台的格式, 可以在不同平台的dart VM中运行。
-$ dart compile kernel hello.dart # generate hello.dill $ dart run hello.dill   2. AOT模式支持两种方式   直接把dart source code编译成可执行文件，可执行文件包含source code的机器码，以及简化版的dart runtime</description>
+      <description>Dart命令支持JIT和AOT模式 1. JIT模式支持两种方式，   直接在dart VM中运行dart source code</description>
     </item>
     
     <item>
@@ -47,8 +41,7 @@ $ dart compile kernel hello.dart # generate hello.dill $ dart run hello.dill   2
       <pubDate>Wed, 10 Mar 2021 00:13:27 +0000</pubDate>
       
       <guid>https://songchunbo.github.io/about/</guid>
-      <description>专注于移动安全，虚拟机技术, Android沙箱，Android Framework, ART Runtime, Dart Runtime 病毒检测，逆向
- 扫码关注   </description>
+      <description>专注于移动安全，虚拟机技术, Android沙箱，Android Framework, ART Runtime, Dart Runtime 病毒检测，逆向</description>
     </item>
     
     <item>
@@ -57,9 +50,7 @@ $ dart compile kernel hello.dart # generate hello.dill $ dart run hello.dill   2
       <pubDate>Wed, 16 Dec 2020 15:55:19 +0800</pubDate>
       
       <guid>https://songchunbo.github.io/post/art_commit_history/</guid>
-      <description>1 runtime雏形 ART inital code
-https://android.googlesource.com/platform/art/+/3ee755da5c1c17b6a29052d171a8a63c0eb0b052 https://android.googlesource.com/platform/art/+/3ee755da5c1c17b6a29052d171a8a63c0eb0b052/src/runtime.cc
-commit 3ee755da5c1c17b6a29052d171a8a63c0eb0b052 Author: Carl Shapiro &amp;lt;cshapiro@google.com&amp;gt; Date: Tue Jun 28 12:11:04 2011 -0700 Complete support for loading classes from a DEX file. Change-Id: I1b9aa105fc78df170e83b259d8d04317c296a1b5 Android.common.mk | 1 + src/dex_file.cc | 105 ++++++++++++++++++++++++------- src/dex_file.h | 12 +--- src/dex_file_test.cc | 6 ++ src/object.cc | 23 +++++++ src/object.h | 175 ++++++++++++++++++++++++++++++++++++++++++++++----- src/raw_dex_file.h | 79 +++++++++++++++++++---- 7 files changed, 339 insertions(+), 62 deletions(-) 2 class_linker init https://android.googlesource.com/platform/art/+/0e5d75d5ca2b8a44fab0c862276a466cbab39859</description>
+      <description>1 runtime雏形 ART inital code</description>
     </item>
     
     <item>
@@ -68,9 +59,36 @@ commit 3ee755da5c1c17b6a29052d171a8a63c0eb0b052 Author: Carl Shapiro &amp;lt;csh
       <pubDate>Mon, 10 Aug 2020 16:02:03 +0800</pubDate>
       
       <guid>https://songchunbo.github.io/post/x86_arm_callconvention/</guid>
-      <description>ARM64 call convention
-https://android.googlesource.com/platform/art/+/refs/tags/android-11.0.0_r35/runtime/interpreter/mterp/arm64/main.S
-/* ARM64 Runtime register usage conventions. r0 : w0 is 32-bit return register and x0 is 64-bit. r0-r7 : Argument registers. r8-r15 : Caller save registers (used as temporary registers). r16-r17: Also known as ip0-ip1, respectively. Used as scratch registers by the linker, by the trampolines and other stubs (the backend uses these as temporary registers). r18 : Caller save register (used as temporary register).</description>
+      <description>ARM64 call convention</description>
+    </item>
+    
+    <item>
+      <title>Android文件IO路径小记</title>
+      <link>https://songchunbo.github.io/post/andorid_file_io/</link>
+      <pubDate>Mon, 15 Oct 2018 15:56:45 +0800</pubDate>
+      
+      <guid>https://songchunbo.github.io/post/andorid_file_io/</guid>
+      <description>Android文件IO路径小记 1 open创建文件   bionic libc.</description>
+    </item>
+    
+    <item>
+      <title>纠删码基础知识</title>
+      <link>https://songchunbo.github.io/post/galois_math/</link>
+      <pubDate>Sun, 03 Sep 2017 18:10:00 +0800</pubDate>
+      
+      <guid>https://songchunbo.github.io/post/galois_math/</guid>
+      <description>RS纠删码算法实现需要伽罗瓦域和矩阵的一些知识。
+1 伽罗瓦域的四则运算 提到伽罗瓦域（也称有限域），不得不提一嘴伽罗瓦Évariste Galois，非常传奇的一位法国天才数学家，现代数学群论的创立者，人们称之为伽罗瓦理论，21岁时死于一次决斗，关于伽罗域的基本概念和理论，可以参考《古典数学难题与伽罗瓦理论》。</description>
+    </item>
+    
+    <item>
+      <title>本原多项式的生成方法</title>
+      <link>https://songchunbo.github.io/post/primitive_poly/</link>
+      <pubDate>Wed, 23 Aug 2017 10:29:02 +0800</pubDate>
+      
+      <guid>https://songchunbo.github.io/post/primitive_poly/</guid>
+      <description>本原多项式的生成方法
+暴力枚举所有的多项式，看看哪个多项式能生成一个有限域 // only support degree 63 typedef struct { uint64_t state; uint64_t taps; uint64_t ymask; } LFSR_T; /* Galois implementation of LFSR */ bool lfsr_step(LFSR_T *plfsr) { plfsr-&amp;gt;state &amp;lt;&amp;lt;= 1; // shift left  bool out = (plfsr-&amp;gt;state &amp;amp; plfsr-&amp;gt;ymask) !</description>
     </item>
     
     <item>
