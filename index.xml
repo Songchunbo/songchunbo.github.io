@@ -6,7 +6,16 @@
     <description>Recent content on 心在路上</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Tue, 14 Sep 2021 09:57:43 +0800</lastBuildDate><atom:link href="https://songchunbo.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sat, 15 Oct 2022 15:56:45 +0800</lastBuildDate><atom:link href="https://songchunbo.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Android文件IO路径小记</title>
+      <link>https://songchunbo.github.io/post/andorid_file_io/</link>
+      <pubDate>Sat, 15 Oct 2022 15:56:45 +0800</pubDate>
+      
+      <guid>https://songchunbo.github.io/post/andorid_file_io/</guid>
+      <description>Android文件IO路径小记 1 open创建文件   bionic libc.</description>
+    </item>
+    
     <item>
       <title>Dart VM源码分析之CFE</title>
       <link>https://songchunbo.github.io/post/dart_vm_lex_syntax/</link>
@@ -45,7 +54,7 @@
     </item>
     
     <item>
-      <title>Art Commit History</title>
+      <title>ART Commit History</title>
       <link>https://songchunbo.github.io/post/art_commit_history/</link>
       <pubDate>Wed, 16 Dec 2020 15:55:19 +0800</pubDate>
       
@@ -60,15 +69,6 @@
       
       <guid>https://songchunbo.github.io/post/x86_arm_callconvention/</guid>
       <description>ARM64 call convention</description>
-    </item>
-    
-    <item>
-      <title>Android文件IO路径小记</title>
-      <link>https://songchunbo.github.io/post/andorid_file_io/</link>
-      <pubDate>Mon, 15 Oct 2018 15:56:45 +0800</pubDate>
-      
-      <guid>https://songchunbo.github.io/post/andorid_file_io/</guid>
-      <description>Android文件IO路径小记 1 open创建文件   bionic libc.</description>
     </item>
     
     <item>
@@ -89,6 +89,15 @@
       <guid>https://songchunbo.github.io/post/primitive_poly/</guid>
       <description>本原多项式的生成方法
 暴力枚举所有的多项式，看看哪个多项式能生成一个有限域 // only support degree 63 typedef struct { uint64_t state; uint64_t taps; uint64_t ymask; } LFSR_T; /* Galois implementation of LFSR */ bool lfsr_step(LFSR_T *plfsr) { plfsr-&amp;gt;state &amp;lt;&amp;lt;= 1; // shift left  bool out = (plfsr-&amp;gt;state &amp;amp; plfsr-&amp;gt;ymask) !</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>https://songchunbo.github.io/post/3npacker_jiagu.png/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://songchunbo.github.io/post/3npacker_jiagu.png/</guid>
+      <description></description>
     </item>
     
     <item>
