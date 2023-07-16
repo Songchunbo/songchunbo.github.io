@@ -6,7 +6,17 @@
     <description>Recent content on 心在路上</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 15 Oct 2022 15:56:45 +0800</lastBuildDate><atom:link href="https://songchunbo.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Wed, 15 Mar 2023 20:25:09 +0800</lastBuildDate><atom:link href="https://songchunbo.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Android Packer</title>
+      <link>https://songchunbo.github.io/post/android_packer/</link>
+      <pubDate>Wed, 15 Mar 2023 20:25:09 +0800</pubDate>
+      
+      <guid>https://songchunbo.github.io/post/android_packer/</guid>
+      <description>第一代壳 一代壳，这是最早的Android加壳技术，其主要方法是将原始的.dex文件进行加密，然后在应用中添加一个新的类（通常称为&amp;quot;stub&amp;quot;或&amp;quot;loader&amp;quot;）来在运行时解密和加载这个.dex文件。这种方法可以有效防止静态分析，但对动态分析的防护较弱。
+ 一代壳通常会对整个DEX进行加密，并把加密后的Payload嵌到APK中    安卓APK资源混淆加密重签名工具    ApkProtector   第二代壳 第二代Android壳采取了更复杂的策略来对抗逆向工程。在这个阶段，Dex Method的代码会被提取并存放在外部，而原始Method中则填充nop（无操作）指令。当需要加载或执行method时，系统会动态地解密这些字节码。这个解密逻辑通常存放在so（共享对象）文件中。为了进一步提高安全性，so文件也会进行代码混淆，使得逆向工程变得更为困难。</description>
+    </item>
+    
     <item>
       <title>Android文件IO路径小记</title>
       <link>https://songchunbo.github.io/post/andorid_file_io/</link>
@@ -14,6 +24,17 @@
       
       <guid>https://songchunbo.github.io/post/andorid_file_io/</guid>
       <description>Android文件IO路径小记 1 open创建文件   bionic libc.</description>
+    </item>
+    
+    <item>
+      <title>APT Summary</title>
+      <link>https://songchunbo.github.io/post/apt_summary/</link>
+      <pubDate>Thu, 10 Feb 2022 15:56:45 +0800</pubDate>
+      
+      <guid>https://songchunbo.github.io/post/apt_summary/</guid>
+      <description>&lt;h3 id=&#34;apt-c-01&#34;&gt;APT-C-01&lt;/h3&gt;
+&lt;p&gt;毒云藤，又名绿斑、APT-C-01等，是一个长期针对国内国防、政府、科技和教育领域的重要机构实施网络间谍攻击活动的APT团伙，最早可以追溯到2007年。该组织惯用鱼叉式钓鱼网络攻击，会选取与攻击目标贴合的诱饵内容进行攻击活动，惯用的主题包括通知、会议材料、研究报告等或是采用攻击时间段时事主题。除了附件投递木马外，毒云藤还惯用钓鱼网站钓鱼，窃取目标的账户密码，进而获得更多重要信息。该组织主要关注方向包括：海事、军工、涉台两岸关系、中美关系等。
+别名： APT-C-01、GreenSpot、毒云藤、绿斑、穷奇、白海豚&lt;/p&gt;</description>
     </item>
     
     <item>

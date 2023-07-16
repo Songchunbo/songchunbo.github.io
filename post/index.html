@@ -74,6 +74,25 @@
     <article class="post">
         <header>
             <h1 class="post-title">
+                <a href="https://songchunbo.github.io/post/android_packer/" title="Android Packer">Android Packer</a>
+            </h1>
+        </header>
+        <date class="post-meta meta-date">
+            2023年3月15日
+        </date>
+        
+        <div class="post-content">
+            第一代壳 一代壳，这是最早的Android加壳技术，其主要方法是将原始的.dex文件进行加密，然后在应用中添加一个新的类（通常称为&quot;stub&quot;或&quot;loader&quot;）来在运行时解密和加载这个.dex文件。这种方法可以有效防止静态分析，但对动态分析的防护较弱。
+ 一代壳通常会对整个DEX进行加密，并把加密后的Payload嵌到APK中    安卓APK资源混淆加密重签名工具    ApkProtector   第二代壳 第二代Android壳采取了更复杂的策略来对抗逆向工程。在这个阶段，Dex Method的代码会被提取并存放在外部，而原始Method中则填充nop（无操作）指令。当需要加载或执行method时，系统会动态地解密这些字节码。这个解密逻辑通常存放在so（共享对象）文件中。为了进一步提高安全性，so文件也会进行代码混淆，使得逆向工程变得更为困难。……
+        </div>
+        <p class="readmore"><a href="https://songchunbo.github.io/post/android_packer/">阅读全文</a></p>
+    </article>
+    
+    
+    
+    <article class="post">
+        <header>
+            <h1 class="post-title">
                 <a href="https://songchunbo.github.io/post/andorid_file_io/" title="Android文件IO路径小记">Android文件IO路径小记</a>
             </h1>
         </header>
@@ -85,6 +104,26 @@
             Android文件IO路径小记 1 open创建文件   bionic libc.……
         </div>
         <p class="readmore"><a href="https://songchunbo.github.io/post/andorid_file_io/">阅读全文</a></p>
+    </article>
+    
+    
+    
+    <article class="post">
+        <header>
+            <h1 class="post-title">
+                <a href="https://songchunbo.github.io/post/apt_summary/" title="APT Summary">APT Summary</a>
+            </h1>
+        </header>
+        <date class="post-meta meta-date">
+            2022年2月10日
+        </date>
+        
+        <div class="post-content">
+            <h3 id="apt-c-01">APT-C-01</h3>
+<p>毒云藤，又名绿斑、APT-C-01等，是一个长期针对国内国防、政府、科技和教育领域的重要机构实施网络间谍攻击活动的APT团伙，最早可以追溯到2007年。该组织惯用鱼叉式钓鱼网络攻击，会选取与攻击目标贴合的诱饵内容进行攻击活动，惯用的主题包括通知、会议材料、研究报告等或是采用攻击时间段时事主题。除了附件投递木马外，毒云藤还惯用钓鱼网站钓鱼，窃取目标的账户密码，进而获得更多重要信息。该组织主要关注方向包括：海事、军工、涉台两岸关系、中美关系等。
+别名： APT-C-01、GreenSpot、毒云藤、绿斑、穷奇、白海豚</p>……
+        </div>
+        <p class="readmore"><a href="https://songchunbo.github.io/post/apt_summary/">阅读全文</a></p>
     </article>
     
     
@@ -218,26 +257,28 @@
     
     
     
-    <article class="post">
-        <header>
-            <h1 class="post-title">
-                <a href="https://songchunbo.github.io/post/3npacker_jiagu.png/" title=""></a>
-            </h1>
-        </header>
-        <date class="post-meta meta-date">
-            1年1月1日
-        </date>
-        
-        <div class="post-content">
-            ……
-        </div>
-        <p class="readmore"><a href="https://songchunbo.github.io/post/3npacker_jiagu.png/">阅读全文</a></p>
-    </article>
-    
-    
-    
 
 
+
+<ol class="page-navigator">
+    
+
+    
+    <li  class="current">
+        <a href="https://songchunbo.github.io/post/">1</a>
+    </li>
+    
+    <li >
+        <a href="https://songchunbo.github.io/post/page/2/">2</a>
+    </li>
+    
+
+    
+    <li class="next">
+        <a href="https://songchunbo.github.io/post/page/2/">下一页</a>
+    </li>
+    
+</ol>
 
 
 
@@ -289,7 +330,15 @@
 <ul class="widget-list">
     
     <li>
+        <a href="https://songchunbo.github.io/post/android_packer/" title="Android Packer">Android Packer</a>
+    </li>
+    
+    <li>
         <a href="https://songchunbo.github.io/post/andorid_file_io/" title="Android文件IO路径小记">Android文件IO路径小记</a>
+    </li>
+    
+    <li>
+        <a href="https://songchunbo.github.io/post/apt_summary/" title="APT Summary">APT Summary</a>
     </li>
     
     <li>
@@ -318,10 +367,6 @@
     
     <li>
         <a href="https://songchunbo.github.io/post/primitive_poly/" title="本原多项式的生成方法">本原多项式的生成方法</a>
-    </li>
-    
-    <li>
-        <a href="https://songchunbo.github.io/post/3npacker_jiagu.png/" title=""></a>
     </li>
     
 </ul>

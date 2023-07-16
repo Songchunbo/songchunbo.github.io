@@ -7,20 +7,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
 
-    <title>X86 and ARM Call Convention | 心在路上</title>
-    <meta property="og:title" content="X86 and ARM Call Convention - 心在路上">
+    <title>APT Summary | 心在路上</title>
+    <meta property="og:title" content="APT Summary - 心在路上">
     <meta property="og:type" content="article">
         
-    <meta property="article:published_time" content='2020-08-10T16:02:03&#43;08:00'>
+    <meta property="article:published_time" content='2022-02-10T15:56:45&#43;08:00'>
         
         
-    <meta property="article:modified_time" content='2020-08-10T16:02:03&#43;08:00'>
+    <meta property="article:modified_time" content='2022-02-10T15:56:45&#43;08:00'>
         
     <meta name="Keywords" content="">
-    <meta name="description" content="X86 and ARM Call Convention">
+    <meta name="description" content="APT Summary">
         
     <meta name="author" content="心在路上">
-    <meta property="og:url" content="https://songchunbo.github.io/post/x86_arm_callconvention/">
+    <meta property="og:url" content="https://songchunbo.github.io/post/apt_summary/">
     <link rel="shortcut icon" href='/favicon.ico'  type="image/x-icon">
 
     <link rel="stylesheet" href='/css/normalize.css'>
@@ -75,136 +75,42 @@
     
     <article class="post">
         <header>
-            <h1 class="post-title">X86 and ARM Call Convention</h1>
+            <h1 class="post-title">APT Summary</h1>
         </header>
         <date class="post-meta meta-date">
-            2020年8月10日
+            2022年2月10日
         </date>
         
         
         
         <div class="post-content">
-            <ul>
-<li>
-<p>ARM64 call convention</p>
-<p><a href="https://android.googlesource.com/platform/art/+/refs/tags/android-11.0.0_r35/runtime/interpreter/mterp/arm64/main.S">https://android.googlesource.com/platform/art/+/refs/tags/android-11.0.0_r35/runtime/interpreter/mterp/arm64/main.S</a></p>
-<pre tabindex="0"><code>/*
-ARM64 Runtime register usage conventions.
-  r0     : w0 is 32-bit return register and x0 is 64-bit.
-  r0-r7  : Argument registers.
-  r8-r15 : Caller save registers (used as temporary registers).
-  r16-r17: Also known as ip0-ip1, respectively. Used as scratch registers by
-           the linker, by the trampolines and other stubs (the backend uses
-           these as temporary registers).
-  r18    : Caller save register (used as temporary register).
-  r19    : Pointer to thread-local storage.
-  r20-r29: Callee save registers.
-  r30    : (lr) is reserved (the link register).
-  rsp    : (sp) is reserved (the stack pointer).
-  rzr    : (zr) is reserved (the zero register).
-  Floating-point registers
-  v0-v31
-  v0     : s0 is return register for singles (32-bit) and d0 for doubles (64-bit).
-           This is analogous to the C/C++ (hard-float) calling convention.
-  v0-v7  : Floating-point argument registers in both Dalvik and C/C++ conventions.
-           Also used as temporary and codegen scratch registers.
-  v0-v7 and v16-v31 : trashed across C calls.
-  v8-v15 : bottom 64-bits preserved across C calls (d8-d15 are preserved).
-  v16-v31: Used as codegen temp/scratch.
-  v8-v15 : Can be used for promotion.
-  Must maintain 16-byte stack alignment.
-Mterp notes:
-The following registers have fixed assignments:
-  reg nick      purpose
-  x20  xPC       interpreted program counter, used for fetching instructions
-  x21  xFP       interpreted frame pointer, used for accessing locals and args
-  x22  xSELF     self (Thread) pointer
-  x23  xINST     first 16-bit code unit of current instruction
-  x24  xIBASE    interpreted instruction base pointer, used for computed goto
-  x25  xREFS     base of object references in shadow frame  (ideally, we'll get rid of this later).
-  x26  wPROFILE  jit profile hotness countdown
-  x16  ip        scratch reg
-  x17  ip2       scratch reg (used by macros)
-Macros are provided for common operations.  They MUST NOT alter unspecified registers or condition
-codes.
-*/
-</code></pre></li>
-<li>
-<p>ARM call convention</p>
-<p><a href="https://android.googlesource.com/platform/art/+/refs/tags/android-11.0.0_r35/runtime/interpreter/mterp/arm/main.S">https://android.googlesource.com/platform/art/+/refs/tags/android-11.0.0_r35/runtime/interpreter/mterp/arm/main.S</a></p>
-<pre tabindex="0"><code>/*
-ARM EABI general notes:
-r0-r3 hold first 4 args to a method; they are not preserved across method calls
-r4-r8 are available for general use
-r9 is given special treatment in some situations, but not for us
-r10 (sl) seems to be generally available
-r11 (fp) is used by gcc (unless -fomit-frame-pointer is set)
-r12 (ip) is scratch -- not preserved across method calls
-r13 (sp) should be managed carefully in case a signal arrives
-r14 (lr) must be preserved
-r15 (pc) can be tinkered with directly
-r0 holds returns of &lt;= 4 bytes
-r0-r1 hold returns of 8 bytes, low word in r0
-Callee must save/restore r4+ (except r12) if it modifies them.  If VFP
-is present, registers s16-s31 (a/k/a d8-d15, a/k/a q4-q7) must be preserved,
-s0-s15 (d0-d7, q0-a3) do not need to be.
-Stack is &quot;full descending&quot;.  Only the arguments that don't fit in the first 4
-registers are placed on the stack.  &quot;sp&quot; points at the first stacked argument
-(i.e. the 5th arg).
-VFP: single-precision results in s0, double-precision results in d0.
-In the EABI, &quot;sp&quot; must be 64-bit aligned on entry to a function, and any
-64-bit quantities (long long, double) must be 64-bit aligned.
-*/
-</code></pre></li>
-<li>
-<p>X86 call convention</p>
-<p><a href="https://android.googlesource.com/platform/art/+/refs/tags/android-11.0.0_r35/runtime/interpreter/mterp/x86/main.S">https://android.googlesource.com/platform/art/+/refs/tags/android-11.0.0_r35/runtime/interpreter/mterp/x86/main.S</a></p>
-<pre tabindex="0"><code>/*
-x86 ABI general notes:
-Caller save set:
-   eax, edx, ecx, st(0)-st(7)
-Callee save set:
-   ebx, esi, edi, ebp
-Return regs:
-   32-bit in eax
-   64-bit in edx:eax (low-order 32 in eax)
-   fp on top of fp stack st(0)
-Parameters passed on stack, pushed right-to-left.  On entry to target, first
-parm is at 4(%esp).  Traditional entry code is:
-functEntry:
-    push    %ebp             # save old frame pointer
-    mov     %ebp,%esp        # establish new frame pointer
-    sub     FrameSize,%esp   # Allocate storage for spill, locals &amp; outs
-Once past the prologue, arguments are referenced at ((argno + 2)*4)(%ebp)
-Stack must be 16-byte aligned to support SSE in native code.
-If we're not doing variable stack allocation (alloca), the frame pointer can be
-eliminated and all arg references adjusted to be esp relative.
-*/
-</code></pre></li>
-<li>
-<p>X86_64 call convention</p>
-<p><a href="https://android.googlesource.com/platform/art/+/refs/tags/android-11.0.0_r35/runtime/interpreter/mterp/x86_64/main.S">https://android.googlesource.com/platform/art/+/refs/tags/android-11.0.0_r35/runtime/interpreter/mterp/x86_64/main.S</a></p>
-<pre tabindex="0"><code>/*
-x86_64 ABI general notes:
-Caller save set:
-   rax, rdx, rcx, rsi, rdi, r8-r11, st(0)-st(7)
-Callee save set:
-   rbx, rbp, r12-r15
-Return regs:
-   32-bit in eax
-   64-bit in rax
-   fp on xmm0
-First 8 fp parameters came in xmm0-xmm7.
-First 6 non-fp parameters came in rdi, rsi, rdx, rcx, r8, r9.
-Other parameters passed on stack, pushed right-to-left.  On entry to target, first
-param is at 8(%esp).  Traditional entry code is:
-Stack must be 16-byte aligned to support SSE in native code.
-If we're not doing variable stack allocation (alloca), the frame pointer can be
-eliminated and all arg references adjusted to be esp relative.
-*/
-</code></pre></li>
-</ul>
-
+            <h3 id="apt-c-01">APT-C-01</h3>
+<p>毒云藤，又名绿斑、APT-C-01等，是一个长期针对国内国防、政府、科技和教育领域的重要机构实施网络间谍攻击活动的APT团伙，最早可以追溯到2007年。该组织惯用鱼叉式钓鱼网络攻击，会选取与攻击目标贴合的诱饵内容进行攻击活动，惯用的主题包括通知、会议材料、研究报告等或是采用攻击时间段时事主题。除了附件投递木马外，毒云藤还惯用钓鱼网站钓鱼，窃取目标的账户密码，进而获得更多重要信息。该组织主要关注方向包括：海事、军工、涉台两岸关系、中美关系等。
+别名： APT-C-01、GreenSpot、毒云藤、绿斑、穷奇、白海豚</p>
+<p>归属地： 中国台湾</p>
+<h3 id="apt-c-12">APT-C-12</h3>
+<p>蓝宝菇
+蓝宝菇（BlueMushroom）组织，2018年才被披露，其从2011年开始就针对我国政府、军工、科研、金融、教育等重点单位和部门进行网络间谍活动，比较关注工业和科研领域，攻击对象主要都集中在中国大陆境内。
+别名： BlueMushroom、APT-C-12、核危机、蓝宝菇</p>
+<h3 id="apt-c-09">APT-C-09</h3>
+<p>白象
+Patchwork组织， 是一个来自于南亚地区的境外APT组织。该组织最早由Norman安全公司于2013年曝光，随后又有其他安全厂商持续追踪并披露该组织的最新活动，但该组织并未由于相关攻击行动曝光而停止对相关目标的攻击。白象APT组织主要针对中国、巴基斯坦等亚洲地区国家进行网络间谍活动，其中以窃取敏感信息为主.相关攻击活动最早可以追溯到2009年11月，至今还非常活跃.在针对中国地区的攻击中，该组织主要针对政府机构、科研教育领域进行攻击，其中以科研教育领域为主。
+别名： Patchwork、Dropping Elephant、Chinastrats、APT-C-09、Monsoon、Quilted Tiger、ATK 11、白象、摩诃草、Hangover
+归属地： 印度
+标签： 信息窃取与间谍活动
+涉及行业： 航空、国防、能源行业、金融行业、政府、IT行业、媒体行业、非政府组织、制药、智囊团</p>
+<h3 id="apt-c-39">APT-C-39</h3>
+<p>APT-C-39，美国中央情报局(CIA)背景，对我国进行的长达十一年的网络攻击渗透，我国航空航天、科研机构、石油行业、大型互联网公司以及政府机构等多个单位均受到影响。其核心武器文件使用了维基解密曝光的美国中央情报局CIA网络情报中心的文件中的“Vault7（穹窿7）”项目。
+别名： Longhorn、The Lamberts、APT-C-39
+归属地： 美国
+标签： 信息窃取与间谍活动
+涉及行业： 航天、航空、教育行业、能源行业、金融行业、政府、IT行业、石油天然气、科研、通信行业</p>
+<h3 id="confucius">Confucius</h3>
+<p>Confucius是一个印度背景的APT组织，攻击活动最早可追溯到2013年，主要针对南亚各国的政府、军事等行业目标进行攻击。该组织在恶意代码和基础设施上与Patchwork存在重叠，但目标侧重有所不同。
+别名： Confucius
+归属地： 印度
+标签： 信息窃取与间谍活动</p>
+<p><a href="https://www.trendmicro.com/en_us/research/18/e/confucius-update-new-tools-and-techniques-further-connections-with-patchwork.html">https://www.trendmicro.com/en_us/research/18/e/confucius-update-new-tools-and-techniques-further-connections-with-patchwork.html</a></p>
         </div>
 
         
