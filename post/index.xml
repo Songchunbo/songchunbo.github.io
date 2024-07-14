@@ -4,113 +4,93 @@
     <title>Posts on 心在路上</title>
     <link>https://songchunbo.github.io/post/</link>
     <description>Recent content in Posts on 心在路上</description>
-    <generator>Hugo -- gohugo.io</generator>
+    <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 15 Mar 2023 20:25:09 +0800</lastBuildDate><atom:link href="https://songchunbo.github.io/post/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sun, 14 Jul 2024 16:59:44 +0800</lastBuildDate>
+    <atom:link href="https://songchunbo.github.io/post/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title> OpenSSL 源码分析（一） </title>
+      <link>https://songchunbo.github.io/post/openssl_tls/</link>
+      <pubDate>Sun, 14 Jul 2024 16:59:44 +0800</pubDate>
+      <guid>https://songchunbo.github.io/post/openssl_tls/</guid>
+      <description>最近需要做一些加解密的事情，简单分析了一下TLS安全机制在OpenSSL中的实现，记录一下。&#xA;1. TLS 安全机制介绍 TLS（传输层安全协议）是一种用于在互联网上进行安全通信的协议。它通过加密和身份验证来保护数据传输的安全性，它的主要功能包括：</description>
+    </item>
     <item>
       <title>Android Packer</title>
       <link>https://songchunbo.github.io/post/android_packer/</link>
       <pubDate>Wed, 15 Mar 2023 20:25:09 +0800</pubDate>
-      
       <guid>https://songchunbo.github.io/post/android_packer/</guid>
-      <description>第一代壳 一代壳，这是最早的Android加壳技术，其主要方法是将原始的.dex文件进行加密，然后在应用中添加一个新的类（通常称为&amp;quot;stub&amp;quot;或&amp;quot;loader&amp;quot;）来在运行时解密和加载这个.dex文件。这种方法可以有效防止静态分析，但对动态分析的防护较弱。
- 一代壳通常会对整个DEX进行加密，并把加密后的Payload嵌到APK中    安卓APK资源混淆加密重签名工具    ApkProtector   第二代壳 第二代Android壳采取了更复杂的策略来对抗逆向工程。在这个阶段，Dex Method的代码会被提取并存放在外部，而原始Method中则填充nop（无操作）指令。当需要加载或执行method时，系统会动态地解密这些字节码。这个解密逻辑通常存放在so（共享对象）文件中。为了进一步提高安全性，so文件也会进行代码混淆，使得逆向工程变得更为困难。</description>
+      <description>第一代壳 一代壳，这是最早的Android加壳技术，其主要方法是将原始的.dex文件进行加密，然后在应用中添加一个新的类（通常称为&amp;quot;stub&amp;quot;或&amp;quot;loader&amp;quot;）来在运行时解密和加载这个.dex文件。这种方法可以有效防止静态分析，但对动态分析的防护较弱。&#xA;一代壳通常会对整个DEX进行加密，并把加密后的Payload嵌到APK中 安卓APK资源混淆加密重签名工具 ApkProtector 第二代壳 第二代Android壳采取了更复杂的策略来对抗逆向工程。在这个阶段，Dex Method的代码会被提取并存放在外部，而原始Method中则填充nop（无操作）指令。当需要加载或执行method时，系统会动态地解密这些字节码。这个解密逻辑通常存放在so（共享对象）文件中。为了进一步提高安全性，so文件也会进行代码混淆，使得逆向工程变得更为困难。</description>
     </item>
-    
     <item>
       <title>Android文件IO路径小记</title>
       <link>https://songchunbo.github.io/post/andorid_file_io/</link>
       <pubDate>Sat, 15 Oct 2022 15:56:45 +0800</pubDate>
-      
       <guid>https://songchunbo.github.io/post/andorid_file_io/</guid>
-      <description>Android文件IO路径小记 1 open创建文件   bionic libc.</description>
+      <description>Android文件IO路径小记 1 open创建文件 bionic libc. bionic/libc/bionic/open.</description>
     </item>
-    
     <item>
       <title>APT Summary</title>
       <link>https://songchunbo.github.io/post/apt_summary/</link>
       <pubDate>Thu, 10 Feb 2022 15:56:45 +0800</pubDate>
-      
       <guid>https://songchunbo.github.io/post/apt_summary/</guid>
-      <description>&lt;h3 id=&#34;apt-c-01&#34;&gt;APT-C-01&lt;/h3&gt;
-&lt;p&gt;毒云藤，又名绿斑、APT-C-01等，是一个长期针对国内国防、政府、科技和教育领域的重要机构实施网络间谍攻击活动的APT团伙，最早可以追溯到2007年。该组织惯用鱼叉式钓鱼网络攻击，会选取与攻击目标贴合的诱饵内容进行攻击活动，惯用的主题包括通知、会议材料、研究报告等或是采用攻击时间段时事主题。除了附件投递木马外，毒云藤还惯用钓鱼网站钓鱼，窃取目标的账户密码，进而获得更多重要信息。该组织主要关注方向包括：海事、军工、涉台两岸关系、中美关系等。
-别名： APT-C-01、GreenSpot、毒云藤、绿斑、穷奇、白海豚&lt;/p&gt;</description>
+      <description>&lt;h3 id=&#34;apt-c-01&#34;&gt;APT-C-01&lt;/h3&gt;&#xA;&lt;p&gt;毒云藤，又名绿斑、APT-C-01等，是一个长期针对国内国防、政府、科技和教育领域的重要机构实施网络间谍攻击活动的APT团伙，最早可以追溯到2007年。该组织惯用鱼叉式钓鱼网络攻击，会选取与攻击目标贴合的诱饵内容进行攻击活动，惯用的主题包括通知、会议材料、研究报告等或是采用攻击时间段时事主题。除了附件投递木马外，毒云藤还惯用钓鱼网站钓鱼，窃取目标的账户密码，进而获得更多重要信息。该组织主要关注方向包括：海事、军工、涉台两岸关系、中美关系等。&#xA;别名： APT-C-01、GreenSpot、毒云藤、绿斑、穷奇、白海豚&lt;/p&gt;</description>
     </item>
-    
     <item>
       <title>Dart VM源码分析之CFE</title>
       <link>https://songchunbo.github.io/post/dart_vm_lex_syntax/</link>
       <pubDate>Tue, 14 Sep 2021 09:57:43 +0800</pubDate>
-      
       <guid>https://songchunbo.github.io/post/dart_vm_lex_syntax/</guid>
       <description>CFE全称Common Front End, 主要把负责dart源码翻译成kernel AST，中间会经过词法分析，语法分析和语义分析，最终把分析结果写入dill文件，CFE使用Dart开发的，运行在kernel isolate中，由于生成的dill与平台无关，在x86上生成的dill在arm平台上可以加载运行</description>
     </item>
-    
     <item>
       <title>Dart VM源码分析之编译dill</title>
       <link>https://songchunbo.github.io/post/dart_vm_how_compile_works/</link>
       <pubDate>Sun, 12 Sep 2021 20:37:39 +0800</pubDate>
-      
       <guid>https://songchunbo.github.io/post/dart_vm_how_compile_works/</guid>
-      <description>Dart VM是运行dart的虚拟机，由多个isolate组成，每个isolate提供dart的运行环境，类似Android/ART中Zygote提供的Java运行环境，Dart VM包含下面几个重要的isolate
-一、Dart VM概述 Dart VM是运行dart的虚拟机，由多个isolate组成，每个isolate提供dart的运行环境，类似Android/ART中Zygote提供的Java运行环境，Dart VM包含下面几个重要的isolate</description>
+      <description>Dart VM是运行dart的虚拟机，由多个isolate组成，每个isolate提供dart的运行环境，类似Android/ART中Zygote提供的Java运行环境，Dart VM包含下面几个重要的isolate&#xA;一、Dart VM概述 Dart VM是运行dart的虚拟机，由多个isolate组成，每个isolate提供dart的运行环境，类似Android/ART中Zygote提供的Java运行环境，Dart VM包含下面几个重要的isolate</description>
     </item>
-    
     <item>
       <title>Dart VM命令行工具</title>
       <link>https://songchunbo.github.io/post/dart_vm_quick_start/</link>
       <pubDate>Fri, 10 Sep 2021 15:30:24 +0800</pubDate>
-      
       <guid>https://songchunbo.github.io/post/dart_vm_quick_start/</guid>
-      <description>Dart命令支持JIT和AOT模式 1. JIT模式支持两种方式，   直接在dart VM中运行dart source code</description>
+      <description>Dart命令支持JIT和AOT模式 1. JIT模式支持两种方式， 直接在dart VM中运行dart source code</description>
     </item>
-    
     <item>
       <title>ART Commit History</title>
       <link>https://songchunbo.github.io/post/art_commit_history/</link>
       <pubDate>Wed, 16 Dec 2020 15:55:19 +0800</pubDate>
-      
       <guid>https://songchunbo.github.io/post/art_commit_history/</guid>
       <description>1 runtime雏形 ART inital code</description>
     </item>
-    
     <item>
       <title>X86 and ARM Call Convention</title>
       <link>https://songchunbo.github.io/post/x86_arm_callconvention/</link>
       <pubDate>Mon, 10 Aug 2020 16:02:03 +0800</pubDate>
-      
       <guid>https://songchunbo.github.io/post/x86_arm_callconvention/</guid>
-      <description>ARM64 call convention</description>
+      <description>ARM64 call convention&#xA;https://android.googlesource.com/platform/art/+/refs/tags/android-11.0.0_r35/runtime/interpreter/mterp/arm64/main.S</description>
     </item>
-    
     <item>
       <title>纠删码基础知识</title>
       <link>https://songchunbo.github.io/post/galois_math/</link>
       <pubDate>Sun, 03 Sep 2017 18:10:00 +0800</pubDate>
-      
       <guid>https://songchunbo.github.io/post/galois_math/</guid>
-      <description>RS纠删码算法实现需要伽罗瓦域和矩阵的一些知识。
-1 伽罗瓦域的四则运算 提到伽罗瓦域（也称有限域），不得不提一嘴伽罗瓦Évariste Galois，非常传奇的一位法国天才数学家，现代数学群论的创立者，人们称之为伽罗瓦理论，21岁时死于一次决斗，关于伽罗域的基本概念和理论，可以参考《古典数学难题与伽罗瓦理论》。</description>
+      <description>RS纠删码算法实现需要伽罗瓦域和矩阵的一些知识。&#xA;1 伽罗瓦域的四则运算 提到伽罗瓦域（也称有限域），不得不提一嘴伽罗瓦Évariste Galois，非常传奇的一位法国天才数学家，现代数学群论的创立者，人们称之为伽罗瓦理论，21岁时死于一次决斗，关于伽罗域的基本概念和理论，可以参考《古典数学难题与伽罗瓦理论》。</description>
     </item>
-    
     <item>
       <title>本原多项式的生成方法</title>
       <link>https://songchunbo.github.io/post/primitive_poly/</link>
       <pubDate>Wed, 23 Aug 2017 10:29:02 +0800</pubDate>
-      
       <guid>https://songchunbo.github.io/post/primitive_poly/</guid>
-      <description>本原多项式的生成方法
-暴力枚举所有的多项式，看看哪个多项式能生成一个有限域 // only support degree 63 typedef struct { uint64_t state; uint64_t taps; uint64_t ymask; } LFSR_T; /* Galois implementation of LFSR */ bool lfsr_step(LFSR_T *plfsr) { plfsr-&amp;gt;state &amp;lt;&amp;lt;= 1; // shift left  bool out = (plfsr-&amp;gt;state &amp;amp; plfsr-&amp;gt;ymask) !</description>
+      <description>本原多项式的生成方法&#xA;暴力枚举所有的多项式，看看哪个多项式能生成一个有限域 // only support degree 63 typedef struct { uint64_t state; uint64_t taps; uint64_t ymask; } LFSR_T; /* Galois implementation of LFSR */ bool lfsr_step(LFSR_T *plfsr) { plfsr-&amp;gt;state &amp;lt;&amp;lt;= 1; // shift left bool out = (plfsr-&amp;gt;state &amp;amp; plfsr-&amp;gt;ymask) !</description>
     </item>
-    
     <item>
       <title></title>
       <link>https://songchunbo.github.io/post/3npacker_jiagu.png/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
       <guid>https://songchunbo.github.io/post/3npacker_jiagu.png/</guid>
       <description></description>
     </item>
-    
   </channel>
 </rss>

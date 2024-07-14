@@ -121,7 +121,7 @@ The following registers have fixed assignments:
   x22  xSELF     self (Thread) pointer
   x23  xINST     first 16-bit code unit of current instruction
   x24  xIBASE    interpreted instruction base pointer, used for computed goto
-  x25  xREFS     base of object references in shadow frame  (ideally, we'll get rid of this later).
+  x25  xREFS     base of object references in shadow frame  (ideally, we&#39;ll get rid of this later).
   x26  wPROFILE  jit profile hotness countdown
   x16  ip        scratch reg
   x17  ip2       scratch reg (used by macros)
@@ -148,11 +148,11 @@ r0-r1 hold returns of 8 bytes, low word in r0
 Callee must save/restore r4+ (except r12) if it modifies them.  If VFP
 is present, registers s16-s31 (a/k/a d8-d15, a/k/a q4-q7) must be preserved,
 s0-s15 (d0-d7, q0-a3) do not need to be.
-Stack is &quot;full descending&quot;.  Only the arguments that don't fit in the first 4
-registers are placed on the stack.  &quot;sp&quot; points at the first stacked argument
+Stack is &#34;full descending&#34;.  Only the arguments that don&#39;t fit in the first 4
+registers are placed on the stack.  &#34;sp&#34; points at the first stacked argument
 (i.e. the 5th arg).
 VFP: single-precision results in s0, double-precision results in d0.
-In the EABI, &quot;sp&quot; must be 64-bit aligned on entry to a function, and any
+In the EABI, &#34;sp&#34; must be 64-bit aligned on entry to a function, and any
 64-bit quantities (long long, double) must be 64-bit aligned.
 */
 </code></pre></li>
@@ -177,7 +177,7 @@ functEntry:
     sub     FrameSize,%esp   # Allocate storage for spill, locals &amp; outs
 Once past the prologue, arguments are referenced at ((argno + 2)*4)(%ebp)
 Stack must be 16-byte aligned to support SSE in native code.
-If we're not doing variable stack allocation (alloca), the frame pointer can be
+If we&#39;re not doing variable stack allocation (alloca), the frame pointer can be
 eliminated and all arg references adjusted to be esp relative.
 */
 </code></pre></li>
@@ -199,7 +199,7 @@ First 6 non-fp parameters came in rdi, rsi, rdx, rcx, r8, r9.
 Other parameters passed on stack, pushed right-to-left.  On entry to target, first
 param is at 8(%esp).  Traditional entry code is:
 Stack must be 16-byte aligned to support SSE in native code.
-If we're not doing variable stack allocation (alloca), the frame pointer can be
+If we&#39;re not doing variable stack allocation (alloca), the frame pointer can be
 eliminated and all arg references adjusted to be esp relative.
 */
 </code></pre></li>
@@ -238,7 +238,7 @@ eliminated and all arg references adjusted to be esp relative.
 
                     <footer id="footer">
     <div>
-        &copy; 2023 <a href="https://songchunbo.github.io/">心在路上 By 心在路上</a>
+        &copy; 2024 <a href="https://songchunbo.github.io/">心在路上 By 心在路上</a>
         
     </div>
     <br />
@@ -292,6 +292,10 @@ eliminated and all arg references adjusted to be esp relative.
 <ul class="widget-list">
     
     <li>
+        <a href="https://songchunbo.github.io/post/openssl_tls/" title=" OpenSSL 源码分析（一） "> OpenSSL 源码分析（一） </a>
+    </li>
+    
+    <li>
         <a href="https://songchunbo.github.io/post/android_packer/" title="Android Packer">Android Packer</a>
     </li>
     
@@ -325,10 +329,6 @@ eliminated and all arg references adjusted to be esp relative.
     
     <li>
         <a href="https://songchunbo.github.io/post/galois_math/" title="纠删码基础知识">纠删码基础知识</a>
-    </li>
-    
-    <li>
-        <a href="https://songchunbo.github.io/post/primitive_poly/" title="本原多项式的生成方法">本原多项式的生成方法</a>
     </li>
     
 </ul>

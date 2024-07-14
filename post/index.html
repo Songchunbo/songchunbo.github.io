@@ -74,6 +74,25 @@
     <article class="post">
         <header>
             <h1 class="post-title">
+                <a href="https://songchunbo.github.io/post/openssl_tls/" title=" OpenSSL 源码分析（一） "> OpenSSL 源码分析（一） </a>
+            </h1>
+        </header>
+        <date class="post-meta meta-date">
+            2024年7月14日
+        </date>
+        
+        <div class="post-content">
+            最近需要做一些加解密的事情，简单分析了一下TLS安全机制在OpenSSL中的实现，记录一下。
+1. TLS 安全机制介绍 TLS（传输层安全协议）是一种用于在互联网上进行安全通信的协议。它通过加密和身份验证来保护数据传输的安全性，它的主要功能包括：……
+        </div>
+        <p class="readmore"><a href="https://songchunbo.github.io/post/openssl_tls/">阅读全文</a></p>
+    </article>
+    
+    
+    
+    <article class="post">
+        <header>
+            <h1 class="post-title">
                 <a href="https://songchunbo.github.io/post/android_packer/" title="Android Packer">Android Packer</a>
             </h1>
         </header>
@@ -83,7 +102,7 @@
         
         <div class="post-content">
             第一代壳 一代壳，这是最早的Android加壳技术，其主要方法是将原始的.dex文件进行加密，然后在应用中添加一个新的类（通常称为&quot;stub&quot;或&quot;loader&quot;）来在运行时解密和加载这个.dex文件。这种方法可以有效防止静态分析，但对动态分析的防护较弱。
- 一代壳通常会对整个DEX进行加密，并把加密后的Payload嵌到APK中    安卓APK资源混淆加密重签名工具    ApkProtector   第二代壳 第二代Android壳采取了更复杂的策略来对抗逆向工程。在这个阶段，Dex Method的代码会被提取并存放在外部，而原始Method中则填充nop（无操作）指令。当需要加载或执行method时，系统会动态地解密这些字节码。这个解密逻辑通常存放在so（共享对象）文件中。为了进一步提高安全性，so文件也会进行代码混淆，使得逆向工程变得更为困难。……
+一代壳通常会对整个DEX进行加密，并把加密后的Payload嵌到APK中 安卓APK资源混淆加密重签名工具 ApkProtector 第二代壳 第二代Android壳采取了更复杂的策略来对抗逆向工程。在这个阶段，Dex Method的代码会被提取并存放在外部，而原始Method中则填充nop（无操作）指令。当需要加载或执行method时，系统会动态地解密这些字节码。这个解密逻辑通常存放在so（共享对象）文件中。为了进一步提高安全性，so文件也会进行代码混淆，使得逆向工程变得更为困难。……
         </div>
         <p class="readmore"><a href="https://songchunbo.github.io/post/android_packer/">阅读全文</a></p>
     </article>
@@ -101,7 +120,7 @@
         </date>
         
         <div class="post-content">
-            Android文件IO路径小记 1 open创建文件   bionic libc.……
+            Android文件IO路径小记 1 open创建文件 bionic libc. bionic/libc/bionic/open.……
         </div>
         <p class="readmore"><a href="https://songchunbo.github.io/post/andorid_file_io/">阅读全文</a></p>
     </article>
@@ -176,7 +195,7 @@
         </date>
         
         <div class="post-content">
-            Dart命令支持JIT和AOT模式 1. JIT模式支持两种方式，   直接在dart VM中运行dart source code……
+            Dart命令支持JIT和AOT模式 1. JIT模式支持两种方式， 直接在dart VM中运行dart source code……
         </div>
         <p class="readmore"><a href="https://songchunbo.github.io/post/dart_vm_quick_start/">阅读全文</a></p>
     </article>
@@ -212,7 +231,8 @@
         </date>
         
         <div class="post-content">
-            ARM64 call convention……
+            ARM64 call convention
+https://android.googlesource.com/platform/art/+/refs/tags/android-11.0.0_r35/runtime/interpreter/mterp/arm64/main.S……
         </div>
         <p class="readmore"><a href="https://songchunbo.github.io/post/x86_arm_callconvention/">阅读全文</a></p>
     </article>
@@ -234,25 +254,6 @@
 1 伽罗瓦域的四则运算 提到伽罗瓦域（也称有限域），不得不提一嘴伽罗瓦Évariste Galois，非常传奇的一位法国天才数学家，现代数学群论的创立者，人们称之为伽罗瓦理论，21岁时死于一次决斗，关于伽罗域的基本概念和理论，可以参考《古典数学难题与伽罗瓦理论》。……
         </div>
         <p class="readmore"><a href="https://songchunbo.github.io/post/galois_math/">阅读全文</a></p>
-    </article>
-    
-    
-    
-    <article class="post">
-        <header>
-            <h1 class="post-title">
-                <a href="https://songchunbo.github.io/post/primitive_poly/" title="本原多项式的生成方法">本原多项式的生成方法</a>
-            </h1>
-        </header>
-        <date class="post-meta meta-date">
-            2017年8月23日
-        </date>
-        
-        <div class="post-content">
-            本原多项式的生成方法
-暴力枚举所有的多项式，看看哪个多项式能生成一个有限域 // only support degree 63 typedef struct { uint64_t state; uint64_t taps; uint64_t ymask; } LFSR_T; /* Galois implementation of LFSR */ bool lfsr_step(LFSR_T *plfsr) { plfsr-&gt;state &lt;&lt;= 1; // shift left  bool out = (plfsr-&gt;state &amp; plfsr-&gt;ymask) !……
-        </div>
-        <p class="readmore"><a href="https://songchunbo.github.io/post/primitive_poly/">阅读全文</a></p>
     </article>
     
     
@@ -286,7 +287,7 @@
 
                     <footer id="footer">
     <div>
-        &copy; 2023 <a href="https://songchunbo.github.io/">心在路上 By 心在路上</a>
+        &copy; 2024 <a href="https://songchunbo.github.io/">心在路上 By 心在路上</a>
         
     </div>
     <br />
@@ -330,6 +331,10 @@
 <ul class="widget-list">
     
     <li>
+        <a href="https://songchunbo.github.io/post/openssl_tls/" title=" OpenSSL 源码分析（一） "> OpenSSL 源码分析（一） </a>
+    </li>
+    
+    <li>
         <a href="https://songchunbo.github.io/post/android_packer/" title="Android Packer">Android Packer</a>
     </li>
     
@@ -363,10 +368,6 @@
     
     <li>
         <a href="https://songchunbo.github.io/post/galois_math/" title="纠删码基础知识">纠删码基础知识</a>
-    </li>
-    
-    <li>
-        <a href="https://songchunbo.github.io/post/primitive_poly/" title="本原多项式的生成方法">本原多项式的生成方法</a>
     </li>
     
 </ul>

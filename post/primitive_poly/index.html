@@ -86,70 +86,69 @@
         <div class="post-content">
             <p>本原多项式的生成方法</p>
 <h3 id="暴力枚举所有的多项式看看哪个多项式能生成一个有限域">暴力枚举所有的多项式，看看哪个多项式能生成一个有限域</h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C++" data-lang="C++">
-<span style="color:#75715e">// only support  degree 63
-</span><span style="color:#75715e"></span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> {
-    <span style="color:#66d9ef">uint64_t</span> state;
-    <span style="color:#66d9ef">uint64_t</span> taps;
-    <span style="color:#66d9ef">uint64_t</span> ymask;
-} LFSR_T;
-
-<span style="color:#75715e">/* Galois implementation of LFSR */</span>
-<span style="color:#66d9ef">bool</span> <span style="color:#a6e22e">lfsr_step</span>(LFSR_T <span style="color:#f92672">*</span>plfsr)
-{
-    plfsr<span style="color:#f92672">-&gt;</span>state <span style="color:#f92672">&lt;&lt;=</span> <span style="color:#ae81ff">1</span>;    <span style="color:#75715e">// shift left
-</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">bool</span> out <span style="color:#f92672">=</span> (plfsr<span style="color:#f92672">-&gt;</span>state <span style="color:#f92672">&amp;</span> plfsr<span style="color:#f92672">-&gt;</span>ymask) <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span>; <span style="color:#75715e">// overflow and taps
-</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (out)
-    {
-        plfsr<span style="color:#f92672">-&gt;</span>state <span style="color:#f92672">^=</span> plfsr<span style="color:#f92672">-&gt;</span>taps;
-    }
-    <span style="color:#66d9ef">return</span> out;
-}
-
-
-<span style="color:#66d9ef">void</span> <span style="color:#a6e22e">lfsr_init</span>(LFSR_T <span style="color:#f92672">*</span>plfsr, <span style="color:#66d9ef">int</span> n, <span style="color:#66d9ef">int32_t</span> feedback_poly)
-{
-    plfsr<span style="color:#f92672">-&gt;</span>state <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
-    plfsr<span style="color:#f92672">-&gt;</span>taps  <span style="color:#f92672">=</span> feedback_poly;  <span style="color:#75715e">// feedback polynomial
-</span><span style="color:#75715e"></span>    plfsr<span style="color:#f92672">-&gt;</span>ymask <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">&lt;&lt;</span> n;
-}
-
-<span style="color:#75715e">//  traverse all degree n polynomial , use as lfsr feedback polynomial, and check the peroid of lfsr shit
-</span><span style="color:#75715e"></span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">gen_prim_poly</span>(<span style="color:#66d9ef">int</span> n) {
-
-    LFSR_T lfsr;
-
-    <span style="color:#66d9ef">uint64_t</span> limit <span style="color:#f92672">=</span> ((<span style="color:#ae81ff">1</span><span style="color:#f92672">&lt;&lt;</span>n)<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>);
-
-    <span style="color:#75715e">// check all polynomial except those like  (x^2 + x), in this case the polynomial is reducible with x.
-</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">uint64_t</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>; i <span style="color:#f92672">&lt;</span> limit; i <span style="color:#f92672">=</span> i <span style="color:#f92672">+</span> <span style="color:#ae81ff">2</span>) {
-
-        <span style="color:#66d9ef">uint64_t</span> peroid <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
-
-        <span style="color:#66d9ef">uint64_t</span> poly <span style="color:#f92672">=</span> i <span style="color:#f92672">|</span> (<span style="color:#ae81ff">1</span><span style="color:#f92672">&lt;&lt;</span>n);  <span style="color:#75715e">// all poly include (x^n + 1) item
-</span><span style="color:#75715e"></span>        lfsr_init(<span style="color:#f92672">&amp;</span>lfsr, n, poly);
-        <span style="color:#66d9ef">uint64_t</span> init_state <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
-        <span style="color:#66d9ef">do</span> {
-           <span style="color:#f92672">++</span>peroid;
-           lfsr_step(<span style="color:#f92672">&amp;</span>lfsr);
-        } <span style="color:#66d9ef">while</span> (init_state <span style="color:#f92672">!=</span> (lfsr.state));
-
-        <span style="color:#75715e">// if the peroid reaches max lenght 2^n - 1, the candidate polynomial is a primitive polynomial
-</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> (peroid <span style="color:#f92672">==</span> limit) {
-            printf ( <span style="color:#e6db74">&#34;pritimive poly :%d</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, i);
-        }
-    }
-
-}
-
-<span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">int</span> argc,<span style="color:#66d9ef">char</span> <span style="color:#f92672">**</span>argv)
-{
-    <span style="color:#66d9ef">int</span> degree <span style="color:#f92672">=</span> atoi(argv[<span style="color:#ae81ff">1</span>]);
-    gen_prim_poly(degree);
-    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
-}
-
-</code></pre></div><p>15次幂的本原多项式:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C++" data-lang="C++"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// only support  degree 63
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">uint64_t</span> state;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">uint64_t</span> taps;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">uint64_t</span> ymask;
+</span></span><span style="display:flex;"><span>} LFSR_T;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Galois implementation of LFSR */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">bool</span> <span style="color:#a6e22e">lfsr_step</span>(LFSR_T <span style="color:#f92672">*</span>plfsr)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    plfsr<span style="color:#f92672">-&gt;</span>state <span style="color:#f92672">&lt;&lt;=</span> <span style="color:#ae81ff">1</span>;    <span style="color:#75715e">// shift left
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">bool</span> out <span style="color:#f92672">=</span> (plfsr<span style="color:#f92672">-&gt;</span>state <span style="color:#f92672">&amp;</span> plfsr<span style="color:#f92672">-&gt;</span>ymask) <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span>; <span style="color:#75715e">// overflow and taps
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (out)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        plfsr<span style="color:#f92672">-&gt;</span>state <span style="color:#f92672">^=</span> plfsr<span style="color:#f92672">-&gt;</span>taps;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> out;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">lfsr_init</span>(LFSR_T <span style="color:#f92672">*</span>plfsr, <span style="color:#66d9ef">int</span> n, <span style="color:#66d9ef">int32_t</span> feedback_poly)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    plfsr<span style="color:#f92672">-&gt;</span>state <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>    plfsr<span style="color:#f92672">-&gt;</span>taps  <span style="color:#f92672">=</span> feedback_poly;  <span style="color:#75715e">// feedback polynomial
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    plfsr<span style="color:#f92672">-&gt;</span>ymask <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">&lt;&lt;</span> n;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//  traverse all degree n polynomial , use as lfsr feedback polynomial, and check the peroid of lfsr shit
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">gen_prim_poly</span>(<span style="color:#66d9ef">int</span> n) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    LFSR_T lfsr;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">uint64_t</span> limit <span style="color:#f92672">=</span> ((<span style="color:#ae81ff">1</span><span style="color:#f92672">&lt;&lt;</span>n)<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// check all polynomial except those like  (x^2 + x), in this case the polynomial is reducible with x.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">uint64_t</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>; i <span style="color:#f92672">&lt;</span> limit; i <span style="color:#f92672">=</span> i <span style="color:#f92672">+</span> <span style="color:#ae81ff">2</span>) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">uint64_t</span> peroid <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">uint64_t</span> poly <span style="color:#f92672">=</span> i <span style="color:#f92672">|</span> (<span style="color:#ae81ff">1</span><span style="color:#f92672">&lt;&lt;</span>n);  <span style="color:#75715e">// all poly include (x^n + 1) item
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        lfsr_init(<span style="color:#f92672">&amp;</span>lfsr, n, poly);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">uint64_t</span> init_state <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">do</span> {
+</span></span><span style="display:flex;"><span>           <span style="color:#f92672">++</span>peroid;
+</span></span><span style="display:flex;"><span>           lfsr_step(<span style="color:#f92672">&amp;</span>lfsr);
+</span></span><span style="display:flex;"><span>        } <span style="color:#66d9ef">while</span> (init_state <span style="color:#f92672">!=</span> (lfsr.state));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// if the peroid reaches max lenght 2^n - 1, the candidate polynomial is a primitive polynomial
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> (peroid <span style="color:#f92672">==</span> limit) {
+</span></span><span style="display:flex;"><span>            printf ( <span style="color:#e6db74">&#34;pritimive poly :%d</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, i);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">int</span> argc,<span style="color:#66d9ef">char</span> <span style="color:#f92672">**</span>argv)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> degree <span style="color:#f92672">=</span> atoi(argv[<span style="color:#ae81ff">1</span>]);
+</span></span><span style="display:flex;"><span>    gen_prim_poly(degree);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>15次幂的本原多项式:</p>
 <pre tabindex="0"><code>poly = 7: x^2 + x^1 + 1
 poly = 11: x^3 + x^1 + 1
 poly = 13: x^3 + x^2 + 1
@@ -3849,7 +3848,7 @@ poly = 49153: x^15 + x^14 + 1
 
                     <footer id="footer">
     <div>
-        &copy; 2023 <a href="https://songchunbo.github.io/">心在路上 By 心在路上</a>
+        &copy; 2024 <a href="https://songchunbo.github.io/">心在路上 By 心在路上</a>
         
     </div>
     <br />
@@ -3903,6 +3902,10 @@ poly = 49153: x^15 + x^14 + 1
 <ul class="widget-list">
     
     <li>
+        <a href="https://songchunbo.github.io/post/openssl_tls/" title=" OpenSSL 源码分析（一） "> OpenSSL 源码分析（一） </a>
+    </li>
+    
+    <li>
         <a href="https://songchunbo.github.io/post/android_packer/" title="Android Packer">Android Packer</a>
     </li>
     
@@ -3936,10 +3939,6 @@ poly = 49153: x^15 + x^14 + 1
     
     <li>
         <a href="https://songchunbo.github.io/post/galois_math/" title="纠删码基础知识">纠删码基础知识</a>
-    </li>
-    
-    <li>
-        <a href="https://songchunbo.github.io/post/primitive_poly/" title="本原多项式的生成方法">本原多项式的生成方法</a>
     </li>
     
 </ul>

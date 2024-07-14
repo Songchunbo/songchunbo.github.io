@@ -1,0 +1,937 @@
+<!doctype html>
+<html lang="en-us">
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+
+    <title> OpenSSL 源码分析（一）  | 心在路上</title>
+    <meta property="og:title" content=" OpenSSL 源码分析（一）  - 心在路上">
+    <meta property="og:type" content="article">
+        
+    <meta property="article:published_time" content='2024-07-14T16:59:44&#43;08:00'>
+        
+        
+    <meta property="article:modified_time" content='2024-07-14T16:59:44&#43;08:00'>
+        
+    <meta name="Keywords" content="">
+    <meta name="description" content=" OpenSSL 源码分析（一） ">
+        
+    <meta name="author" content="心在路上">
+    <meta property="og:url" content="https://songchunbo.github.io/post/openssl_tls/">
+    <link rel="shortcut icon" href='/favicon.ico'  type="image/x-icon">
+
+    <link rel="stylesheet" href='/css/normalize.css'>
+    <link rel="stylesheet" href='/css/style.css'>
+    
+    
+    
+    <script type="text/javascript" src="//cdn.bootcdn.net/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+    
+    
+    
+    
+    
+    
+</head>
+
+
+<body>
+    <header id="header" class="clearfix">
+    <div class="container">
+        <div class="col-group">
+            <div class="site-name ">
+                
+                    <a id="logo" href="https://songchunbo.github.io/">
+                        心在路上
+                    </a>
+                
+                <p class="description">专注于移动安全，虚拟机技术, Android沙箱，Android Framework, ART Runtime, Dart Runtime 病毒检测，逆向</p>
+            </div>
+            <div>
+                <nav id="nav-menu" class="clearfix">
+                    <a class="current" href="https://songchunbo.github.io/">首页</a>
+                    
+                    <a  href="https://songchunbo.github.io/archives/" title="存档">存档</a>
+                    
+                    <a  href="https://songchunbo.github.io/about/" title="关于">关于</a>
+                    
+                </nav>
+            </div>
+        </div>
+    </div>
+</header>
+
+    <div id="body">
+        <div class="container">
+            <div class="col-group">
+
+                <div class="col-8" id="main">
+                    
+<div class="res-cons">
+    
+    <article class="post">
+        <header>
+            <h1 class="post-title"> OpenSSL 源码分析（一） </h1>
+        </header>
+        <date class="post-meta meta-date">
+            2024年7月14日
+        </date>
+        
+        
+        
+        <div class="post-content">
+            <!-- # 解析 OpenSSL 源码，深入理解 TLS 安全通信协议 -->
+<p>最近需要做一些加解密的事情，简单分析了一下TLS安全机制在OpenSSL中的实现，记录一下。</p>
+<h2 id="1-tls-安全机制介绍">1. <strong>TLS 安全机制介绍</strong></h2>
+<p>TLS（传输层安全协议）是一种用于在互联网上进行安全通信的协议。它通过加密和身份验证来保护数据传输的安全性，它的主要功能包括：</p>
+<ul>
+<li>身份验证：使用数字证书和公钥基础设施（PKI）来验证通信双方的身份。</li>
+<li>密钥交换：使用非对称加密算法（如ECDHE, RSA）来交换对称加密算法的密钥。</li>
+<li>加密：使用对称加密算法（如 AES）和非对称加密算法（如 RSA）来保护数据传输的机密性。</li>
+<li>数据完整性：使用消息认证码（如 HMAC）来确保数据在传输过程中未被篡改。</li>
+</ul>
+<h2 id="2-tls-加密套件选择">2. <strong>TLS 加密套件选择</strong></h2>
+<ul>
+<li>
+<p>获取top100热门网站的服务端首选加密套件，计各个加密套件的占比情况。</p>
+<table>
+<thead>
+<tr>
+<th>TLS协议版本</th>
+<th>加密套件</th>
+<th>个数</th>
+<th>占比</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TLSv1.3</td>
+<td>TLS_AES_256_GCM_SHA384</td>
+<td>41</td>
+<td>41%</td>
+</tr>
+<tr>
+<td>TLSv1.2</td>
+<td>ECDHE_RSA_AES128_GCM_SHA256</td>
+<td>28</td>
+<td>28%</td>
+</tr>
+<tr>
+<td>TLSv1.2</td>
+<td>ECDHE_RSA_CHACHA20_POLY1305</td>
+<td>13</td>
+<td>13%</td>
+</tr>
+<tr>
+<td>TLSv1.2</td>
+<td>ECDHE_RSA_AES256_GCM_SHA384</td>
+<td>10</td>
+<td>10%</td>
+</tr>
+<tr>
+<td>TLSv1.2</td>
+<td>ECDHE_ECDSA_AES128_GCM_SHA256</td>
+<td>4</td>
+<td>4%</td>
+</tr>
+<tr>
+<td>TLSv1.3</td>
+<td>TLS_AES_128_GCM_SHA256</td>
+<td>3</td>
+<td>3%</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>
+<p>top10网站的加密套件</p>
+<table>
+<thead>
+<tr>
+<th>网站名称</th>
+<th>网址</th>
+<th>TLS协议版本</th>
+<th>加密套件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>百度</td>
+<td><a href="https://www.baidu.com">www.baidu.com</a></td>
+<td>TLSv1.2</td>
+<td>ECDHE_RSA_AES128_GCM_SHA256</td>
+</tr>
+<tr>
+<td>腾讯网</td>
+<td><a href="https://www.qq.com">www.qq.com</a></td>
+<td>TLSv1.2</td>
+<td>ECDHE_RSA_AES128_GCM_SHA256</td>
+</tr>
+<tr>
+<td>搜狐</td>
+<td><a href="https://www.sohu.com">www.sohu.com</a></td>
+<td>TLSv1.2</td>
+<td>ECDHE_RSA_AES128_GCM_SHA256</td>
+</tr>
+<tr>
+<td>新浪网</td>
+<td><a href="https://www.sina.com.cn">www.sina.com.cn</a></td>
+<td>TLSv1.3</td>
+<td>TLS_AES_256_GCM_SHA384</td>
+</tr>
+<tr>
+<td>好搜</td>
+<td><a href="https://www.so.com">www.so.com</a></td>
+<td>TLSv1.2</td>
+<td>ECDHE_RSA_AES128_GCM_SHA256</td>
+</tr>
+<tr>
+<td>网易</td>
+<td><a href="https://www.163.com">www.163.com</a></td>
+<td>TLSv1.3</td>
+<td>TLS_AES_256_GCM_SHA384</td>
+</tr>
+<tr>
+<td>CSDN</td>
+<td><a href="https://www.csdn.net">www.csdn.net</a></td>
+<td>TLSv1.3</td>
+<td>TLS_AES_256_GCM_SHA384</td>
+</tr>
+<tr>
+<td>搜狗</td>
+<td><a href="https://www.sohu.com">www.sohu.com</a></td>
+<td>TLSv1.2</td>
+<td>ECDHE_RSA_AES256_GCM_SHA384</td>
+</tr>
+<tr>
+<td>哔哩哔哩</td>
+<td><a href="https://www.bilibili.com">www.bilibili.com</a></td>
+<td>TLSv1.2</td>
+<td>ECDHE_RSA_AES128_GCM_SHA256</td>
+</tr>
+<tr>
+<td>知乎</td>
+<td><a href="https://www.zhihu.com">www.zhihu.com</a></td>
+<td>TLSv1.3</td>
+<td>TLS_AES_256_GCM_SHA384</td>
+</tr>
+<tr>
+<td>豆瓣</td>
+<td><a href="https://www.douban.com">www.douban.com</a></td>
+<td>TLSv1.2</td>
+<td>ECDHE_RSA_AES128_GCM_SHA256</td>
+</tr>
+</tbody>
+</table>
+<p><strong>热门网站数据来源</strong>： <a href="https://top.chinaz.com/all/">https://top.chinaz.com/all/</a></p>
+</li>
+</ul>
+<p>从统计信息可以看出大多数网站采用加密套件TLS_AES_256_GCM_SHA384和ECDHE_RSA_AES128_GCM_SHA256<br>
+以下分析主要基于这两个加密套件。</p>
+<h3 id="21-加密套件ecdhe_rsa_aes128_gcm_sha256">2.1 加密套件ECDHE_RSA_AES128_GCM_SHA256</h3>
+<p>加密套件ECDHE_RSA_AES128_GCM_SHA256 主要用于 TLS 1.2，可以提供较好的性能和安全性平衡，主要交互流程如下。</p>
+<pre tabindex="0"><code> Client                          Server
+   |                               |
+   |------- ClientHello ----------&gt;|
+   |                               |
+   |&lt;------ ServerHello -----------|
+   |&lt;------ Server Certificate ----|    // 身份认证, 对服务端证书签名进行校验
+   |&lt;------ ServerKeyExchange -----|    
+   |&lt;------ ServerHelloDone -------|
+   |                               |
+   |------ ClientKeyExchange -----&gt;|   // 密钥交换，默认采用 ECDHE 进行密钥交换，椭圆曲线选用 secp256r1
+   |------ CertificateVerify -----&gt;|  (if needed)
+   |------ ChangeCipherSpec ------&gt;|   // 通过PRF算法派生出pre-master-key, master-key，最终派生出client_secret和server_secret分别用于客户端和服务端数据加密
+   |------ Finished --------------&gt;|
+   |                               |
+   |&lt;------ ChangeCipherSpec ------|
+   |&lt;------ Finished --------------|
+   |                               |
+   |&lt;------Application  Data ----&gt; | 
+   |&lt;------Application  Data ----&gt; |  // 使用AES128-GCM对数据包进行加密加签(备注：在TLS 1.2仅数据包有加密加签，握手消息未加密)
+   |                               |
+</code></pre><h3 id="22-加密套件tls_aes_256_gcm_sha384">2.2 加密套件TLS_AES_256_GCM_SHA384</h3>
+<p>加密套件TLS_AES_256_GCM_SHA384 主要用于 TLS 1.3， 提供更强的加密和哈希安全性，适合需要高安全性的场景, 主要交互流程如下：</p>
+<pre tabindex="0"><code>Client                            Server
+  |                                 |
+  |------ ClientHello -------------&gt;|
+  |                                 |
+  |&lt;------ ServerHello -------------|  // 密钥交换, 默认采用 ECDHE 进行密钥交换，椭圆曲线选用 x25519
+  |&lt;------ ChangeCipherSpec --------|  // 通过HKDF算法，派生出pre-master-secret, handshake secret用于握手消息加密
+  |                                 |   // handshake secret分为client_handshake_traffic_secret和server_handshake_traffic_secret分别用于客户端和服务端握手消息加密
+  |                                 |  
+  |                                 |  // 以下握手消息都是用handshake secret进行加密的
+  |&lt;------ Application Data --------|  // Server EncryptedExtensions消息
+  |&lt;------ Application Data --------|  // Server Certificate消息，用于身份认证，验证服务端证书签名
+  |&lt;------ Application Data --------|  // Server CertificateVerify消息，用于对握手消息进行验签
+  |&lt;------ Application Data --------|  // Server Finished消息 , TLS 1.3 密钥派生：https://datatracker.ietf.org/doc/html/rfc8446#section-7.1
+  |                                 |
+  |------ ChangeCipherSpec  -------&gt;|  // 通过HKDF算法派生出master secret, 最终派生出client_app_traffic_secret, server_app_traffic_secret分别用于客户端和服务端数据加密
+  |------ Application Data --------&gt;|  // Client Finished消息
+  |                                 |
+  |&lt;------Application  Data ------&gt; |  // 使用AES256-GCM对数据包进行加密加签
+  |&lt;------Application  Data ------&gt; | 
+  |                                 |
+</code></pre><p>接下来，我们以 ECDHE_RSA_AES128_GCM_SHA256 加密套件为例，分析 TLS 1.2 安全通信协议的实现。下一篇将分析基于 TLS 1.3 的加密套件 TLS_AES_256_GCM_SHA384。
+<br/></p>
+<h2 id="3-基于-ecdhe_rsa_aes128_gcm_sha256-加密套件的-tls-安全机制">3. <strong>基于 ECDHE_RSA_AES128_GCM_SHA256 加密套件的 TLS 安全机制</strong></h2>
+<p>基于 ECDHE_RSA_AES128_GCM_SHA256 的 TLS 通信过程主要包括以下步骤：</p>
+<ul>
+<li>通过数字证书来验证通信双方的身份。</li>
+<li>使用ECDHE算法进行密钥交换，生成临时的会话密钥。</li>
+<li>使用AES128-GCM算法对数据进行加密，保证数据的机密性</li>
+<li>使用SHA256算法对数据进行签名，保证数据的完整性和不可抵赖性。</li>
+</ul>
+<h3 id="31身份认证">3.1、身份认证</h3>
+<p>客户端收到服务端发送的Server Certificate消息后，会对证书中的签名进行校验，验证通过后，密钥交换过程中会使用证书中的公钥信息。</p>
+<p>以下主要介绍服务端证书的验证过程，客户端证书的验证过程类似。以 <a href="https://www.baidu.com">www.baidu.com</a> 网站为例，使用 openssl s_client 命令可以获取到百度的证书链，如下所示：</p>
+<pre tabindex="0"><code>$ openssl s_client -connect www.baidu.com:443 -servername www.baidu.com -showcerts
+
+   depth=2 OU = GlobalSign Root CA - R3, O = GlobalSign, CN = GlobalSign
+   depth=1 C = BE, O = GlobalSign nv-sa, CN = GlobalSign RSA OV SSL CA 2018
+   depth=0 C = CN, ST = beijing, L = beijing, O = &#34;Beijing Baidu Netcom Science Technology Co., Ltd&#34;, CN = baidu.com
+</code></pre><p>证书验证过程分为两部分：</p>
+<ul>
+<li>客户端根据本地预置的 CA 证书，对 GlobalSign Root CA 进行合法性检查。</li>
+<li>使用 CA 证书的公钥对证书逐级进行签名校验，确保每一级证书的有效性和可信性。</li>
+</ul>
+<p>通过以上步骤，客户端能够确认服务端的身份，从而确保后续通信的安全性和可靠性。</p>
+<h4 id="311根据系统预置的可信ca证书列表对证书链中的根证书进行合法性检查">3.1.1、根据系统预置的可信CA证书列表，对证书链中的根证书进行合法性检查</h4>
+<p>以openssl client为例读取本地预置的ROOT CA证书列表, 对GlobalSign Root CA合法性检查。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C" data-lang="C"><span style="display:flex;"><span><span style="color:#75715e">// openssl在启动的时候，可以指定加载CA证书，命令如下： 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#960050;background-color:#1e0010">$</span> openssl s_client <span style="color:#f92672">-</span>connect www.baidu.com:<span style="color:#ae81ff">443</span> <span style="color:#f92672">-</span>CAfile <span style="color:#f92672">/</span>usr<span style="color:#f92672">/</span>local<span style="color:#f92672">/</span>etc<span style="color:#f92672">/</span>openssl<span style="color:#960050;background-color:#1e0010">@</span><span style="color:#ae81ff">1.1</span><span style="color:#f92672">/</span>cert.pem
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// CA证书读取的代码调用栈 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x0000000101ce27d8</span> PEM_X509_INFO_read_bio <span style="color:#f92672">+</span> <span style="color:#ae81ff">120</span>
+</span></span><span style="display:flex;"><span>libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x0000000101d64a6f</span> X509_load_cert_crl_file <span style="color:#f92672">+</span> <span style="color:#ae81ff">159</span>
+</span></span><span style="display:flex;"><span>libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x0000000101d64d38</span> by_file_ctrl <span style="color:#f92672">+</span> <span style="color:#ae81ff">248</span>
+</span></span><span style="display:flex;"><span>libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x0000000101d69a55</span> X509_LOOKUP_ctrl <span style="color:#f92672">+</span> <span style="color:#ae81ff">181</span>
+</span></span><span style="display:flex;"><span>libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x0000000101d6904f</span> X509_STORE_load_locations <span style="color:#f92672">+</span> <span style="color:#ae81ff">143</span>
+</span></span><span style="display:flex;"><span>libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010170e759</span> SSL_CTX_load_verify_locations <span style="color:#f92672">+</span> <span style="color:#ae81ff">41</span>
+</span></span><span style="display:flex;"><span>openssl                             <span style="color:#ae81ff">0x000000010155253e</span> ctx_set_verify_locations <span style="color:#f92672">+</span> <span style="color:#ae81ff">158</span>
+</span></span><span style="display:flex;"><span>openssl                             <span style="color:#ae81ff">0x000000010152a5de</span> s_client_main <span style="color:#f92672">+</span> <span style="color:#ae81ff">12382</span>
+</span></span><span style="display:flex;"><span>openssl                             <span style="color:#ae81ff">0x0000000101514a99</span> do_cmd <span style="color:#f92672">+</span> <span style="color:#ae81ff">233</span>
+</span></span><span style="display:flex;"><span>openssl                             <span style="color:#ae81ff">0x000000010151443b</span> main <span style="color:#f92672">+</span> <span style="color:#ae81ff">651</span>
+</span></span><span style="display:flex;"><span>dyld                                <span style="color:#ae81ff">0x00007ff80337a41f</span> start <span style="color:#f92672">+</span> <span style="color:#ae81ff">1903</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 读取代码
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">STACK_OF</span>(X509_INFO) <span style="color:#f92672">*</span><span style="color:#a6e22e">PEM_X509_INFO_read_bio</span>(BIO <span style="color:#f92672">*</span>bp, <span style="color:#a6e22e">STACK_OF</span>(X509_INFO) <span style="color:#f92672">*</span>sk,..) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (;;) {
+</span></span><span style="display:flex;"><span>        i <span style="color:#f92672">=</span> <span style="color:#a6e22e">PEM_read_bio</span>(bp, <span style="color:#f92672">&amp;</span>name, <span style="color:#f92672">&amp;</span>header, <span style="color:#f92672">&amp;</span>data, <span style="color:#f92672">&amp;</span>len);
+</span></span><span style="display:flex;"><span>        d2i <span style="color:#f92672">=</span> (<span style="color:#a6e22e">D2I_OF</span>(<span style="color:#66d9ef">void</span>)) d2i_X509;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">strcmp</span>(name, PEM_STRING_X509) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">sk_X509_INFO_push</span>(ret, xi)
+</span></span><span style="display:flex;"><span>            xi <span style="color:#f92672">=</span> <span style="color:#a6e22e">X509_INFO_new</span>();
+</span></span><span style="display:flex;"><span>            pp <span style="color:#f92672">=</span> <span style="color:#f92672">&amp;</span>(xi<span style="color:#f92672">-&gt;</span>x509);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">PEM_get_EVP_CIPHER_INFO</span>(header, <span style="color:#f92672">&amp;</span>cipher);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">PEM_do_header</span>(<span style="color:#f92672">&amp;</span>cipher, data, <span style="color:#f92672">&amp;</span>len, cb, u);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> p <span style="color:#f92672">=</span> data;
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 把perm文件中的CA证书转换为x509 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">d2i</span>(pp, <span style="color:#f92672">&amp;</span>p, len);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 部分预置的ROOT CA证书
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>x509_object_idx i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>, <span style="color:#f92672">/</span>C<span style="color:#f92672">=</span>FR<span style="color:#f92672">/</span>O<span style="color:#f92672">=</span>Dhimyotis<span style="color:#f92672">/</span>CN<span style="color:#f92672">=</span>Certigna
+</span></span><span style="display:flex;"><span>x509_object_idx i <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>, <span style="color:#f92672">/</span>O<span style="color:#f92672">=</span>TeliaSonera<span style="color:#f92672">/</span>CN<span style="color:#f92672">=</span>TeliaSonera Root CA v1
+</span></span><span style="display:flex;"><span>x509_object_idx i <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span>, <span style="color:#f92672">/</span>C<span style="color:#f92672">=</span>ES<span style="color:#f92672">/</span>O<span style="color:#f92672">=</span>IZENPE S.A.<span style="color:#f92672">/</span>CN<span style="color:#f92672">=</span>Izenpe.com
+</span></span><span style="display:flex;"><span>x509_object_idx i <span style="color:#f92672">=</span> <span style="color:#ae81ff">3</span>, <span style="color:#f92672">/</span>C<span style="color:#f92672">=</span>US<span style="color:#f92672">/</span>O<span style="color:#f92672">=</span>Amazon<span style="color:#f92672">/</span>CN<span style="color:#f92672">=</span>Amazon Root CA <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>x509_object_idx i <span style="color:#f92672">=</span> <span style="color:#ae81ff">4</span>, <span style="color:#f92672">/</span>C<span style="color:#f92672">=</span>US<span style="color:#f92672">/</span>O<span style="color:#f92672">=</span>Amazon<span style="color:#f92672">/</span>CN<span style="color:#f92672">=</span>Amazon Root CA <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>x509_object_idx i <span style="color:#f92672">=</span> <span style="color:#ae81ff">5</span>, <span style="color:#f92672">/</span>C<span style="color:#f92672">=</span>US<span style="color:#f92672">/</span>O<span style="color:#f92672">=</span>Amazon<span style="color:#f92672">/</span>CN<span style="color:#f92672">=</span>Amazon Root CA <span style="color:#ae81ff">3</span>
+</span></span><span style="display:flex;"><span>... 
+</span></span><span style="display:flex;"><span>x509_object_idx i <span style="color:#f92672">=</span> <span style="color:#ae81ff">70</span>, <span style="color:#f92672">/</span>C<span style="color:#f92672">=</span>CN<span style="color:#f92672">/</span>O<span style="color:#f92672">=</span>China Financial Certification Authority<span style="color:#f92672">/</span>CN<span style="color:#f92672">=</span>CFCA EV ROOT
+</span></span><span style="display:flex;"><span>x509_object_idx i <span style="color:#f92672">=</span> <span style="color:#ae81ff">71</span>, <span style="color:#f92672">/</span>C<span style="color:#f92672">=</span>US<span style="color:#f92672">/</span>OU<span style="color:#f92672">=</span>emSign PKI<span style="color:#f92672">/</span>O<span style="color:#f92672">=</span>eMudhra Inc<span style="color:#f92672">/</span>CN<span style="color:#f92672">=</span>emSign Root CA <span style="color:#f92672">-</span> C1
+</span></span><span style="display:flex;"><span>x509_object_idx i <span style="color:#f92672">=</span> <span style="color:#ae81ff">72</span>, <span style="color:#f92672">/</span>C<span style="color:#f92672">=</span>BE<span style="color:#f92672">/</span>O<span style="color:#f92672">=</span>GlobalSign nv<span style="color:#f92672">-</span>sa<span style="color:#f92672">/</span>OU<span style="color:#f92672">=</span>Root CA<span style="color:#f92672">/</span>CN<span style="color:#f92672">=</span>GlobalSign Root CA
+</span></span></code></pre></div><h4 id="322-证书校验-用ca的公钥对证书签名进行验签">3.2.2、 证书校验, 用CA的公钥对证书签名进行验签</h4>
+<p>证书校验的核心逻辑位于 <code>internal_verify</code> 函数中，证书的验证签名算法采用的是 <code>sha256WithRSAEncryption</code>，签名验证的具体实现细节在 <code>int_rsa_verify</code> 函数中。</p>
+<ul>
+<li><code>internal_verify</code>：该函数负责各级证书的合法性检查。</li>
+<li><code>sha256WithRSAEncryption</code>：证书签名算法，使用 SHA-256 进行哈希处理，然后使用 RSA 算法进行加密。</li>
+<li><code>int_rsa_verify</code>：具体执行签名验证操作。它接收签名、原始数据和公钥，使用 RSA 解密签名并比对哈希值，确认签名的合法性。</li>
+</ul>
+<p>调用栈如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C" data-lang="C"><span style="display:flex;"><span>libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x0000000101d15fa0</span> int_rsa_verify <span style="color:#f92672">+</span> <span style="color:#ae81ff">992</span>
+</span></span><span style="display:flex;"><span>libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x0000000101d160fb</span> RSA_verify <span style="color:#f92672">+</span> <span style="color:#ae81ff">139</span>
+</span></span><span style="display:flex;"><span>libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x0000000101d12e12</span> pkey_rsa_verify <span style="color:#f92672">+</span> <span style="color:#ae81ff">130</span>
+</span></span><span style="display:flex;"><span>libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x0000000101cb82f0</span> EVP_PKEY_verify <span style="color:#f92672">+</span> <span style="color:#ae81ff">208</span>
+</span></span><span style="display:flex;"><span>libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x0000000101cb3490</span> EVP_DigestVerifyFinal <span style="color:#f92672">+</span> <span style="color:#ae81ff">464</span>
+</span></span><span style="display:flex;"><span>libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x0000000101cb356c</span> EVP_DigestVerify <span style="color:#f92672">+</span> <span style="color:#ae81ff">156</span>
+</span></span><span style="display:flex;"><span>libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x0000000101b89fcf</span> ASN1_item_verify <span style="color:#f92672">+</span> <span style="color:#ae81ff">959</span>
+</span></span><span style="display:flex;"><span>libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x0000000101d7a80e</span> X509_verify <span style="color:#f92672">+</span> <span style="color:#ae81ff">158</span>
+</span></span><span style="display:flex;"><span>libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x0000000101d71ee6</span> internal_verify <span style="color:#f92672">+</span> <span style="color:#ae81ff">870</span>
+</span></span><span style="display:flex;"><span>libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x0000000101d6fffc</span> verify_chain <span style="color:#f92672">+</span> <span style="color:#ae81ff">348</span>
+</span></span><span style="display:flex;"><span>libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x0000000101d6fad6</span> X509_verify_cert <span style="color:#f92672">+</span> <span style="color:#ae81ff">534</span>
+</span></span><span style="display:flex;"><span>libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x00000001016fc1b1</span> ssl_verify_cert_chain <span style="color:#f92672">+</span> <span style="color:#ae81ff">705</span>
+</span></span><span style="display:flex;"><span>libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x0000000101730b89</span> tls_process_server_certificate <span style="color:#f92672">+</span> <span style="color:#ae81ff">1113</span>
+</span></span><span style="display:flex;"><span>libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010172f771</span> ossl_statem_client_process_message <span style="color:#f92672">+</span> <span style="color:#ae81ff">177</span>
+</span></span><span style="display:flex;"><span>libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010172bb55</span> read_state_machine <span style="color:#f92672">+</span> <span style="color:#ae81ff">901</span>
+</span></span><span style="display:flex;"><span>libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010172b37a</span> state_machine <span style="color:#f92672">+</span> <span style="color:#ae81ff">1226</span>
+</span></span><span style="display:flex;"><span>libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010172aea7</span> ossl_statem_connect <span style="color:#f92672">+</span> <span style="color:#ae81ff">23</span>
+</span></span><span style="display:flex;"><span>libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x00000001016e6567</span> ssl3_write_bytes <span style="color:#f92672">+</span> <span style="color:#ae81ff">503</span>
+</span></span><span style="display:flex;"><span>libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x00000001016f8669</span> ssl3_write <span style="color:#f92672">+</span> <span style="color:#ae81ff">105</span>
+</span></span><span style="display:flex;"><span>libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x0000000101709925</span> ssl_write_internal <span style="color:#f92672">+</span> <span style="color:#ae81ff">437</span>
+</span></span><span style="display:flex;"><span>libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010170999f</span> SSL_write <span style="color:#f92672">+</span> <span style="color:#ae81ff">95</span>
+</span></span><span style="display:flex;"><span>openssl                             <span style="color:#ae81ff">0x000000010152d38c</span> s_client_main <span style="color:#f92672">+</span> <span style="color:#ae81ff">24076</span>
+</span></span><span style="display:flex;"><span>openssl                             <span style="color:#ae81ff">0x0000000101514a99</span> do_cmd <span style="color:#f92672">+</span> <span style="color:#ae81ff">233</span>
+</span></span><span style="display:flex;"><span>openssl                             <span style="color:#ae81ff">0x000000010151443b</span> main <span style="color:#f92672">+</span> <span style="color:#ae81ff">651</span>
+</span></span><span style="display:flex;"><span>dyld                                <span style="color:#ae81ff">0x00007ff80337a41f</span> start <span style="color:#f92672">+</span> <span style="color:#ae81ff">1903</span>     
+</span></span></code></pre></div><p><strong>证书链各级证书的合法性检查</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C" data-lang="C"><span style="display:flex;"><span><span style="color:#75715e">/* verify the issuer signatures and cert times of ctx-&gt;chain */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">static</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">internal_verify</span>(X509_STORE_CTX <span style="color:#f92672">*</span>ctx) {
+</span></span><span style="display:flex;"><span>    X509 <span style="color:#f92672">*</span>xi, <span style="color:#f92672">*</span>xs;               <span style="color:#75715e">// xi是CA证书，xs是待校验证书。
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">int</span> n <span style="color:#f92672">=</span> <span style="color:#a6e22e">sk_x509_num</span>(ctx<span style="color:#f92672">-&gt;</span>chain) <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>;    <span style="color:#75715e">// (3 - 1)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">while</span> (n <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">fprintf</span>(stderr, <span style="color:#e6db74">&#34;CA: use xi&#39;s public key to verify the signature of xs</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (xs <span style="color:#f92672">!=</span> xi <span style="color:#f92672">||</span> ((ctx<span style="color:#f92672">-&gt;</span>param<span style="color:#f92672">-&gt;</span>flags <span style="color:#f92672">&amp;</span> X509_V_FLAG_CHECK_SS_SIGNATURE)   <span style="color:#75715e">// 跳过自签名证书，默认不校验
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                        <span style="color:#f92672">&amp;&amp;</span> (xi<span style="color:#f92672">-&gt;</span>ex_flags <span style="color:#f92672">&amp;</span> EXFLAG_SS) <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span>)) {
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>            EVP_PKEY <span style="color:#f92672">*</span>pkey;
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">int</span> issuer_depth <span style="color:#f92672">=</span> n <span style="color:#f92672">+</span> (xs <span style="color:#f92672">==</span> xi <span style="color:#f92672">?</span> <span style="color:#ae81ff">0</span> <span style="color:#f92672">:</span> <span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>            pkey <span style="color:#f92672">=</span> <span style="color:#a6e22e">X509_get0_pubkey</span>(xi);
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">X509_verify</span>(xs, pkey);     <span style="color:#75715e">// 用xi的公钥对xs证书签名进行验签名
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        } 
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 证书验签过程依赖DER格式证书，使用ASN.1编码, DER证书主要由【4字节头 + tbsCertificate（待签名的证书主体内容） +  signatureAlgorithm + signature】字段组成
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 其中tbsCertificate时待签名的证书主体内容，signature是证书签名信息
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">int_rsa_verify</span>(<span style="color:#66d9ef">int</span> type, <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>m, <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> m_len,
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>rm, <span style="color:#66d9ef">size_t</span> <span style="color:#f92672">*</span>prm_len,
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>sigbuf, <span style="color:#66d9ef">size_t</span> siglen, RSA <span style="color:#f92672">*</span>rsa) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 用CA的公钥对签名进行解密，解密出的内容为tbsCertificate的sha256哈希值并且进行了ASN.1编码，descrypt_buf = encode_pkcs1(sha256(tbsCertificate))
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    decrypt_len <span style="color:#f92672">=</span> <span style="color:#a6e22e">RSA_public_decrypt</span>((<span style="color:#66d9ef">int</span>)siglen, sigbuf, decrypt_buf, rsa,
+</span></span><span style="display:flex;"><span>                        RSA_PKCS1_PADDING);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 输入的m为证书签名主体tbsCertificate的sha256哈希值，对m进行ASN.1编码
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">encode_pkcs1</span>(<span style="color:#f92672">&amp;</span>encoded, <span style="color:#f92672">&amp;</span>encoded_len, type, m, m_len))     <span style="color:#75715e">// 对m（hash）进行ASN.1编码
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 比较encode和decrypt_buf ,都是ASN.1编码的sha256(tbsCertificate)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">memcmp</span>(encoded, decrypt_buf, encoded_len) <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>}    
+</span></span></code></pre></div><h3 id="32-密钥交换-server-key-exchange">3.2 密钥交换 Server Key Exchange</h3>
+<p>使用非对称加密算法ECDHE来交换对称加密算法的密钥，非对称加密算法 ECDHE（Elliptic Curve Diffie-Hellman Ephemeral）用于安全地交换对称加密的密钥，从而确保数据传输的机密性和安全性。以下是 ECDHE 交换对称加密密钥的实现原理：</p>
+<ul>
+<li>
+<p><strong>初始阶段</strong>：</p>
+<ul>
+<li>客户端和服务器生成密钥对：客户端和服务器分别生成各自的椭圆曲线密钥对（私钥和对应的公钥）。这个密钥对是临时的，仅用于当前会话，因此被称为“临时”（Ephemeral）。</li>
+</ul>
+</li>
+<li>
+<p><strong>公钥交换</strong>：</p>
+<ul>
+<li>客户端发送公钥：客户端将它的公钥发送给服务器。</li>
+<li>服务器发送公钥：服务器将它的公钥发送给客户端。</li>
+</ul>
+</li>
+<li>
+<p><strong>计算共享密钥</strong>：</p>
+<ul>
+<li>客户端计算共享密钥：客户端使用自己的私钥和服务器的公钥，通过 ECDHE 算法计算出一个共享的对称密钥。</li>
+<li>服务器计算共享密钥：服务器使用自己的私钥和客户端的公钥，通过相同的 ECDHE 算法计算出同一个共享的对称密钥。</li>
+</ul>
+</li>
+<li>
+<p><strong>使用对称密钥加密通信</strong>：</p>
+<ul>
+<li>加密数据传输：一旦共享密钥被计算出来，客户端和服务器就可以使用这个对称密钥进行后续的数据加密传输。常见的对称加密算法包括 AES，这里具体使用 AES-128-GCM。</li>
+</ul>
+</li>
+<li>
+<p><strong>ECDHE 密钥交换的安全优势</strong></p>
+<ul>
+<li>抵御中间人攻击：即使攻击者截获了公钥，无法通过公钥推导出私钥，因此无法计算出共享密钥。</li>
+<li>前向保密：每次会话使用不同的临时密钥对，即使某次会话的密钥被泄露，也不会影响其他会话的安全性。</li>
+</ul>
+</li>
+</ul>
+<h4 id="321-ecdhe密钥交换过程中对服务端ec公钥进行验签">3.2.1 ECDHE密钥交换过程中对服务端EC公钥进行验签</h4>
+<p>服务端在Server Key Exchange消息中发送自己的EC公钥，客户端收到后，利用服务端证书中的公钥对EC公钥等信息进行验签，以签名算法rsa_pkcs1_sha512为例</p>
+<pre tabindex="0"><code>输入：
+    cert_pubkey = server_cert_pubkey
+    tbs = 【client-random(32) + server-random(32) + Pubkey Length(4) + Pubkey(65)】
+    signature = rsa()  
+输出：
+    hash1 (asn.1) = decrypt_rsa(cert_pubkey, signature)
+    hash2 (asn.1) = encode_asn1(sha512 (tbs) )
+
+验证签名:
+    memcmp(hash1, hash2)
+</code></pre><p>代码分析如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C" data-lang="C"><span style="display:flex;"><span>libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010b8fc993</span> tls_process_ske_ecdhe <span style="color:#f92672">+</span> <span style="color:#ae81ff">51</span>
+</span></span><span style="display:flex;"><span>libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010b8fa0b2</span> tls_process_key_exchange <span style="color:#f92672">+</span> <span style="color:#ae81ff">354</span>
+</span></span><span style="display:flex;"><span>libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010b8f88f0</span> ossl_statem_client_process_message <span style="color:#f92672">+</span> <span style="color:#ae81ff">240</span>
+</span></span><span style="display:flex;"><span>libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010b8f4ce5</span> read_state_machine <span style="color:#f92672">+</span> <span style="color:#ae81ff">901</span>
+</span></span><span style="display:flex;"><span>libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010b8f450a</span> state_machine <span style="color:#f92672">+</span> <span style="color:#ae81ff">1226</span>
+</span></span><span style="display:flex;"><span>libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010b8f4037</span> ossl_statem_connect <span style="color:#f92672">+</span> <span style="color:#ae81ff">23</span>
+</span></span><span style="display:flex;"><span>libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010b8afce7</span> ssl3_write_bytes <span style="color:#f92672">+</span> <span style="color:#ae81ff">503</span>
+</span></span><span style="display:flex;"><span>libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010b8c1899</span> ssl3_write <span style="color:#f92672">+</span> <span style="color:#ae81ff">105</span>
+</span></span><span style="display:flex;"><span>libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010b8d2aa5</span> ssl_write_internal <span style="color:#f92672">+</span> <span style="color:#ae81ff">437</span>
+</span></span><span style="display:flex;"><span>libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010b8d2b1f</span> SSL_write <span style="color:#f92672">+</span> <span style="color:#ae81ff">95</span>
+</span></span><span style="display:flex;"><span>openssl                             <span style="color:#ae81ff">0x000000010b6fd54c</span> s_client_main <span style="color:#f92672">+</span> <span style="color:#ae81ff">24076</span>
+</span></span><span style="display:flex;"><span>openssl                             <span style="color:#ae81ff">0x000000010b6e4d59</span> do_cmd <span style="color:#f92672">+</span> <span style="color:#ae81ff">233</span>
+</span></span><span style="display:flex;"><span>openssl                             <span style="color:#ae81ff">0x000000010b6e471b</span> main <span style="color:#f92672">+</span> <span style="color:#ae81ff">651</span>
+</span></span><span style="display:flex;"><span>dyld                                <span style="color:#ae81ff">0x00007ff80337a41f</span> start <span style="color:#f92672">+</span> <span style="color:#ae81ff">1903</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>MSG_PROCESS_RETURN <span style="color:#a6e22e">tls_process_key_exchange</span>(SSL <span style="color:#f92672">*</span>s, PACKET <span style="color:#f92672">*</span>pkt) {
+</span></span><span style="display:flex;"><span>    ...
+</span></span><span style="display:flex;"><span>    EVP_PKEY <span style="color:#f92672">*</span>pkey <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">tls_process_ske_ecdhe</span>(SSL <span style="color:#f92672">*</span>s, PACKET <span style="color:#f92672">*</span>pkt, EVP_PKEY <span style="color:#f92672">**</span>pkey) 
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        ...
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (s<span style="color:#f92672">-&gt;</span>s3<span style="color:#f92672">-&gt;</span>tmp.new_cipher<span style="color:#f92672">-&gt;</span>algorithm_auth <span style="color:#f92672">&amp;</span> SSL_aECDSA)
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">*</span>pkey <span style="color:#f92672">=</span> <span style="color:#a6e22e">X509_get0_pubkey</span>(s<span style="color:#f92672">-&gt;</span>session<span style="color:#f92672">-&gt;</span>peer);            <span style="color:#75715e">// 获取服务端证书的公钥
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (s<span style="color:#f92672">-&gt;</span>s3<span style="color:#f92672">-&gt;</span>tmp.new_cipher<span style="color:#f92672">-&gt;</span>algorithm_auth <span style="color:#f92672">&amp;</span> SSL_aRSA)     <span style="color:#75715e">// rsa_pkcs1_sha512 = 1
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#f92672">*</span>pkey <span style="color:#f92672">=</span> <span style="color:#a6e22e">X509_get0_pubkey</span>(s<span style="color:#f92672">-&gt;</span>session<span style="color:#f92672">-&gt;</span>peer);   
+</span></span><span style="display:flex;"><span>        ...
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (pkey <span style="color:#f92672">!=</span> NULL) {
+</span></span><span style="display:flex;"><span>         <span style="color:#75715e">// 构建待验签的内容tbs =  【client-random(32) + server-random(32) + Pubkey Length(4) + Pubkey(65)】
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        tbslen <span style="color:#f92672">=</span> <span style="color:#a6e22e">construct_key_exchange_tbs</span>(s, <span style="color:#f92672">&amp;</span>tbs, <span style="color:#a6e22e">PACKET_data</span>(<span style="color:#f92672">&amp;</span>params), <span style="color:#a6e22e">PACKET_remaining</span>(<span style="color:#f92672">&amp;</span>params));
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 用服务端证书的公钥对tbs进行验签，
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">EVP_DigestVerifyInit</span>(md_ctx, <span style="color:#f92672">&amp;</span>pctx, md, NULL, pkey);  <span style="color:#75715e">// md = sha512
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        rv <span style="color:#f92672">=</span> <span style="color:#a6e22e">EVP_DigestVerify</span>(md_ctx, <span style="color:#a6e22e">PACKET_data</span>(<span style="color:#f92672">&amp;</span>signature),      
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">PACKET_remaining</span>(<span style="color:#f92672">&amp;</span>signature), tbs, tbslen);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Server Key Exchange数据包</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C" data-lang="C"><span style="display:flex;"><span>TLSv1<span style="color:#ae81ff">.2</span> Record Layer: Handshake Protocol: Server Key Exchange
+</span></span><span style="display:flex;"><span>    Content Type: <span style="color:#a6e22e">Handshake</span> (<span style="color:#ae81ff">22</span>)
+</span></span><span style="display:flex;"><span>    Version: TLS <span style="color:#ae81ff">1.2</span> (<span style="color:#ae81ff">0x0303</span>)
+</span></span><span style="display:flex;"><span>    Length: <span style="color:#ae81ff">333</span>
+</span></span><span style="display:flex;"><span>    Handshake Protocol: Server Key Exchange
+</span></span><span style="display:flex;"><span>        Handshake Type: Server Key <span style="color:#a6e22e">Exchange</span> (<span style="color:#ae81ff">12</span>)
+</span></span><span style="display:flex;"><span>        Length: <span style="color:#ae81ff">329</span>
+</span></span><span style="display:flex;"><span>        EC Diffie<span style="color:#f92672">-</span>Hellman Server Params
+</span></span><span style="display:flex;"><span>            Curve Type: <span style="color:#a6e22e">named_curve</span> (<span style="color:#ae81ff">0x03</span>)
+</span></span><span style="display:flex;"><span>            Named Curve: <span style="color:#a6e22e">secp256r1</span> (<span style="color:#ae81ff">0x0017</span>)
+</span></span><span style="display:flex;"><span>            Pubkey Length: <span style="color:#ae81ff">65</span>
+</span></span><span style="display:flex;"><span>            Pubkey: <span style="color:#ae81ff">04f</span><span style="color:#ae81ff">0</span>c946215b6087886061603731a85...
+</span></span><span style="display:flex;"><span>            Signature Algorithm: <span style="color:#a6e22e">rsa_pkcs1_sha512</span> (<span style="color:#ae81ff">0x0601</span>)
+</span></span><span style="display:flex;"><span>            Signature Length: <span style="color:#ae81ff">256</span>
+</span></span><span style="display:flex;"><span>            Signature [truncated]<span style="color:#f92672">:</span> <span style="color:#ae81ff">34720</span>afa82341de0b766bfa0...
+</span></span></code></pre></div><h4 id="322-客户端生成客户端ec公私钥对把客户端ec公钥发往服务端">3.2.2 客户端生成客户端EC公私钥对，把客户端EC公钥发往服务端</h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C" data-lang="C"><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">tls_construct_client_key_exchange</span>(SSL <span style="color:#f92672">*</span>s, WPACKET <span style="color:#f92672">*</span>pkt) { 
+</span></span><span style="display:flex;"><span>   ...
+</span></span><span style="display:flex;"><span>   <span style="color:#a6e22e">tls_construct_cke_ecdhe</span>(SSL <span style="color:#f92672">*</span>s, WPACKET <span style="color:#f92672">*</span>pkt) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  服务端EC公钥
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    EVP_PKEY<span style="color:#f92672">*</span> skey <span style="color:#f92672">=</span> s<span style="color:#f92672">-&gt;</span>s3<span style="color:#f92672">-&gt;</span>peer_tmp;
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  客户端生成EC公私钥对
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    EVP_PKEY<span style="color:#f92672">*</span> ckey <span style="color:#f92672">=</span> <span style="color:#a6e22e">ssl_generate_pkey</span>(skey);
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/* Generate encoding of client key */</span>
+</span></span><span style="display:flex;"><span>    encoded_pt_len <span style="color:#f92672">=</span> <span style="color:#a6e22e">EVP_PKEY_get1_tls_encodedpoint</span>(ckey, <span style="color:#f92672">&amp;</span>encodedPoint);
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// [encodedPoint, encoded_pt_len]为客户端的EC公钥
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// 客户端的EC公钥通过Client Key Exchange消息发送到服务端
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    Handshake Protocol: Client Key Exchange
+</span></span><span style="display:flex;"><span>        Handshake Type: Client Key <span style="color:#a6e22e">Exchange</span> (<span style="color:#ae81ff">16</span>)
+</span></span><span style="display:flex;"><span>        Length: <span style="color:#ae81ff">66</span>
+</span></span><span style="display:flex;"><span>        EC Diffie<span style="color:#f92672">-</span>Hellman Client Params
+</span></span><span style="display:flex;"><span>            Pubkey Length: <span style="color:#ae81ff">65</span>
+</span></span><span style="display:flex;"><span>            Pubkey: <span style="color:#ae81ff">041f</span>de8f0f40e54ba73e0d5893bd95a5b13bd02...
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>       ...
+</span></span><span style="display:flex;"><span>   }    
+</span></span></code></pre></div><h4 id="322-密钥交换完成后生成预主密钥">3.2.2 密钥交换完成后，生成预主密钥</h4>
+<p>根据客户端的EC私钥和服务单的EC公钥【派生出】预主密钥pre master key</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C" data-lang="C"><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">tls_construct_client_key_exchange</span>(SSL <span style="color:#f92672">*</span>s, WPACKET <span style="color:#f92672">*</span>pkt) {
+</span></span><span style="display:flex;"><span>    ...
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">tls_construct_cke_ecdhe</span>(SSL <span style="color:#f92672">*</span>s, WPACKET <span style="color:#f92672">*</span>pkt) {
+</span></span><span style="display:flex;"><span>        EVP_PKEY<span style="color:#f92672">*</span> skey <span style="color:#f92672">=</span> s<span style="color:#f92672">-&gt;</span>s3<span style="color:#f92672">-&gt;</span>peer_tmp;
+</span></span><span style="display:flex;"><span>        EVP_PKEY<span style="color:#f92672">*</span> ckey <span style="color:#f92672">=</span> <span style="color:#a6e22e">ssl_generate_pkey</span>(skey);
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 通过客户端的EC私钥ckey和服务端的EC公钥skey【派生出】预主密钥pre master key
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">ssl_derive</span>(s, ckey, skey, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>         <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">ssl_derive</span>(SSL <span style="color:#f92672">*</span>s, EVP_PKEY <span style="color:#f92672">*</span>privkey, EVP_PKEY <span style="color:#f92672">*</span>pubkey, <span style="color:#66d9ef">int</span> gensecret) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>              EVP_PKEY_CTX<span style="color:#f92672">*</span> pctx <span style="color:#f92672">=</span> <span style="color:#a6e22e">EVP_PKEY_CTX_new</span>(privkey, NULL);
+</span></span><span style="display:flex;"><span>              <span style="color:#a6e22e">EVP_PKEY_derive_init</span>(pctx);
+</span></span><span style="display:flex;"><span>              <span style="color:#a6e22e">EVP_PKEY_derive_set_peer</span>(pctx, pubkey);
+</span></span><span style="display:flex;"><span>              <span style="color:#a6e22e">EVP_PKEY_derive</span>(pctx, NULL, <span style="color:#f92672">&amp;</span>pmslen);
+</span></span><span style="display:flex;"><span>              <span style="color:#a6e22e">EVP_PKEY_derive</span>(pctx, pms, <span style="color:#f92672">&amp;</span>pmslen);
+</span></span><span style="display:flex;"><span>              
+</span></span><span style="display:flex;"><span>              <span style="color:#75715e">/* Save premaster secret */</span>
+</span></span><span style="display:flex;"><span>                 s<span style="color:#f92672">-&gt;</span>s3<span style="color:#f92672">-&gt;</span>tmp.pms <span style="color:#f92672">=</span> pms;
+</span></span><span style="display:flex;"><span>                 s<span style="color:#f92672">-&gt;</span>s3<span style="color:#f92672">-&gt;</span>tmp.pmslen <span style="color:#f92672">=</span> pmslen;
+</span></span><span style="display:flex;"><span>         }
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span> ...           
+</span></span><span style="display:flex;"><span>}    
+</span></span></code></pre></div><h2 id="4计算会话密码">4、计算会话密码</h2>
+<ul>
+<li>首先根据ECHDE中生成的pre master secret派生出 master secret</li>
+<li>根据master secret派生出会话密钥块，从会话密钥块从提取出客户端密钥client-secret和服务端密钥server-secret，分别用于客户端和服务端数据的加密加签。</li>
+<li>以客户端为例，数据发送使用client-secret, 数据接收使用server-secret。原因是如果客户端和服务器使用相同的密钥和IV，攻击者可以利用已知的明文和密文来推导出密钥流，从而解密其他数据。这种风险在TLS协议中通过使用不同的密钥和IV来消除，确保每个方向的密钥流是独立的，从而提高通信的安全性。</li>
+</ul>
+<h3 id="411-计算主密钥master-secret">4.1.1 计算主密钥master secret</h3>
+<p>s-&gt;session-&gt;master_key = tls1_PRF(&ldquo;master key&rdquo;, client_random, server_random, pre-master-key)</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C" data-lang="C"><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">tls_client_key_exchange_post_work</span>(SSL <span style="color:#f92672">*</span>s) {
+</span></span><span style="display:flex;"><span>     pms <span style="color:#f92672">=</span> s<span style="color:#f92672">-&gt;</span>s3<span style="color:#f92672">-&gt;</span>tmp.pms;
+</span></span><span style="display:flex;"><span>     pmslen <span style="color:#f92672">=</span> s<span style="color:#f92672">-&gt;</span>s3<span style="color:#f92672">-&gt;</span>tmp.pmslen;
+</span></span><span style="display:flex;"><span>     <span style="color:#a6e22e">ssl_generate_master_secret</span>(s, pms, pmslen, <span style="color:#ae81ff">1</span>); {
+</span></span><span style="display:flex;"><span>         
+</span></span><span style="display:flex;"><span>         s<span style="color:#f92672">-&gt;</span>method<span style="color:#f92672">-&gt;</span>ssl3_enc<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">generate_master_secret</span>(s,    <span style="color:#75715e">// // tls1.2, tls1_generate_master_secret
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>             s<span style="color:#f92672">-&gt;</span>session<span style="color:#f92672">-&gt;</span>master_key, pms, pmslen,
+</span></span><span style="display:flex;"><span>              <span style="color:#f92672">&amp;</span>s<span style="color:#f92672">-&gt;</span>session<span style="color:#f92672">-&gt;</span>master_key_length);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">tls1_generate_master_secret</span>(SSL <span style="color:#f92672">*</span>s, <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>out, <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>p,
+</span></span><span style="display:flex;"><span>                                <span style="color:#66d9ef">size_t</span> len, <span style="color:#66d9ef">size_t</span> <span style="color:#f92672">*</span>secret_size) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//......
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">tls1_PRF</span>(s,
+</span></span><span style="display:flex;"><span>                TLS_MD_MASTER_SECRET_CONST,
+</span></span><span style="display:flex;"><span>                TLS_MD_MASTER_SECRET_CONST_SIZE,
+</span></span><span style="display:flex;"><span>                s<span style="color:#f92672">-&gt;</span>s3<span style="color:#f92672">-&gt;</span>client_random, SSL3_RANDOM_SIZE,
+</span></span><span style="display:flex;"><span>                NULL, <span style="color:#ae81ff">0</span>,
+</span></span><span style="display:flex;"><span>                s<span style="color:#f92672">-&gt;</span>s3<span style="color:#f92672">-&gt;</span>server_random, SSL3_RANDOM_SIZE,
+</span></span><span style="display:flex;"><span>                NULL, <span style="color:#ae81ff">0</span>, p, len, out,
+</span></span><span style="display:flex;"><span>                SSL3_MASTER_SECRET_SIZE, <span style="color:#ae81ff">1</span>));
+</span></span><span style="display:flex;"><span>    ...
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">*</span>secret_size <span style="color:#f92672">=</span> SSL3_MASTER_SECRET_SIZE;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="412-计算key-block从中提取aes128-gcm-sha256加密加签密钥以及初始向量的前8个字节">4.1.2 计算key block，从中提取AES128-GCM-SHA256加密加签密钥以及初始向量的前8个字节。</h3>
+<p>KeyBlock(56) = tls1_PRF(&ldquo;key expansion&rdquo;, client_random, server_random, master secret)</p>
+<p>代码实现：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C" data-lang="C"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 生成Key Block
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">static</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">tls1_generate_key_block</span>(SSL <span style="color:#f92672">*</span>s, <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>km, <span style="color:#66d9ef">size_t</span> num)
+</span></span><span style="display:flex;"><span>{	
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> ret;
+</span></span><span style="display:flex;"><span>     <span style="color:#75715e">/* Calls SSLfatal() as required */</span>
+</span></span><span style="display:flex;"><span>    ret <span style="color:#f92672">=</span> <span style="color:#a6e22e">tls1_PRF</span>(s,
+</span></span><span style="display:flex;"><span>               TLS_MD_KEY_EXPANSION_CONST, TLS_MD_KEY_EXPANSION_CONST_SIZE, 
+</span></span><span style="display:flex;"><span>               s<span style="color:#f92672">-&gt;</span>s3<span style="color:#f92672">-&gt;</span>server_random, SSL3_RANDOM_SIZE, 
+</span></span><span style="display:flex;"><span>               s<span style="color:#f92672">-&gt;</span>s3<span style="color:#f92672">-&gt;</span>client_random, SSL3_RANDOM_SIZE,
+</span></span><span style="display:flex;"><span>               NULL, <span style="color:#ae81ff">0</span>, NULL, <span style="color:#ae81ff">0</span>, s<span style="color:#f92672">-&gt;</span>session<span style="color:#f92672">-&gt;</span>master_key,
+</span></span><span style="display:flex;"><span>               s<span style="color:#f92672">-&gt;</span>session<span style="color:#f92672">-&gt;</span>master_key_length, km, num, <span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> ret;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 从Key Block中提取会话密钥
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">tls1_change_cipher_state</span>(SSL <span style="color:#f92672">*</span>s, <span style="color:#66d9ef">int</span> which) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 数据加解密的会话密钥上下文,  数据发送和接收使用不同的加密密钥 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    s<span style="color:#f92672">-&gt;</span>enc_write_ctx;  
+</span></span><span style="display:flex;"><span>    s<span style="color:#f92672">-&gt;</span>enc_read_ctx;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>   <span style="color:#75715e">// 数据签名的会话密钥上下文
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>   s<span style="color:#f92672">-&gt;</span>write_hash
+</span></span><span style="display:flex;"><span>   s<span style="color:#f92672">-&gt;</span>read_hash
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// key block 实例以及生成的密钥和IV 以AES128-GCM为例
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>key block
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">61</span> <span style="color:#ae81ff">94</span> D6 <span style="color:#ae81ff">2</span>E <span style="color:#ae81ff">3</span>A <span style="color:#ae81ff">34</span> <span style="color:#ae81ff">83</span> <span style="color:#ae81ff">1</span>D F9 <span style="color:#ae81ff">90</span> <span style="color:#ae81ff">4</span>C F4 <span style="color:#ae81ff">29</span> <span style="color:#ae81ff">43</span> F3 B2
+</span></span><span style="display:flex;"><span>E9 E4 <span style="color:#ae81ff">49</span> <span style="color:#ae81ff">26</span> A1 DF <span style="color:#ae81ff">2F</span> ED <span style="color:#ae81ff">6</span>C <span style="color:#ae81ff">6</span>A <span style="color:#ae81ff">2</span>A <span style="color:#ae81ff">98</span> FB <span style="color:#ae81ff">45</span> CF <span style="color:#ae81ff">0</span>B
+</span></span><span style="display:flex;"><span>A7 <span style="color:#ae81ff">2</span>E E8 <span style="color:#ae81ff">4</span>A E8 <span style="color:#ae81ff">01</span> F4 B7 <span style="color:#ae81ff">75</span> <span style="color:#ae81ff">0</span>B <span style="color:#ae81ff">91</span> B1 <span style="color:#ae81ff">83</span> <span style="color:#ae81ff">8</span>B AF <span style="color:#ae81ff">2</span>E
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">0</span>D <span style="color:#ae81ff">32</span> <span style="color:#ae81ff">49</span> DF <span style="color:#ae81ff">0</span>A <span style="color:#ae81ff">3</span>A <span style="color:#ae81ff">50</span> <span style="color:#ae81ff">28</span>   
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">数据发送密钥</span> <span style="color:#960050;background-color:#1e0010">以及</span> <span style="color:#a6e22e">IV的前4字节</span>( <span style="color:#960050;background-color:#1e0010">注意：</span>IV后4字节在随机生成<span style="color:#960050;background-color:#1e0010">，其中最后一个字节会递增，第二个加密包</span><span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>, <span style="color:#960050;background-color:#1e0010">第三个加密包</span><span style="color:#f92672">+</span><span style="color:#ae81ff">2</span><span style="color:#960050;background-color:#1e0010">，依次类推。</span>)
+</span></span><span style="display:flex;"><span>KEY <span style="color:#f92672">=</span> <span style="color:#ae81ff">61</span> <span style="color:#ae81ff">94</span> D6 <span style="color:#ae81ff">2</span>E <span style="color:#ae81ff">3</span>A <span style="color:#ae81ff">34</span> <span style="color:#ae81ff">83</span> <span style="color:#ae81ff">1</span>D F9 <span style="color:#ae81ff">90</span> <span style="color:#ae81ff">4</span>C F4 <span style="color:#ae81ff">29</span> <span style="color:#ae81ff">43</span> F3 B2 
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">IV</span>(<span style="color:#ae81ff">4</span>) <span style="color:#f92672">=</span> A7 <span style="color:#ae81ff">2</span>E E8 <span style="color:#ae81ff">4</span>A
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">数据接收密钥</span>
+</span></span><span style="display:flex;"><span>KEY <span style="color:#f92672">=</span> E9 E4 <span style="color:#ae81ff">49</span> <span style="color:#ae81ff">26</span> A1 DF <span style="color:#ae81ff">2F</span> ED <span style="color:#ae81ff">6</span>C <span style="color:#ae81ff">6</span>A <span style="color:#ae81ff">2</span>A <span style="color:#ae81ff">98</span> FB <span style="color:#ae81ff">45</span> CF <span style="color:#ae81ff">0</span>B
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">IV</span>(<span style="color:#ae81ff">4</span>) <span style="color:#f92672">=</span> E8 <span style="color:#ae81ff">01</span> F4 B7
+</span></span></code></pre></div><h2 id="5-数据加密加签">5. 数据加密加签</h2>
+<p>为了保证数据的保密性和完整性，在发送数据之前会使用会话密钥对数据加密加签，AES-GCM可支持在加密的同时生成认证标签。</p>
+<p>对加密套件ECDHE_RSA_AES128_GCM_SHA256来说，加密加签在aes_gcm_tls_cipher中实现：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C" data-lang="C"><span style="display:flex;"><span>libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x0000000107b00220</span> aes_gcm_tls_cipher <span style="color:#f92672">+</span> <span style="color:#ae81ff">192</span>
+</span></span><span style="display:flex;"><span>libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x0000000107aff428</span> aes_gcm_cipher <span style="color:#f92672">+</span> <span style="color:#ae81ff">104</span>
+</span></span><span style="display:flex;"><span>libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x0000000107b18053</span> EVP_Cipher <span style="color:#f92672">+</span> <span style="color:#ae81ff">51</span>
+</span></span><span style="display:flex;"><span>libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x0000000107555cff</span> tls1_enc <span style="color:#f92672">+</span> <span style="color:#ae81ff">3487</span>
+</span></span><span style="display:flex;"><span>libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010755005c</span> do_ssl3_write <span style="color:#f92672">+</span> <span style="color:#ae81ff">4924</span>
+</span></span><span style="display:flex;"><span>libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010754e8c0</span> ssl3_write_bytes <span style="color:#f92672">+</span> <span style="color:#ae81ff">3408</span>
+</span></span><span style="display:flex;"><span>libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010755f919</span> ssl3_write <span style="color:#f92672">+</span> <span style="color:#ae81ff">105</span>
+</span></span><span style="display:flex;"><span>libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x0000000107570b25</span> ssl_write_internal <span style="color:#f92672">+</span> <span style="color:#ae81ff">437</span>
+</span></span><span style="display:flex;"><span>libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x0000000107570b9f</span> SSL_write <span style="color:#f92672">+</span> <span style="color:#ae81ff">95</span>
+</span></span><span style="display:flex;"><span>openssl                             <span style="color:#ae81ff">0x000000010739b54c</span> s_client_main <span style="color:#f92672">+</span> <span style="color:#ae81ff">24076</span>
+</span></span><span style="display:flex;"><span>openssl                             <span style="color:#ae81ff">0x0000000107382d59</span> do_cmd <span style="color:#f92672">+</span> <span style="color:#ae81ff">233</span>
+</span></span><span style="display:flex;"><span>openssl                             <span style="color:#ae81ff">0x000000010738271b</span> main <span style="color:#f92672">+</span> <span style="color:#ae81ff">651</span>
+</span></span><span style="display:flex;"><span>dyld                                <span style="color:#ae81ff">0x00007ff80337a41f</span> start <span style="color:#f92672">+</span> <span style="color:#ae81ff">1903</span>    
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">static</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">aes_gcm_tls_cipher</span>(EVP_CIPHER_CTX <span style="color:#f92672">*</span>ctx, <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>out,
+</span></span><span style="display:flex;"><span>                          <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>in, <span style="color:#66d9ef">size_t</span> len)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    EVP_AES_GCM_CTX <span style="color:#f92672">*</span>gctx <span style="color:#f92672">=</span> <span style="color:#a6e22e">EVP_C_DATA</span>(EVP_AES_GCM_CTX,ctx);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">EVP_CIPHER_CTX_ctrl</span>(ctx, ctx<span style="color:#f92672">-&gt;</span>encrypt <span style="color:#f92672">?</span> EVP_CTRL_GCM_IV_GEN
+</span></span><span style="display:flex;"><span>                                              : EVP_CTRL_GCM_SET_IV_INV,
+</span></span><span style="display:flex;"><span>                            EVP_GCM_TLS_EXPLICIT_IV_LEN, out) <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/* Use saved AAD */</span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 输入认证附加数据
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">CRYPTO_gcm128_aad</span>(<span style="color:#f92672">&amp;</span>gctx<span style="color:#f92672">-&gt;</span>gcm, ctx<span style="color:#f92672">-&gt;</span>buf, gctx<span style="color:#f92672">-&gt;</span>tls_aad_len))
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">goto</span> err;
+</span></span><span style="display:flex;"><span>    in <span style="color:#f92672">+=</span> EVP_GCM_TLS_EXPLICIT_IV_LEN; (<span style="color:#ae81ff">8</span>)
+</span></span><span style="display:flex;"><span>    out <span style="color:#f92672">+=</span> EVP_GCM_TLS_EXPLICIT_IV_LEN;
+</span></span><span style="display:flex;"><span>    len <span style="color:#f92672">-=</span> EVP_GCM_TLS_EXPLICIT_IV_LEN <span style="color:#f92672">+</span> <span style="color:#a6e22e">EVP_GCM_TLS_TAG_LEN</span>(<span style="color:#ae81ff">16</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (ctx<span style="color:#f92672">-&gt;</span>encrypt) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">/* Encrypt payload  */</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 进行数据加密
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> (gctx<span style="color:#f92672">-&gt;</span>ctr) {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">size_t</span> bulk <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> (len <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">32</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">AES_GCM_ASM</span>(gctx)) {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">CRYPTO_gcm128_encrypt</span>(<span style="color:#f92672">&amp;</span>gctx<span style="color:#f92672">-&gt;</span>gcm, NULL, NULL, <span style="color:#ae81ff">0</span>))
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>                bulk <span style="color:#f92672">=</span> <span style="color:#a6e22e">AES_gcm_encrypt</span>(in, out, len,
+</span></span><span style="display:flex;"><span>                                       gctx<span style="color:#f92672">-&gt;</span>gcm.key,
+</span></span><span style="display:flex;"><span>                                       gctx<span style="color:#f92672">-&gt;</span>gcm.Yi.c, gctx<span style="color:#f92672">-&gt;</span>gcm.Xi.u);
+</span></span><span style="display:flex;"><span>                gctx<span style="color:#f92672">-&gt;</span>gcm.len.u[<span style="color:#ae81ff">1</span>] <span style="color:#f92672">+=</span> bulk;
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        } 
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    out <span style="color:#f92672">+=</span> len;
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/* Finally write tag  */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 数据加签，生成认证tag，防止数据被篡改。
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">CRYPTO_gcm128_tag</span>(<span style="color:#f92672">&amp;</span>gctx<span style="color:#f92672">-&gt;</span>gcm, out, EVP_GCM_TLS_TAG_LEN);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><ul>
+<li>发送到服务端的加密数据格式为：
+Encrypted Application Data = IV (8) + Encrypted DATA (15) + TAG (16)</li>
+</ul>
+<pre tabindex="0"><code>加密数据包实例如下：
+
+第一个数据包： GET / HTTP/1.1 (15)
+
+    附加认证数据AAD：
+    AAD: 00 00 00 00 00 00 00 01          sequence
+                                17       Content Type: Application Data (23)
+                                03 03    Version: TLS 1.2 (0x0303)
+                                00 0F    Length:   39 - (IVLen:8 + TagLen:16) = 15
+    
+    TAG计算方法 = F(AAD, 密文， IV)
+
+    before encryption len = 15
+    47 45 54 20 2F 20 48 54 54 50 2F 31 2E 31 0A  == &#34;GET / HTTP/1.1\n&#34;
+    after encryption len = 15
+    41 7B CE 29 AF F8 27 6D CF D9 25 F6 43 39 EB  == Encrypted(&#34;GET / HTTP/1.1\n&#34;)
+
+    Frame 76: 98 bytes on wire (784 bits), 98 bytes captured (784 bits) on interface en0, id 0
+    Ethernet II, Src: Apple_5d:ef:60 (14:7d:da:5d:ef:60), Dst: RuijieNetwor_7a:66:d0 (80:05:88:7a:66:d0)
+    Internet Protocol Version 4, Src: 192.168.68.124, Dst: 110.242.68.4
+    Transmission Control Protocol, Src Port: 57249, Dst Port: 443, Seq: 442, Ack: 5411, Len: 44
+    Transport Layer Security
+        TLSv1.2 Record Layer: Application Data Protocol: Hypertext Transfer Protocol
+            Content Type: Application Data (23)
+            Version: TLS 1.2 (0x0303)
+            Length: 39
+            Encrypted Application Data: e06c9f63 7ea28030(IV) 417bce29aff8276dcfd925f64339eb(Encrypted DATA)   f9d95ac4f783d6f04e8419ada4577555(TAG)
+            [Application Data Protocol: Hypertext Transfer Protocol]
+
+第二个数据包： HOST: www.baidu.com (20)
+
+    附加认证数据AAD：
+    AAD: 00 00 00 00 00 00 00 02          sequence
+                                17       Content Type: Application Data (23)
+                                03 03    Version: TLS 1.2 (0x0303)
+                                00 14    Length:   36 - (IVLen:8 + TagLen:16) = 20
+    
+    TAG计算方法 = F(AAD, 密文， IV)
+
+    before encryption len = 20
+    48 4F 53 54 3A 20 77 77 77 2E 62 61 69 64 75 2E   == &#34;HOST: www.baidu.com\n&#34;
+    63 6F 6D 0A
+
+    after encryption len = 20
+    31 7D 37 0B C4 9E 08 F2 5E D6 85 63 90 4E 7E 2D   == Encrypted(&#34;HOST: www.baidu.com\n&#34;)
+    C2 E0 28 11
+
+    Frame 104: 103 bytes on wire (824 bits), 103 bytes captured (824 bits) on interface en0, id 0
+    Ethernet II, Src: Apple_5d:ef:60 (14:7d:da:5d:ef:60), Dst: RuijieNetwor_7a:66:d0 (80:05:88:7a:66:d0)
+    Internet Protocol Version 4, Src: 192.168.68.124, Dst: 110.242.68.4
+    Transmission Control Protocol, Src Port: 57249, Dst Port: 443, Seq: 486, Ack: 5411, Len: 49
+    Transport Layer Security
+        TLSv1.2 Record Layer: Application Data Protocol: Hypertext Transfer Protocol
+            Content Type: Application Data (23)
+            Version: TLS 1.2 (0x0303)
+            Length: 44
+            Encrypted Application Data: e06c9f63 7ea28031(IV)  317d370bc49e08f25ed68563904e7e2dc2e02811(Encrypted DATA)   d905aa05ad72c24837696fde2131fd1f(TAG)
+            [Application Data Protocol: Hypertext Transfer Protocol]
+</code></pre><h2 id="总结">总结</h2>
+<p>本文通过解析 OpenSSL 源码，详细介绍了 TLS 安全通信协议的实现机制。文章首先简要概述了 TLS 的核心安全功能，包括身份验证、密钥交换、数据加密和数据完整性保护。接着，通过对热门网站加密套件的统计分析，选取了 ECDHE_RSA_AES128_GCM_SHA256 加密套件作为重点解析对象。随后，文章深入剖析了基于该加密套件的 TLS 通信过程，包括数字证书验证、ECDHE 算法密钥交换、AES128-GCM 数据加密以及 SHA256 数据签名。通过这些分析，读者可以更清晰地理解 TLS 协议如何在实际应用中保障通信安全。</p>
+
+        </div>
+
+        
+
+
+        
+
+
+        <div class="post-meta meta-tags">
+            
+            没有标签
+            
+        </div>
+    </article>
+    
+    
+
+    
+    
+    <div class="post bg-white">
+      <script src="https://utteranc.es/client.js"
+            repo= "Songchunbo/blog-comment"
+            issue-term="pathname"
+            theme="github-light"
+            crossorigin="anonymous"
+            async>
+      </script>
+    </div>
+    
+</div>
+
+                    <footer id="footer">
+    <div>
+        &copy; 2024 <a href="https://songchunbo.github.io/">心在路上 By 心在路上</a>
+        
+    </div>
+    <br />
+    <div>
+        <div class="github-badge">
+            <a href="https://gohugo.io/" target="_black" rel="nofollow"><span class="badge-subject">Powered by</span><span class="badge-value bg-blue">Hugo</span></a>
+        </div>
+        <div class="github-badge">
+            <a href="https://www.flysnow.org/" target="_black"><span class="badge-subject">Design by</span><span class="badge-value bg-brightgreen">飞雪无情</span></a>
+        </div>
+        <div class="github-badge">
+            <a href="https://github.com/flysnow-org/maupassant-hugo" target="_black"><span class="badge-subject">Theme</span><span class="badge-value bg-yellowgreen">Maupassant</span></a>
+        </div>
+    </div>
+</footer>
+
+
+    
+    <script type="text/javascript">
+        window.MathJax = {
+            tex2jax: {
+                inlineMath: [['$', '$']],
+                processEscapes: true
+                }
+            };
+    </script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+
+<a id="rocket" href="#top"></a>
+<script type="text/javascript" src='/js/totop.js?v=0.0.0' async=""></script>
+
+
+
+
+
+
+                </div>
+
+                <div id="secondary">
+    <section class="widget">
+        <form id="search" action='https://songchunbo.github.io/search/' method="get" accept-charset="utf-8" target="_blank" _lpchecked="1">
+      
+      <input type="text" name="q" maxlength="20" placeholder="Search">
+      <input type="hidden" name="sitesearch" value="https://songchunbo.github.io/">
+      <button type="submit" class="submit icon-search"></button>
+</form>
+    </section>
+    
+    <section class="widget">
+        <h3 class="widget-title">最近文章</h3>
+<ul class="widget-list">
+    
+    <li>
+        <a href="https://songchunbo.github.io/post/openssl_tls/" title=" OpenSSL 源码分析（一） "> OpenSSL 源码分析（一） </a>
+    </li>
+    
+    <li>
+        <a href="https://songchunbo.github.io/post/android_packer/" title="Android Packer">Android Packer</a>
+    </li>
+    
+    <li>
+        <a href="https://songchunbo.github.io/post/andorid_file_io/" title="Android文件IO路径小记">Android文件IO路径小记</a>
+    </li>
+    
+    <li>
+        <a href="https://songchunbo.github.io/post/apt_summary/" title="APT Summary">APT Summary</a>
+    </li>
+    
+    <li>
+        <a href="https://songchunbo.github.io/post/dart_vm_lex_syntax/" title="Dart VM源码分析之CFE">Dart VM源码分析之CFE</a>
+    </li>
+    
+    <li>
+        <a href="https://songchunbo.github.io/post/dart_vm_how_compile_works/" title="Dart VM源码分析之编译dill">Dart VM源码分析之编译dill</a>
+    </li>
+    
+    <li>
+        <a href="https://songchunbo.github.io/post/dart_vm_quick_start/" title="Dart VM命令行工具">Dart VM命令行工具</a>
+    </li>
+    
+    <li>
+        <a href="https://songchunbo.github.io/post/art_commit_history/" title="ART Commit History">ART Commit History</a>
+    </li>
+    
+    <li>
+        <a href="https://songchunbo.github.io/post/x86_arm_callconvention/" title="X86 and ARM Call Convention">X86 and ARM Call Convention</a>
+    </li>
+    
+    <li>
+        <a href="https://songchunbo.github.io/post/galois_math/" title="纠删码基础知识">纠删码基础知识</a>
+    </li>
+    
+</ul>
+    </section>
+
+    
+
+    <section class="widget">
+        <h3 class="widget-title"><a href='/categories/'>分类</a></h3>
+<ul class="widget-list">
+    
+</ul>
+    </section>
+
+    <section class="widget">
+        <h3 class="widget-title"><a href='/tags/'>标签</a></h3>
+<div class="tagcloud">
+    
+</div>
+    </section>
+
+    
+<section class="widget">
+    <h3 class="widget-title">友情链接</h3>
+    <ul class="widget-list">
+        
+        <li>
+            <a target="_blank" href="https://android.googlesource.com/" title="AOSP">AOSP</a>
+        </li>
+        
+        <li>
+            <a target="_blank" href="https://android.googlesource.com/platform/art/" title="ART mirror">ART mirror</a>
+        </li>
+        
+    </ul>
+</section>
+
+
+    <section class="widget">
+        <h3 class="widget-title">其它</h3>
+        <ul class="widget-list">
+            <li><a href="https://songchunbo.github.io/index.xml">文章 RSS</a></li>
+        </ul>
+    </section>
+</div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -91,139 +91,139 @@
 <h4 id="bionic-libc">bionic libc.</h4>
 </li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C++" data-lang="C++">bionic<span style="color:#f92672">/</span>libc<span style="color:#f92672">/</span>bionic<span style="color:#f92672">/</span>open.cpp
-
-     open(<span style="color:#e6db74">&#34;my.txt&#34;</span>, O_CREAT, mode) <span style="color:#f92672">-&gt;</span>  __openat(<span style="color:#e6db74">&#34;my.txt&#34;</span>, O_CREAT, mode)
-</code></pre></div><ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C++" data-lang="C++"><span style="display:flex;"><span>bionic<span style="color:#f92672">/</span>libc<span style="color:#f92672">/</span>bionic<span style="color:#f92672">/</span>open.cpp
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>     open(<span style="color:#e6db74">&#34;my.txt&#34;</span>, O_CREAT, mode) <span style="color:#f92672">-&gt;</span>  __openat(<span style="color:#e6db74">&#34;my.txt&#34;</span>, O_CREAT, mode)
+</span></span></code></pre></div><ul>
 <li>
 <h4 id="system-call">system call</h4>
 </li>
 </ul>
 <p>Arm</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C++" data-lang="C++"> arm:   bionic<span style="color:#f92672">/</span>libc<span style="color:#f92672">/</span>arch<span style="color:#f92672">-</span>arm<span style="color:#f92672">/</span>syscalls<span style="color:#f92672">/</span>__openat.S
-
-ENTRY(__openat)
-    mov     ip, r7
-    ldr     r7, <span style="color:#f92672">=</span>__NR_openat
-    swi     <span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">0</span>
-    mov     r7, ip
-    cmn     r0, <span style="color:#960050;background-color:#1e0010">#</span>(MAX_ERRNO <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>)
-    bxls    lr
-    neg     r0, r0
-    b       __set_errno_internal
-END(__openat)
-</code></pre></div><p>X86</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C++" data-lang="C++">x86:  bionic<span style="color:#f92672">/</span>libc<span style="color:#f92672">/</span>arch<span style="color:#f92672">-</span>x86<span style="color:#f92672">/</span>syscalls<span style="color:#f92672">/</span>__openat.S
-
-ENTRY(__openat)
-    pushl   <span style="color:#f92672">%</span>ebx
-    pushl   <span style="color:#f92672">%</span>ecx
-    pushl   <span style="color:#f92672">%</span>edx
-    pushl   <span style="color:#f92672">%</span>esi
-    mov     <span style="color:#ae81ff">20</span>(<span style="color:#f92672">%</span>esp), <span style="color:#f92672">%</span>ebx
-    mov     <span style="color:#ae81ff">24</span>(<span style="color:#f92672">%</span>esp), <span style="color:#f92672">%</span>ecx
-    mov     <span style="color:#ae81ff">28</span>(<span style="color:#f92672">%</span>esp), <span style="color:#f92672">%</span>edx
-    mov     <span style="color:#ae81ff">32</span>(<span style="color:#f92672">%</span>esp), <span style="color:#f92672">%</span>esi
-    movl    <span style="color:#960050;background-color:#1e0010">$</span>__NR_openat, <span style="color:#f92672">%</span>eax
-    <span style="color:#66d9ef">int</span>     <span style="color:#960050;background-color:#1e0010">$</span><span style="color:#ae81ff">0x80</span>
-    cmpl    <span style="color:#960050;background-color:#1e0010">$</span><span style="color:#f92672">-</span>MAX_ERRNO, <span style="color:#f92672">%</span>eax
-    jb      <span style="color:#ae81ff">1f</span>
-    negl    <span style="color:#f92672">%</span>eax
-    pushl   <span style="color:#f92672">%</span>eax
-    call    __set_errno_internal
-    addl    <span style="color:#960050;background-color:#1e0010">$</span><span style="color:#ae81ff">4</span>, <span style="color:#f92672">%</span>esp
-<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>
-    popl    <span style="color:#f92672">%</span>esi
-    popl    <span style="color:#f92672">%</span>edx
-    popl    <span style="color:#f92672">%</span>ecx
-    popl    <span style="color:#f92672">%</span>ebx
-    ret
-END(__openat)
-</code></pre></div><ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C++" data-lang="C++"><span style="display:flex;"><span> arm:   bionic<span style="color:#f92672">/</span>libc<span style="color:#f92672">/</span>arch<span style="color:#f92672">-</span>arm<span style="color:#f92672">/</span>syscalls<span style="color:#f92672">/</span>__openat.S
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ENTRY(__openat)
+</span></span><span style="display:flex;"><span>    mov     ip, r7
+</span></span><span style="display:flex;"><span>    ldr     r7, <span style="color:#f92672">=</span>__NR_openat
+</span></span><span style="display:flex;"><span>    swi     <span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    mov     r7, ip
+</span></span><span style="display:flex;"><span>    cmn     r0, <span style="color:#960050;background-color:#1e0010">#</span>(MAX_ERRNO <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>    bxls    lr
+</span></span><span style="display:flex;"><span>    neg     r0, r0
+</span></span><span style="display:flex;"><span>    b       __set_errno_internal
+</span></span><span style="display:flex;"><span>END(__openat)
+</span></span></code></pre></div><p>X86</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C++" data-lang="C++"><span style="display:flex;"><span>x86:  bionic<span style="color:#f92672">/</span>libc<span style="color:#f92672">/</span>arch<span style="color:#f92672">-</span>x86<span style="color:#f92672">/</span>syscalls<span style="color:#f92672">/</span>__openat.S
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ENTRY(__openat)
+</span></span><span style="display:flex;"><span>    pushl   <span style="color:#f92672">%</span>ebx
+</span></span><span style="display:flex;"><span>    pushl   <span style="color:#f92672">%</span>ecx
+</span></span><span style="display:flex;"><span>    pushl   <span style="color:#f92672">%</span>edx
+</span></span><span style="display:flex;"><span>    pushl   <span style="color:#f92672">%</span>esi
+</span></span><span style="display:flex;"><span>    mov     <span style="color:#ae81ff">20</span>(<span style="color:#f92672">%</span>esp), <span style="color:#f92672">%</span>ebx
+</span></span><span style="display:flex;"><span>    mov     <span style="color:#ae81ff">24</span>(<span style="color:#f92672">%</span>esp), <span style="color:#f92672">%</span>ecx
+</span></span><span style="display:flex;"><span>    mov     <span style="color:#ae81ff">28</span>(<span style="color:#f92672">%</span>esp), <span style="color:#f92672">%</span>edx
+</span></span><span style="display:flex;"><span>    mov     <span style="color:#ae81ff">32</span>(<span style="color:#f92672">%</span>esp), <span style="color:#f92672">%</span>esi
+</span></span><span style="display:flex;"><span>    movl    <span style="color:#960050;background-color:#1e0010">$</span>__NR_openat, <span style="color:#f92672">%</span>eax
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span>     <span style="color:#960050;background-color:#1e0010">$</span><span style="color:#ae81ff">0x80</span>
+</span></span><span style="display:flex;"><span>    cmpl    <span style="color:#960050;background-color:#1e0010">$</span><span style="color:#f92672">-</span>MAX_ERRNO, <span style="color:#f92672">%</span>eax
+</span></span><span style="display:flex;"><span>    jb      <span style="color:#ae81ff">1f</span>
+</span></span><span style="display:flex;"><span>    negl    <span style="color:#f92672">%</span>eax
+</span></span><span style="display:flex;"><span>    pushl   <span style="color:#f92672">%</span>eax
+</span></span><span style="display:flex;"><span>    call    __set_errno_internal
+</span></span><span style="display:flex;"><span>    addl    <span style="color:#960050;background-color:#1e0010">$</span><span style="color:#ae81ff">4</span>, <span style="color:#f92672">%</span>esp
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>    popl    <span style="color:#f92672">%</span>esi
+</span></span><span style="display:flex;"><span>    popl    <span style="color:#f92672">%</span>edx
+</span></span><span style="display:flex;"><span>    popl    <span style="color:#f92672">%</span>ecx
+</span></span><span style="display:flex;"><span>    popl    <span style="color:#f92672">%</span>ebx
+</span></span><span style="display:flex;"><span>    ret
+</span></span><span style="display:flex;"><span>END(__openat)
+</span></span></code></pre></div><ul>
 <li>kernel-3.4.0</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C++" data-lang="C++">fs<span style="color:#f92672">/</span>open.c
-fs<span style="color:#f92672">/</span>namei.c
-
-   SYSCALL_DEFINE3(open, <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> __user <span style="color:#f92672">*</span>, filename, <span style="color:#66d9ef">int</span>, flags, umode_t, mode)
-
-
-   sys_open() <span style="color:#f92672">-&gt;</span> do_sys_open() <span style="color:#f92672">-&gt;</span> do_filp_open() <span style="color:#f92672">-&gt;</span> path_openat() <span style="color:#f92672">-&gt;</span> do_last() 
-   
-       do_last() {
-           	<span style="color:#75715e">/* Negative dentry, just create the file */</span>
-           <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>dentry<span style="color:#f92672">-&gt;</span>d_inode) {
-		           umode_t mode <span style="color:#f92672">=</span> op<span style="color:#f92672">-&gt;</span>mode;
-		           <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>IS_POSIXACL(dir<span style="color:#f92672">-&gt;</span>d_inode))
-			             mode <span style="color:#f92672">&amp;=</span> <span style="color:#f92672">~</span>current_umask();
-			             			         
-			         error <span style="color:#f92672">=</span> vfs_create(dir<span style="color:#f92672">-&gt;</span>d_inode, dentry, mode, nd);
-			     }
-			     
-			     
-			     
-       }
-         
-
-<span style="color:#66d9ef">int</span> <span style="color:#a6e22e">vfs_create</span>(<span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">inode</span><span style="color:#f92672">*</span> dir, 
-                  <span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">dentry</span> <span style="color:#f92672">*</span>dentry, 
-                  umode_t mode, 
-                  <span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">nameidata</span> <span style="color:#f92672">*</span>nd)
-{
-    dir<span style="color:#f92672">-&gt;</span>i_op<span style="color:#f92672">-&gt;</span>create()
-    
-          fs<span style="color:#f92672">/</span>ext4<span style="color:#f92672">/</span>namei.c: ext4_create      
-}
-
-
-fs<span style="color:#f92672">/</span>ext4<span style="color:#f92672">/</span>inode.c
-
-{
-		inode<span style="color:#f92672">-&gt;</span>i_op <span style="color:#f92672">=</span> <span style="color:#f92672">&amp;</span>ext4_dir_inode_operations;
-		inode<span style="color:#f92672">-&gt;</span>i_fop <span style="color:#f92672">=</span> <span style="color:#f92672">&amp;</span>ext4_dir_operations;
-
-}
-
-
-fs<span style="color:#f92672">/</span>ext4<span style="color:#f92672">/</span>namei.c
-
-<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">inode_operations</span> ext4_dir_inode_operations <span style="color:#f92672">=</span> {
-	.create		<span style="color:#f92672">=</span> ext4_create,
-	.lookup		<span style="color:#f92672">=</span> ext4_lookup,
-	.link		<span style="color:#f92672">=</span> ext4_link,
-	.unlink		<span style="color:#f92672">=</span> ext4_unlink,
-	.symlink	<span style="color:#f92672">=</span> ext4_symlink,
-	.mkdir		<span style="color:#f92672">=</span> ext4_mkdir,
-	.rmdir		<span style="color:#f92672">=</span> ext4_rmdir,
-	.mknod		<span style="color:#f92672">=</span> ext4_mknod,
-	.rename		<span style="color:#f92672">=</span> ext4_rename,
-	.setattr	<span style="color:#f92672">=</span> ext4_setattr,
-<span style="color:#75715e">#ifdef CONFIG_EXT4_FS_XATTR
-</span><span style="color:#75715e"></span>	.setxattr	<span style="color:#f92672">=</span> generic_setxattr,
-	.getxattr	<span style="color:#f92672">=</span> generic_getxattr,
-	.listxattr	<span style="color:#f92672">=</span> ext4_listxattr,
-	.removexattr	<span style="color:#f92672">=</span> generic_removexattr,
-<span style="color:#75715e">#endif
-</span><span style="color:#75715e"></span>	.get_acl	<span style="color:#f92672">=</span> ext4_get_acl,
-	.fiemap         <span style="color:#f92672">=</span> ext4_fiemap,
-};
-
-
-fs<span style="color:#f92672">/</span>ext4<span style="color:#f92672">/</span>dir.c
-
-
-<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">file_operations</span> ext4_dir_operations <span style="color:#f92672">=</span> {
-	.llseek		<span style="color:#f92672">=</span> ext4_dir_llseek,
-	.read		<span style="color:#f92672">=</span> generic_read_dir,
-	.readdir	<span style="color:#f92672">=</span> ext4_readdir,
-	.unlocked_ioctl <span style="color:#f92672">=</span> ext4_ioctl,
-<span style="color:#75715e">#ifdef CONFIG_COMPAT
-</span><span style="color:#75715e"></span>	.compat_ioctl	<span style="color:#f92672">=</span> ext4_compat_ioctl,
-<span style="color:#75715e">#endif
-</span><span style="color:#75715e"></span>	.fsync		<span style="color:#f92672">=</span> ext4_sync_file,
-	.release	<span style="color:#f92672">=</span> ext4_release_dir,
-};
-</code></pre></div><p>​</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C++" data-lang="C++"><span style="display:flex;"><span>fs<span style="color:#f92672">/</span>open.c
+</span></span><span style="display:flex;"><span>fs<span style="color:#f92672">/</span>namei.c
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>   SYSCALL_DEFINE3(open, <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> __user <span style="color:#f92672">*</span>, filename, <span style="color:#66d9ef">int</span>, flags, umode_t, mode)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>   sys_open() <span style="color:#f92672">-&gt;</span> do_sys_open() <span style="color:#f92672">-&gt;</span> do_filp_open() <span style="color:#f92672">-&gt;</span> path_openat() <span style="color:#f92672">-&gt;</span> do_last() 
+</span></span><span style="display:flex;"><span>   
+</span></span><span style="display:flex;"><span>       do_last() {
+</span></span><span style="display:flex;"><span>           	<span style="color:#75715e">/* Negative dentry, just create the file */</span>
+</span></span><span style="display:flex;"><span>           <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>dentry<span style="color:#f92672">-&gt;</span>d_inode) {
+</span></span><span style="display:flex;"><span>		           umode_t mode <span style="color:#f92672">=</span> op<span style="color:#f92672">-&gt;</span>mode;
+</span></span><span style="display:flex;"><span>		           <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>IS_POSIXACL(dir<span style="color:#f92672">-&gt;</span>d_inode))
+</span></span><span style="display:flex;"><span>			             mode <span style="color:#f92672">&amp;=</span> <span style="color:#f92672">~</span>current_umask();
+</span></span><span style="display:flex;"><span>			             			         
+</span></span><span style="display:flex;"><span>			         error <span style="color:#f92672">=</span> vfs_create(dir<span style="color:#f92672">-&gt;</span>d_inode, dentry, mode, nd);
+</span></span><span style="display:flex;"><span>			     }
+</span></span><span style="display:flex;"><span>			     
+</span></span><span style="display:flex;"><span>			     
+</span></span><span style="display:flex;"><span>			     
+</span></span><span style="display:flex;"><span>       }
+</span></span><span style="display:flex;"><span>         
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">vfs_create</span>(<span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">inode</span><span style="color:#f92672">*</span> dir, 
+</span></span><span style="display:flex;"><span>                  <span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">dentry</span> <span style="color:#f92672">*</span>dentry, 
+</span></span><span style="display:flex;"><span>                  umode_t mode, 
+</span></span><span style="display:flex;"><span>                  <span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">nameidata</span> <span style="color:#f92672">*</span>nd)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    dir<span style="color:#f92672">-&gt;</span>i_op<span style="color:#f92672">-&gt;</span>create()
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>          fs<span style="color:#f92672">/</span>ext4<span style="color:#f92672">/</span>namei.c: ext4_create      
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>fs<span style="color:#f92672">/</span>ext4<span style="color:#f92672">/</span>inode.c
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>		inode<span style="color:#f92672">-&gt;</span>i_op <span style="color:#f92672">=</span> <span style="color:#f92672">&amp;</span>ext4_dir_inode_operations;
+</span></span><span style="display:flex;"><span>		inode<span style="color:#f92672">-&gt;</span>i_fop <span style="color:#f92672">=</span> <span style="color:#f92672">&amp;</span>ext4_dir_operations;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>fs<span style="color:#f92672">/</span>ext4<span style="color:#f92672">/</span>namei.c
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">inode_operations</span> ext4_dir_inode_operations <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>	.create		<span style="color:#f92672">=</span> ext4_create,
+</span></span><span style="display:flex;"><span>	.lookup		<span style="color:#f92672">=</span> ext4_lookup,
+</span></span><span style="display:flex;"><span>	.link		<span style="color:#f92672">=</span> ext4_link,
+</span></span><span style="display:flex;"><span>	.unlink		<span style="color:#f92672">=</span> ext4_unlink,
+</span></span><span style="display:flex;"><span>	.symlink	<span style="color:#f92672">=</span> ext4_symlink,
+</span></span><span style="display:flex;"><span>	.mkdir		<span style="color:#f92672">=</span> ext4_mkdir,
+</span></span><span style="display:flex;"><span>	.rmdir		<span style="color:#f92672">=</span> ext4_rmdir,
+</span></span><span style="display:flex;"><span>	.mknod		<span style="color:#f92672">=</span> ext4_mknod,
+</span></span><span style="display:flex;"><span>	.rename		<span style="color:#f92672">=</span> ext4_rename,
+</span></span><span style="display:flex;"><span>	.setattr	<span style="color:#f92672">=</span> ext4_setattr,
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#ifdef CONFIG_EXT4_FS_XATTR
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	.setxattr	<span style="color:#f92672">=</span> generic_setxattr,
+</span></span><span style="display:flex;"><span>	.getxattr	<span style="color:#f92672">=</span> generic_getxattr,
+</span></span><span style="display:flex;"><span>	.listxattr	<span style="color:#f92672">=</span> ext4_listxattr,
+</span></span><span style="display:flex;"><span>	.removexattr	<span style="color:#f92672">=</span> generic_removexattr,
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#endif
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	.get_acl	<span style="color:#f92672">=</span> ext4_get_acl,
+</span></span><span style="display:flex;"><span>	.fiemap         <span style="color:#f92672">=</span> ext4_fiemap,
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>fs<span style="color:#f92672">/</span>ext4<span style="color:#f92672">/</span>dir.c
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">file_operations</span> ext4_dir_operations <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>	.llseek		<span style="color:#f92672">=</span> ext4_dir_llseek,
+</span></span><span style="display:flex;"><span>	.read		<span style="color:#f92672">=</span> generic_read_dir,
+</span></span><span style="display:flex;"><span>	.readdir	<span style="color:#f92672">=</span> ext4_readdir,
+</span></span><span style="display:flex;"><span>	.unlocked_ioctl <span style="color:#f92672">=</span> ext4_ioctl,
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#ifdef CONFIG_COMPAT
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	.compat_ioctl	<span style="color:#f92672">=</span> ext4_compat_ioctl,
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#endif
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	.fsync		<span style="color:#f92672">=</span> ext4_sync_file,
+</span></span><span style="display:flex;"><span>	.release	<span style="color:#f92672">=</span> ext4_release_dir,
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><p>​</p>
 
         </div>
 
@@ -258,7 +258,7 @@ fs<span style="color:#f92672">/</span>ext4<span style="color:#f92672">/</span>di
 
                     <footer id="footer">
     <div>
-        &copy; 2023 <a href="https://songchunbo.github.io/">心在路上 By 心在路上</a>
+        &copy; 2024 <a href="https://songchunbo.github.io/">心在路上 By 心在路上</a>
         
     </div>
     <br />
@@ -312,6 +312,10 @@ fs<span style="color:#f92672">/</span>ext4<span style="color:#f92672">/</span>di
 <ul class="widget-list">
     
     <li>
+        <a href="https://songchunbo.github.io/post/openssl_tls/" title=" OpenSSL 源码分析（一） "> OpenSSL 源码分析（一） </a>
+    </li>
+    
+    <li>
         <a href="https://songchunbo.github.io/post/android_packer/" title="Android Packer">Android Packer</a>
     </li>
     
@@ -345,10 +349,6 @@ fs<span style="color:#f92672">/</span>ext4<span style="color:#f92672">/</span>di
     
     <li>
         <a href="https://songchunbo.github.io/post/galois_math/" title="纠删码基础知识">纠删码基础知识</a>
-    </li>
-    
-    <li>
-        <a href="https://songchunbo.github.io/post/primitive_poly/" title="本原多项式的生成方法">本原多项式的生成方法</a>
     </li>
     
 </ul>

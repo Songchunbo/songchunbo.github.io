@@ -1,26 +1,26 @@
 <!doctype html>
 <html lang="en-us">
-<head>
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
 
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
 
-    <title>Android Packer | 心在路上</title>
-    <meta property="og:title" content="Android Packer - 心在路上">
+    <title>Dart_vm_base | 心在路上</title>
+    <meta property="og:title" content="Dart_vm_base - 心在路上">
     <meta property="og:type" content="article">
         
-    <meta property="article:published_time" content='2023-03-15T20:25:09&#43;08:00'>
+    <meta property="article:published_time" content='2011-09-18T09:00:59&#43;08:00'>
         
         
-    <meta property="article:modified_time" content='2023-03-15T20:25:09&#43;08:00'>
+    <meta property="article:modified_time" content='2011-09-18T09:00:59&#43;08:00'>
         
     <meta name="Keywords" content="">
-    <meta name="description" content="Android Packer">
+    <meta name="description" content="Dart_vm_base">
         
     <meta name="author" content="心在路上">
-    <meta property="og:url" content="https://songchunbo.github.io/post/android_packer/">
+    <meta property="og:url" content="http://localhost:1313/post/dart_vm_base_draft/">
     <link rel="shortcut icon" href='/favicon.ico'  type="image/x-icon">
 
     <link rel="stylesheet" href='/css/normalize.css'>
@@ -45,7 +45,7 @@
         <div class="col-group">
             <div class="site-name ">
                 
-                    <a id="logo" href="https://songchunbo.github.io/">
+                    <a id="logo" href="http://localhost:1313/">
                         心在路上
                     </a>
                 
@@ -53,11 +53,11 @@
             </div>
             <div>
                 <nav id="nav-menu" class="clearfix">
-                    <a class="current" href="https://songchunbo.github.io/">首页</a>
+                    <a class="current" href="http://localhost:1313/">首页</a>
                     
-                    <a  href="https://songchunbo.github.io/archives/" title="存档">存档</a>
+                    <a  href="http://localhost:1313/archives/" title="存档">存档</a>
                     
-                    <a  href="https://songchunbo.github.io/about/" title="关于">关于</a>
+                    <a  href="http://localhost:1313/about/" title="关于">关于</a>
                     
                 </nav>
             </div>
@@ -75,74 +75,17 @@
     
     <article class="post">
         <header>
-            <h1 class="post-title">Android Packer</h1>
+            <h1 class="post-title">Dart_vm_base</h1>
         </header>
         <date class="post-meta meta-date">
-            2023年3月15日
+            2011年9月18日
         </date>
         
         
         
         <div class="post-content">
-            <h2 id="第一代壳">第一代壳</h2>
-<p>一代壳，这是最早的Android加壳技术，其主要方法是将原始的.dex文件进行加密，然后在应用中添加一个新的类（通常称为&quot;stub&quot;或&quot;loader&quot;）来在运行时解密和加载这个.dex文件。这种方法可以有效防止静态分析，但对动态分析的防护较弱。</p>
-<ul>
-<li>一代壳通常会对整个DEX进行加密，并把加密后的Payload嵌到APK中</li>
-</ul>
-<p>
-        <img class="mx-auto" alt="" src="1stpacker.png" />   
-    </p>
-<ul>
-<li>安卓APK资源混淆加密重签名工具</li>
-</ul>
-<p>
-        <img class="mx-auto" alt="" src="1stpacker_obfpacker.png" />   
-    </p>
-<ul>
-<li>ApkProtector
-
-        <img class="mx-auto" alt="" src="1stpacker_apkprotector.png" />   
-    </li>
-</ul>
-<h2 id="第二代壳">第二代壳</h2>
-<p>第二代Android壳采取了更复杂的策略来对抗逆向工程。在这个阶段，Dex Method的代码会被提取并存放在外部，而原始Method中则填充nop（无操作）指令。当需要加载或执行method时，系统会动态地解密这些字节码。这个解密逻辑通常存放在so（共享对象）文件中。为了进一步提高安全性，so文件也会进行代码混淆，使得逆向工程变得更为困难。</p>
-<ul>
-<li>
-<p>二代壳通常会对Dex中的CodeItem做手脚，以下是DEX的结构
-
-        <img class="mx-auto" alt="" src="2ndpacker_dex.png" />   
-    </p>
-</li>
-<li>
-<p>某固壳
-
-        <img class="mx-auto" alt="" src="2ndpacker_legu.png" />   
-    </p>
-</li>
-<li>
-<p>dpt-shell
-
-        <img class="mx-auto" alt="" src="2ndpacker_dpt.png" />   
-    </p>
-</li>
-</ul>
-<h2 id="第三代壳">第三代壳</h2>
-<p>第三代Android壳一般是VMP壳，应用虚拟机技术，把部分代码转换为虚拟指令，在自己的虚拟机中执行，同时在前两代壳的基础上，进一步增强了混淆和加密技术。</p>
-<ol>
-<li>自定义虚拟机壳</li>
-</ol>
-<ul>
-<li>jiagu packer</li>
-</ul>
-<p>
-        <img class="mx-auto" alt="" src="3ndpacker_jiagu.png" />   
-    </p>
-<ol start="2">
-<li>非Java,Kotlin开发的app，如Flutter(Dart), ReactNative(JS), Unity(C#)，Xamarin(C#)都是自带虚拟机</li>
-</ol>
-<p>
-        <img class="mx-auto" alt="" src="3ndpacker_flutter.png" />   
-    </p>
+            <p>VMHandle</p>
+<p>LocalHandle</p>
 
         </div>
 
@@ -177,7 +120,7 @@
 
                     <footer id="footer">
     <div>
-        &copy; 2024 <a href="https://songchunbo.github.io/">心在路上 By 心在路上</a>
+        &copy; 2024 <a href="http://localhost:1313/">心在路上 By 心在路上</a>
         
     </div>
     <br />
@@ -218,10 +161,10 @@
 
                 <div id="secondary">
     <section class="widget">
-        <form id="search" action='https://songchunbo.github.io/search/' method="get" accept-charset="utf-8" target="_blank" _lpchecked="1">
+        <form id="search" action='http://localhost:1313/search/' method="get" accept-charset="utf-8" target="_blank" _lpchecked="1">
       
       <input type="text" name="q" maxlength="20" placeholder="Search">
-      <input type="hidden" name="sitesearch" value="https://songchunbo.github.io/">
+      <input type="hidden" name="sitesearch" value="http://localhost:1313/">
       <button type="submit" class="submit icon-search"></button>
 </form>
     </section>
@@ -231,43 +174,43 @@
 <ul class="widget-list">
     
     <li>
-        <a href="https://songchunbo.github.io/post/openssl_tls/" title=" OpenSSL 源码分析（一） "> OpenSSL 源码分析（一） </a>
+        <a href="http://localhost:1313/post/openssl_tls/" title="Openssl_tls">Openssl_tls</a>
     </li>
     
     <li>
-        <a href="https://songchunbo.github.io/post/android_packer/" title="Android Packer">Android Packer</a>
+        <a href="http://localhost:1313/post/android_packer/" title="Android Packer">Android Packer</a>
     </li>
     
     <li>
-        <a href="https://songchunbo.github.io/post/andorid_file_io/" title="Android文件IO路径小记">Android文件IO路径小记</a>
+        <a href="http://localhost:1313/post/andorid_file_io/" title="Android文件IO路径小记">Android文件IO路径小记</a>
     </li>
     
     <li>
-        <a href="https://songchunbo.github.io/post/apt_summary/" title="APT Summary">APT Summary</a>
+        <a href="http://localhost:1313/post/apt_summary/" title="APT Summary">APT Summary</a>
     </li>
     
     <li>
-        <a href="https://songchunbo.github.io/post/dart_vm_lex_syntax/" title="Dart VM源码分析之CFE">Dart VM源码分析之CFE</a>
+        <a href="http://localhost:1313/post/dart_vm_lex_syntax/" title="Dart VM源码分析之CFE">Dart VM源码分析之CFE</a>
     </li>
     
     <li>
-        <a href="https://songchunbo.github.io/post/dart_vm_how_compile_works/" title="Dart VM源码分析之编译dill">Dart VM源码分析之编译dill</a>
+        <a href="http://localhost:1313/post/dart_vm_how_compile_works/" title="Dart VM源码分析之编译dill">Dart VM源码分析之编译dill</a>
     </li>
     
     <li>
-        <a href="https://songchunbo.github.io/post/dart_vm_quick_start/" title="Dart VM命令行工具">Dart VM命令行工具</a>
+        <a href="http://localhost:1313/post/dart_vm_quick_start/" title="Dart VM命令行工具">Dart VM命令行工具</a>
     </li>
     
     <li>
-        <a href="https://songchunbo.github.io/post/art_commit_history/" title="ART Commit History">ART Commit History</a>
+        <a href="http://localhost:1313/post/art_commit_history/" title="ART Commit History">ART Commit History</a>
     </li>
     
     <li>
-        <a href="https://songchunbo.github.io/post/x86_arm_callconvention/" title="X86 and ARM Call Convention">X86 and ARM Call Convention</a>
+        <a href="http://localhost:1313/post/x86_arm_callconvention/" title="X86 and ARM Call Convention">X86 and ARM Call Convention</a>
     </li>
     
     <li>
-        <a href="https://songchunbo.github.io/post/galois_math/" title="纠删码基础知识">纠删码基础知识</a>
+        <a href="http://localhost:1313/post/galois_math/" title="纠删码基础知识">纠删码基础知识</a>
     </li>
     
 </ul>
@@ -309,7 +252,7 @@
     <section class="widget">
         <h3 class="widget-title">其它</h3>
         <ul class="widget-list">
-            <li><a href="https://songchunbo.github.io/index.xml">文章 RSS</a></li>
+            <li><a href="http://localhost:1313/index.xml">文章 RSS</a></li>
         </ul>
     </section>
 </div>

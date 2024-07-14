@@ -118,94 +118,94 @@
 <ul>
 <li>
 <p>5个isolate在main中的初始化和启动过程</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C++" data-lang="C++"><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">int</span> argc, <span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> argv[]) {
-    Dart_Initialize(<span style="color:#f92672">&amp;</span>init_params) {
-        Dart<span style="color:#f92672">::</span>Init(..) {
-           Dart<span style="color:#f92672">::</span>DartInit(...) {
-              <span style="color:#75715e">//各种初始化,线程池，heap,zone,object(null_,class_),stub code等
-</span><span style="color:#75715e"></span>
-              <span style="color:#75715e">// create_group_ = CreateIsolateGroupAndSetup();
-</span><span style="color:#75715e"></span>              Isolate<span style="color:#f92672">::</span>SetCreateGroupCallback(create_group);
-              <span style="color:#75715e">// 创建&#34;vm-isolate&#34; isolate
-</span><span style="color:#75715e"></span>              vm_isolate_ <span style="color:#f92672">=</span> Isolate<span style="color:#f92672">::</span>InitIsolate(<span style="color:#e6db74">&#34;vm-isolate&#34;</span>, ....);
-
-              <span style="color:#75715e">// 创建&#34;vm-service&#34; isolate
-</span><span style="color:#75715e"></span>              <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>is_dart2_aot_precompiler <span style="color:#f92672">||</span> <span style="color:#f92672">!</span>kDartPrecompiledRuntime) {
-                  ServiceIsolate<span style="color:#f92672">::</span>Run(); {
-                      CreateIsolateGroupAndSetup(<span style="color:#e6db74">&#34;vm-service&#34;</span>, ...)
-                         CreateAndSetupServiceIsolate(<span style="color:#e6db74">&#34;vm-service&#34;</span>);
-                  }
-              }
-
-              <span style="color:#75715e">// 初始化&#34;kernel-service&#34; isolate
-</span><span style="color:#75715e"></span>              <span style="color:#66d9ef">if</span> (not dart precoompiled runtime) {
-                  KernelIsolate<span style="color:#f92672">::</span>InitializeState();
-              }
-
-              <span style="color:#75715e">// 按需创建kernel-service isolate
-</span><span style="color:#75715e"></span>              <span style="color:#75715e">// KernelIsolate::Start()
-</span><span style="color:#75715e"></span>           }
-        }
-    }
-
-    <span style="color:#75715e">// &#34;dartdev isolate&#34;
-</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">bool</span> should_run_user_program <span style="color:#f92672">=</span> true;
-    <span style="color:#66d9ef">if</span> (...) {
-        result <span style="color:#f92672">=</span> DartDevIsolate<span style="color:#f92672">::</span>RunDartDev(CreateIsolateGroupAndSetup,...)
-           DartDevIsolate<span style="color:#f92672">::</span>DartDevRunner<span style="color:#f92672">::</span>Run(CreateIsolateGroupAndSetup,..)
-             ThreadStart <span style="color:#f92672">--&gt;</span> DartDevRunner<span style="color:#f92672">::</span>RunCallback {
-                 CreateIsolateGroupAndSetup(<span style="color:#e6db74">&#34;dartdev&#34;</span>);
-                    CreateAndSetupDartDevIsolate(<span style="color:#e6db74">&#34;dartdev&#34;</span>)
-
-                 <span style="color:#75715e">// dartdev isolate入口:
-</span><span style="color:#75715e"></span>                 isolate_args[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;dartdev.dart::main&#34;</span> <span style="color:#75715e">// entrypoint
-</span><span style="color:#75715e"></span>                 isolate_args[<span style="color:#ae81ff">1</span>] <span style="color:#f92672">=</span> args                 <span style="color:#75715e">// args
-</span><span style="color:#75715e"></span>                 isolate_args[<span style="color:#ae81ff">2</span>] <span style="color:#f92672">=</span> send_port;           <span style="color:#75715e">// message back
-</span><span style="color:#75715e"></span>                 isolate_args[<span style="color:#ae81ff">4</span>] <span style="color:#f92672">=</span> ...
-                 ...
-
-                 Dart_Invoke(isolate_lib<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;dart::isolate&#34;</span>, <span style="color:#e6db74">&#34;_startIsolate&#34;</span>, <span style="color:#ae81ff">4</span>,
-                               isolate_args);
-                 Dart_RunLoop();
-             }
-        <span style="color:#75715e">// 如果dartdev命令结果是继续执行编译结果，则在main isolate中执行。
-</span><span style="color:#75715e"></span>        should_run_user_program <span style="color:#f92672">=</span>
-              (dartdev_result <span style="color:#f92672">==</span> DartDevIsolate<span style="color:#f92672">::</span>DartDev_Result_Run);
-        <span style="color:#66d9ef">if</span> (should_run_user_program) {
-            <span style="color:#75715e">// 加载编译后dill文件的data和instructions，包含app和vm的data和instruction
-</span><span style="color:#75715e"></span>            <span style="color:#75715e">// vm_snapshot_data
-</span><span style="color:#75715e"></span>            <span style="color:#75715e">// vm_snapshot_instructions
-</span><span style="color:#75715e"></span>            <span style="color:#75715e">// app_isolate_snapshot_data
-</span><span style="color:#75715e"></span>            <span style="color:#75715e">// app_isolate_snapshot_instructions
-</span><span style="color:#75715e"></span>            try_load_snapshots_lambda();
-        }
-    }
-
-    <span style="color:#75715e">// main isolate
-</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (should_run_user_program) {
-        RunMainIsolate(script_name, ...)
-          CreateIsolateGroupAndSetupHelper(true, <span style="color:#e6db74">&#34;hello.dart&#34;</span>, <span style="color:#e6db74">&#34;main&#34;</span>,...);
-
-        <span style="color:#75715e">// 向kernel isolate发起编译dill binary请求
-</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> (Options<span style="color:#f92672">::</span>gen_snapshot_kind) <span style="color:#f92672">==</span> kKernel) {
-           Snapshot<span style="color:#f92672">::</span>GenerateKernel(Options<span style="color:#f92672">::</span>snapshot_filename(), script_name..)
-        }
-        <span style="color:#75715e">// load dill binary(try_load_snapshots_lambda)，并执行
-</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">else</span> {
-            isolate_args[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;hello.dart::main&#34;</span>;   <span style="color:#75715e">// entrypoint
-</span><span style="color:#75715e"></span>            isolate_args[<span style="color:#ae81ff">1</span>] <span style="color:#f92672">=</span>  args                 <span style="color:#75715e">// args
-</span><span style="color:#75715e"></span>
-            Dart_Invoke(isolate_lib<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;dart::isolate&#34;</span>, <span style="color:#ae81ff">2</span>, isolate_args);
-            Dart_RunLoop();
-            <span style="color:#75715e">// Generate an app snapshot after execution if specified.
-</span><span style="color:#75715e"></span>            <span style="color:#66d9ef">if</span> (Options<span style="color:#f92672">::</span>gen_snapshot_kind() <span style="color:#f92672">==</span> kAppJIT) {
-                Snapshot<span style="color:#f92672">::</span>GenerateAppJIT(Options<span style="color:#f92672">::</span>snapshot_filename());
-            }
-        }
-
-    }
-}
-</code></pre></div></li>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C++" data-lang="C++"><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">int</span> argc, <span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> argv[]) {
+</span></span><span style="display:flex;"><span>    Dart_Initialize(<span style="color:#f92672">&amp;</span>init_params) {
+</span></span><span style="display:flex;"><span>        Dart<span style="color:#f92672">::</span>Init(..) {
+</span></span><span style="display:flex;"><span>           Dart<span style="color:#f92672">::</span>DartInit(...) {
+</span></span><span style="display:flex;"><span>              <span style="color:#75715e">//各种初始化,线程池，heap,zone,object(null_,class_),stub code等
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>              <span style="color:#75715e">// create_group_ = CreateIsolateGroupAndSetup();
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>              Isolate<span style="color:#f92672">::</span>SetCreateGroupCallback(create_group);
+</span></span><span style="display:flex;"><span>              <span style="color:#75715e">// 创建&#34;vm-isolate&#34; isolate
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>              vm_isolate_ <span style="color:#f92672">=</span> Isolate<span style="color:#f92672">::</span>InitIsolate(<span style="color:#e6db74">&#34;vm-isolate&#34;</span>, ....);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>              <span style="color:#75715e">// 创建&#34;vm-service&#34; isolate
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>              <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>is_dart2_aot_precompiler <span style="color:#f92672">||</span> <span style="color:#f92672">!</span>kDartPrecompiledRuntime) {
+</span></span><span style="display:flex;"><span>                  ServiceIsolate<span style="color:#f92672">::</span>Run(); {
+</span></span><span style="display:flex;"><span>                      CreateIsolateGroupAndSetup(<span style="color:#e6db74">&#34;vm-service&#34;</span>, ...)
+</span></span><span style="display:flex;"><span>                         CreateAndSetupServiceIsolate(<span style="color:#e6db74">&#34;vm-service&#34;</span>);
+</span></span><span style="display:flex;"><span>                  }
+</span></span><span style="display:flex;"><span>              }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>              <span style="color:#75715e">// 初始化&#34;kernel-service&#34; isolate
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>              <span style="color:#66d9ef">if</span> (not dart precoompiled runtime) {
+</span></span><span style="display:flex;"><span>                  KernelIsolate<span style="color:#f92672">::</span>InitializeState();
+</span></span><span style="display:flex;"><span>              }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>              <span style="color:#75715e">// 按需创建kernel-service isolate
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>              <span style="color:#75715e">// KernelIsolate::Start()
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>           }
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// &#34;dartdev isolate&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">bool</span> should_run_user_program <span style="color:#f92672">=</span> true;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (...) {
+</span></span><span style="display:flex;"><span>        result <span style="color:#f92672">=</span> DartDevIsolate<span style="color:#f92672">::</span>RunDartDev(CreateIsolateGroupAndSetup,...)
+</span></span><span style="display:flex;"><span>           DartDevIsolate<span style="color:#f92672">::</span>DartDevRunner<span style="color:#f92672">::</span>Run(CreateIsolateGroupAndSetup,..)
+</span></span><span style="display:flex;"><span>             ThreadStart <span style="color:#f92672">--&gt;</span> DartDevRunner<span style="color:#f92672">::</span>RunCallback {
+</span></span><span style="display:flex;"><span>                 CreateIsolateGroupAndSetup(<span style="color:#e6db74">&#34;dartdev&#34;</span>);
+</span></span><span style="display:flex;"><span>                    CreateAndSetupDartDevIsolate(<span style="color:#e6db74">&#34;dartdev&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                 <span style="color:#75715e">// dartdev isolate入口:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                 isolate_args[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;dartdev.dart::main&#34;</span> <span style="color:#75715e">// entrypoint
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                 isolate_args[<span style="color:#ae81ff">1</span>] <span style="color:#f92672">=</span> args                 <span style="color:#75715e">// args
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                 isolate_args[<span style="color:#ae81ff">2</span>] <span style="color:#f92672">=</span> send_port;           <span style="color:#75715e">// message back
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                 isolate_args[<span style="color:#ae81ff">4</span>] <span style="color:#f92672">=</span> ...
+</span></span><span style="display:flex;"><span>                 ...
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                 Dart_Invoke(isolate_lib<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;dart::isolate&#34;</span>, <span style="color:#e6db74">&#34;_startIsolate&#34;</span>, <span style="color:#ae81ff">4</span>,
+</span></span><span style="display:flex;"><span>                               isolate_args);
+</span></span><span style="display:flex;"><span>                 Dart_RunLoop();
+</span></span><span style="display:flex;"><span>             }
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 如果dartdev命令结果是继续执行编译结果，则在main isolate中执行。
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        should_run_user_program <span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span>              (dartdev_result <span style="color:#f92672">==</span> DartDevIsolate<span style="color:#f92672">::</span>DartDev_Result_Run);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (should_run_user_program) {
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 加载编译后dill文件的data和instructions，包含app和vm的data和instruction
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#75715e">// vm_snapshot_data
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#75715e">// vm_snapshot_instructions
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#75715e">// app_isolate_snapshot_data
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#75715e">// app_isolate_snapshot_instructions
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            try_load_snapshots_lambda();
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// main isolate
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (should_run_user_program) {
+</span></span><span style="display:flex;"><span>        RunMainIsolate(script_name, ...)
+</span></span><span style="display:flex;"><span>          CreateIsolateGroupAndSetupHelper(true, <span style="color:#e6db74">&#34;hello.dart&#34;</span>, <span style="color:#e6db74">&#34;main&#34;</span>,...);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 向kernel isolate发起编译dill binary请求
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> (Options<span style="color:#f92672">::</span>gen_snapshot_kind) <span style="color:#f92672">==</span> kKernel) {
+</span></span><span style="display:flex;"><span>           Snapshot<span style="color:#f92672">::</span>GenerateKernel(Options<span style="color:#f92672">::</span>snapshot_filename(), script_name..)
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// load dill binary(try_load_snapshots_lambda)，并执行
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>            isolate_args[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;hello.dart::main&#34;</span>;   <span style="color:#75715e">// entrypoint
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            isolate_args[<span style="color:#ae81ff">1</span>] <span style="color:#f92672">=</span>  args                 <span style="color:#75715e">// args
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>            Dart_Invoke(isolate_lib<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;dart::isolate&#34;</span>, <span style="color:#ae81ff">2</span>, isolate_args);
+</span></span><span style="display:flex;"><span>            Dart_RunLoop();
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// Generate an app snapshot after execution if specified.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#66d9ef">if</span> (Options<span style="color:#f92672">::</span>gen_snapshot_kind() <span style="color:#f92672">==</span> kAppJIT) {
+</span></span><span style="display:flex;"><span>                Snapshot<span style="color:#f92672">::</span>GenerateAppJIT(Options<span style="color:#f92672">::</span>snapshot_filename());
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div></li>
 </ul>
 <h3 id="二-用户命令dart-compile-kernel-hellodart执行过程">二、 用户命令dart compile kernel hello.dart执行过程</h3>
 <ul>
@@ -213,94 +213,94 @@
 <p>用户命令在dartdev isolate中执行</p>
 <p>dartdev isolate入口在dartdev.dart，dartdev.dart是一个dart开发工具包，可以处理各种用户命令，包括analyzer, create, compile, run等命令</p>
 <p><a href="https://github.com/dart-lang/sdk/blob/main/pkg/dartdev/bin/dartdev.dart">https://github.com/dart-lang/sdk/blob/main/pkg/dartdev/bin/dartdev.dart</a></p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-dart" data-lang="dart"><span style="color:#75715e">// 支持的命令 
-</span><span style="color:#75715e"></span>addCommand(AnalyzeCommand(verbose: verbose));
-addCommand(CreateCommand(verbose: verbose));
-addCommand(CompileCommand(verbose: verbose));
-addCommand(FixCommand(verbose: verbose));
-addCommand(FormatCommand(verbose: verbose));
-addCommand(LanguageServerCommand(verbose: verbose));
-addCommand(MigrateCommand(verbose: verbose));
-addCommand(pubCommand());
-addCommand(RunCommand(verbose: verbose));
-addCommand(TestCommand())
-</code></pre></div></li>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-dart" data-lang="dart"><span style="display:flex;"><span><span style="color:#75715e">// 支持的命令 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>addCommand(AnalyzeCommand(verbose: verbose));
+</span></span><span style="display:flex;"><span>addCommand(CreateCommand(verbose: verbose));
+</span></span><span style="display:flex;"><span>addCommand(CompileCommand(verbose: verbose));
+</span></span><span style="display:flex;"><span>addCommand(FixCommand(verbose: verbose));
+</span></span><span style="display:flex;"><span>addCommand(FormatCommand(verbose: verbose));
+</span></span><span style="display:flex;"><span>addCommand(LanguageServerCommand(verbose: verbose));
+</span></span><span style="display:flex;"><span>addCommand(MigrateCommand(verbose: verbose));
+</span></span><span style="display:flex;"><span>addCommand(pubCommand());
+</span></span><span style="display:flex;"><span>addCommand(RunCommand(verbose: verbose));
+</span></span><span style="display:flex;"><span>addCommand(TestCommand())
+</span></span></code></pre></div></li>
 <li>
 <p>dartdev入口，以及调用流程</p>
 <ol>
 <li>The entry point for dartdev</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-dart" data-lang="dart">Future<span style="color:#f92672">&lt;</span><span style="color:#66d9ef">void</span><span style="color:#f92672">&gt;</span> main(List<span style="color:#f92672">&lt;</span><span style="color:#66d9ef">String</span><span style="color:#f92672">&gt;</span>args, SendPort )
-    runDartdev(args, port)
-       DartdevRunner.run(args)
-          DartdevRunner:<span style="color:#f92672">:</span>runCommand(args)
-             <span style="color:#66d9ef">super</span>.runCommand(args)
-                CompileCommand.runCommand(..)
-</code></pre></div><ol start="2">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-dart" data-lang="dart"><span style="display:flex;"><span>Future<span style="color:#f92672">&lt;</span><span style="color:#66d9ef">void</span><span style="color:#f92672">&gt;</span> main(List<span style="color:#f92672">&lt;</span><span style="color:#66d9ef">String</span><span style="color:#f92672">&gt;</span>args, SendPort )
+</span></span><span style="display:flex;"><span>    runDartdev(args, port)
+</span></span><span style="display:flex;"><span>       DartdevRunner.run(args)
+</span></span><span style="display:flex;"><span>          DartdevRunner:<span style="color:#f92672">:</span>runCommand(args)
+</span></span><span style="display:flex;"><span>             <span style="color:#66d9ef">super</span>.runCommand(args)
+</span></span><span style="display:flex;"><span>                CompileCommand.runCommand(..)
+</span></span></code></pre></div><ol start="2">
 <li>CompileComand有四个子命令进行js，aot，exe，jit编译，最终会调用native函数执行dart后端编译命令</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-dart" data-lang="dart">CompileCommand.runCommand(..)
-    CompileSnapshotCommand.run {
-       <span style="color:#75715e">// Compiling hello.dart to kernel file hello.dill
-</span><span style="color:#75715e"></span>       log.stdout(<span style="color:#e6db74">&#39;Compiling </span><span style="color:#e6db74">$</span>sourcePath<span style="color:#e6db74"> to </span><span style="color:#e6db74">$</span>commandName<span style="color:#e6db74"> file </span><span style="color:#e6db74">$</span>outputFile<span style="color:#e6db74">.&#39;</span>);
-       <span style="color:#66d9ef">await</span> startDartProcess(sdk, args);
-          external Process.start(sdk.dart, arguments, workingDirectory: cwd);
-          <span style="color:#75715e">//调用native函数dart::bin::Builtin_Process_Start()
-</span><span style="color:#75715e"></span>          <span style="color:#75715e">//最终会fork出一个子进程，执行dart编译命令
-</span><span style="color:#75715e"></span>    }
-
-   .dart:<span style="color:#f92672">:</span>bin:<span style="color:#f92672">:</span>Builtin_Process_Start调用栈如下<span style="color:#960050;background-color:#1e0010">：</span>
-
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">0</span>  dart:<span style="color:#f92672">:</span>bin:<span style="color:#f92672">:</span>ProcessStarter:<span style="color:#f92672">:</span>ProcessStarter (<span style="color:#66d9ef">this</span><span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fde38</span>, namespc<span style="color:#f92672">=</span><span style="color:#ae81ff">0x555558973740</span>,
-    path<span style="color:#f92672">=</span><span style="color:#ae81ff">0x5555589ed180</span> <span style="color:#e6db74">&#34;/data/chunbo/aosp/dart-sdk/sdk/out/DebugX64/dart-sdk/bin/dartdebug&#34;</span>, arguments<span style="color:#f92672">=</span><span style="color:#ae81ff">0x5555589ed210</span>,
-    arguments_length<span style="color:#f92672">=</span><span style="color:#ae81ff">4</span>, working_directory<span style="color:#f92672">=</span><span style="color:#ae81ff">0x0</span>, environment<span style="color:#f92672">=</span><span style="color:#ae81ff">0x5555589ed3c0</span>, environment_length<span style="color:#f92672">=</span><span style="color:#ae81ff">31</span>, mode<span style="color:#f92672">=</span>dart:<span style="color:#f92672">:</span>bin:<span style="color:#f92672">:</span>kNormal,
-    <span style="color:#66d9ef">in</span><span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fe068</span>, out<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fe070</span>, err<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fe060</span>, id<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fdfc0</span>, exit_event<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fe058</span>,
-    os_error_message<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fdfb8</span>) at ..<span style="color:#f92672">/</span>..<span style="color:#f92672">/</span>runtime<span style="color:#f92672">/</span>bin<span style="color:#f92672">/</span>process_linux.cc:<span style="color:#ae81ff">270</span>
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">1</span>  <span style="color:#ae81ff">0x000055555748a5b9</span> <span style="color:#66d9ef">in</span> dart:<span style="color:#f92672">:</span>bin:<span style="color:#f92672">:</span>Process:<span style="color:#f92672">:</span>Start (namespc<span style="color:#f92672">=</span><span style="color:#ae81ff">0x555558973740</span>,
-    path<span style="color:#f92672">=</span><span style="color:#ae81ff">0x5555589ed180</span> <span style="color:#e6db74">&#34;/data/chunbo/aosp/dart-sdk/sdk/out/DebugX64/dart-sdk/bin/dartdebug&#34;</span>, arguments<span style="color:#f92672">=</span><span style="color:#ae81ff">0x5555589ed210</span>,
-    arguments_length<span style="color:#f92672">=</span><span style="color:#ae81ff">4</span>, working_directory<span style="color:#f92672">=</span><span style="color:#ae81ff">0x0</span>, environment<span style="color:#f92672">=</span><span style="color:#ae81ff">0x5555589ed3c0</span>, environment_length<span style="color:#f92672">=</span><span style="color:#ae81ff">31</span>, mode<span style="color:#f92672">=</span>dart:<span style="color:#f92672">:</span>bin:<span style="color:#f92672">:</span>kNormal,
-    <span style="color:#66d9ef">in</span><span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fe068</span>, out<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fe070</span>, err<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fe060</span>, id<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fdfc0</span>, exit_event<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fe058</span>,
-    os_error_message<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fdfb8</span>) at ..<span style="color:#f92672">/</span>..<span style="color:#f92672">/</span>runtime<span style="color:#f92672">/</span>bin<span style="color:#f92672">/</span>process_linux.cc:<span style="color:#ae81ff">809</span>
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">2</span>  <span style="color:#ae81ff">0x0000555557489688</span> <span style="color:#66d9ef">in</span> dart:<span style="color:#f92672">:</span>bin:<span style="color:#f92672">:</span>Builtin_Process_Start (args<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fe1a0</span>) at ..<span style="color:#f92672">/</span>..<span style="color:#f92672">/</span>runtime<span style="color:#f92672">/</span>bin<span style="color:#f92672">/</span>process.cc:<span style="color:#ae81ff">144</span>
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">3</span>  <span style="color:#ae81ff">0x00005555577dd42c</span> <span style="color:#66d9ef">in</span> dart:<span style="color:#f92672">:</span>NativeEntry:<span style="color:#f92672">:</span>AutoScopeNativeCallWrapperNoStackCheck (args<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fe1a0</span>,
-    func<span style="color:#f92672">=</span><span style="color:#ae81ff">0x555557489300</span> <span style="color:#f92672">&lt;</span>dart:<span style="color:#f92672">:</span>bin:<span style="color:#f92672">:</span>Builtin_Process_Start(_Dart_NativeArguments<span style="color:#f92672">*</span>)<span style="color:#f92672">&gt;</span>) at ..<span style="color:#f92672">/</span>..<span style="color:#f92672">/</span>runtime<span style="color:#f92672">/</span>vm<span style="color:#f92672">/</span>native_entry.cc:<span style="color:#ae81ff">217</span>
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">4</span>  <span style="color:#ae81ff">0x00005555577dd309</span> <span style="color:#66d9ef">in</span> dart:<span style="color:#f92672">:</span>NativeEntry:<span style="color:#f92672">:</span>AutoScopeNativeCallWrapper (args<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fe1a0</span>,
-    func<span style="color:#f92672">=</span><span style="color:#ae81ff">0x555557489300</span> <span style="color:#f92672">&lt;</span>dart:<span style="color:#f92672">:</span>bin:<span style="color:#f92672">:</span>Builtin_Process_Start(_Dart_NativeArguments<span style="color:#f92672">*</span>)<span style="color:#f92672">&gt;</span>) at ..<span style="color:#f92672">/</span>..<span style="color:#f92672">/</span>runtime<span style="color:#f92672">/</span>vm<span style="color:#f92672">/</span>native_entry.cc:<span style="color:#ae81ff">198</span>
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">5</span>  <span style="color:#ae81ff">0x00007ffff7682a44</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">6</span>  <span style="color:#ae81ff">0x00005555589b1000</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">7</span>  <span style="color:#ae81ff">0x000000000100000c</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">8</span>  <span style="color:#ae81ff">0x00007ffff39fe240</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">9</span>  <span style="color:#ae81ff">0x00007ffff39fe1e0</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">10</span> <span style="color:#ae81ff">0x00007ffff3472c21</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">11</span> <span style="color:#ae81ff">0x00007ffff778d501</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">12</span> <span style="color:#ae81ff">0x00007ffff39fe268</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">13</span> <span style="color:#ae81ff">0x00007ffff3b2b164</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">14</span> <span style="color:#ae81ff">0x00007ffff7788041</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">15</span> <span style="color:#ae81ff">0x00007ffff3af1639</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">16</span> <span style="color:#ae81ff">0x00007ffff3aed079</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">17</span> <span style="color:#ae81ff">0x00007ffff3aec7d9</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">18</span> <span style="color:#ae81ff">0x00007ffff3aebf59</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">19</span> <span style="color:#ae81ff">0x00007ffff3aea2b9</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
-<span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">20</span> <span style="color:#ae81ff">0x0000000000000000</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
-</code></pre></div><ol start="3">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-dart" data-lang="dart"><span style="display:flex;"><span>CompileCommand.runCommand(..)
+</span></span><span style="display:flex;"><span>    CompileSnapshotCommand.run {
+</span></span><span style="display:flex;"><span>       <span style="color:#75715e">// Compiling hello.dart to kernel file hello.dill
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>       log.stdout(<span style="color:#e6db74">&#39;Compiling </span><span style="color:#e6db74">$</span>sourcePath<span style="color:#e6db74"> to </span><span style="color:#e6db74">$</span>commandName<span style="color:#e6db74"> file </span><span style="color:#e6db74">$</span>outputFile<span style="color:#e6db74">.&#39;</span>);
+</span></span><span style="display:flex;"><span>       <span style="color:#66d9ef">await</span> startDartProcess(sdk, args);
+</span></span><span style="display:flex;"><span>          external Process.start(sdk.dart, arguments, workingDirectory: cwd);
+</span></span><span style="display:flex;"><span>          <span style="color:#75715e">//调用native函数dart::bin::Builtin_Process_Start()
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>          <span style="color:#75715e">//最终会fork出一个子进程，执行dart编译命令
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>   .dart:<span style="color:#f92672">:</span>bin:<span style="color:#f92672">:</span>Builtin_Process_Start调用栈如下<span style="color:#960050;background-color:#1e0010">：</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">0</span>  dart:<span style="color:#f92672">:</span>bin:<span style="color:#f92672">:</span>ProcessStarter:<span style="color:#f92672">:</span>ProcessStarter (<span style="color:#66d9ef">this</span><span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fde38</span>, namespc<span style="color:#f92672">=</span><span style="color:#ae81ff">0x555558973740</span>,
+</span></span><span style="display:flex;"><span>    path<span style="color:#f92672">=</span><span style="color:#ae81ff">0x5555589ed180</span> <span style="color:#e6db74">&#34;/data/chunbo/aosp/dart-sdk/sdk/out/DebugX64/dart-sdk/bin/dartdebug&#34;</span>, arguments<span style="color:#f92672">=</span><span style="color:#ae81ff">0x5555589ed210</span>,
+</span></span><span style="display:flex;"><span>    arguments_length<span style="color:#f92672">=</span><span style="color:#ae81ff">4</span>, working_directory<span style="color:#f92672">=</span><span style="color:#ae81ff">0x0</span>, environment<span style="color:#f92672">=</span><span style="color:#ae81ff">0x5555589ed3c0</span>, environment_length<span style="color:#f92672">=</span><span style="color:#ae81ff">31</span>, mode<span style="color:#f92672">=</span>dart:<span style="color:#f92672">:</span>bin:<span style="color:#f92672">:</span>kNormal,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">in</span><span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fe068</span>, out<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fe070</span>, err<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fe060</span>, id<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fdfc0</span>, exit_event<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fe058</span>,
+</span></span><span style="display:flex;"><span>    os_error_message<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fdfb8</span>) at ..<span style="color:#f92672">/</span>..<span style="color:#f92672">/</span>runtime<span style="color:#f92672">/</span>bin<span style="color:#f92672">/</span>process_linux.cc:<span style="color:#ae81ff">270</span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">1</span>  <span style="color:#ae81ff">0x000055555748a5b9</span> <span style="color:#66d9ef">in</span> dart:<span style="color:#f92672">:</span>bin:<span style="color:#f92672">:</span>Process:<span style="color:#f92672">:</span>Start (namespc<span style="color:#f92672">=</span><span style="color:#ae81ff">0x555558973740</span>,
+</span></span><span style="display:flex;"><span>    path<span style="color:#f92672">=</span><span style="color:#ae81ff">0x5555589ed180</span> <span style="color:#e6db74">&#34;/data/chunbo/aosp/dart-sdk/sdk/out/DebugX64/dart-sdk/bin/dartdebug&#34;</span>, arguments<span style="color:#f92672">=</span><span style="color:#ae81ff">0x5555589ed210</span>,
+</span></span><span style="display:flex;"><span>    arguments_length<span style="color:#f92672">=</span><span style="color:#ae81ff">4</span>, working_directory<span style="color:#f92672">=</span><span style="color:#ae81ff">0x0</span>, environment<span style="color:#f92672">=</span><span style="color:#ae81ff">0x5555589ed3c0</span>, environment_length<span style="color:#f92672">=</span><span style="color:#ae81ff">31</span>, mode<span style="color:#f92672">=</span>dart:<span style="color:#f92672">:</span>bin:<span style="color:#f92672">:</span>kNormal,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">in</span><span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fe068</span>, out<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fe070</span>, err<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fe060</span>, id<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fdfc0</span>, exit_event<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fe058</span>,
+</span></span><span style="display:flex;"><span>    os_error_message<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fdfb8</span>) at ..<span style="color:#f92672">/</span>..<span style="color:#f92672">/</span>runtime<span style="color:#f92672">/</span>bin<span style="color:#f92672">/</span>process_linux.cc:<span style="color:#ae81ff">809</span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">2</span>  <span style="color:#ae81ff">0x0000555557489688</span> <span style="color:#66d9ef">in</span> dart:<span style="color:#f92672">:</span>bin:<span style="color:#f92672">:</span>Builtin_Process_Start (args<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fe1a0</span>) at ..<span style="color:#f92672">/</span>..<span style="color:#f92672">/</span>runtime<span style="color:#f92672">/</span>bin<span style="color:#f92672">/</span>process.cc:<span style="color:#ae81ff">144</span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">3</span>  <span style="color:#ae81ff">0x00005555577dd42c</span> <span style="color:#66d9ef">in</span> dart:<span style="color:#f92672">:</span>NativeEntry:<span style="color:#f92672">:</span>AutoScopeNativeCallWrapperNoStackCheck (args<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fe1a0</span>,
+</span></span><span style="display:flex;"><span>    func<span style="color:#f92672">=</span><span style="color:#ae81ff">0x555557489300</span> <span style="color:#f92672">&lt;</span>dart:<span style="color:#f92672">:</span>bin:<span style="color:#f92672">:</span>Builtin_Process_Start(_Dart_NativeArguments<span style="color:#f92672">*</span>)<span style="color:#f92672">&gt;</span>) at ..<span style="color:#f92672">/</span>..<span style="color:#f92672">/</span>runtime<span style="color:#f92672">/</span>vm<span style="color:#f92672">/</span>native_entry.cc:<span style="color:#ae81ff">217</span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">4</span>  <span style="color:#ae81ff">0x00005555577dd309</span> <span style="color:#66d9ef">in</span> dart:<span style="color:#f92672">:</span>NativeEntry:<span style="color:#f92672">:</span>AutoScopeNativeCallWrapper (args<span style="color:#f92672">=</span><span style="color:#ae81ff">0x7ffff39fe1a0</span>,
+</span></span><span style="display:flex;"><span>    func<span style="color:#f92672">=</span><span style="color:#ae81ff">0x555557489300</span> <span style="color:#f92672">&lt;</span>dart:<span style="color:#f92672">:</span>bin:<span style="color:#f92672">:</span>Builtin_Process_Start(_Dart_NativeArguments<span style="color:#f92672">*</span>)<span style="color:#f92672">&gt;</span>) at ..<span style="color:#f92672">/</span>..<span style="color:#f92672">/</span>runtime<span style="color:#f92672">/</span>vm<span style="color:#f92672">/</span>native_entry.cc:<span style="color:#ae81ff">198</span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">5</span>  <span style="color:#ae81ff">0x00007ffff7682a44</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">6</span>  <span style="color:#ae81ff">0x00005555589b1000</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">7</span>  <span style="color:#ae81ff">0x000000000100000c</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">8</span>  <span style="color:#ae81ff">0x00007ffff39fe240</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">9</span>  <span style="color:#ae81ff">0x00007ffff39fe1e0</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">10</span> <span style="color:#ae81ff">0x00007ffff3472c21</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">11</span> <span style="color:#ae81ff">0x00007ffff778d501</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">12</span> <span style="color:#ae81ff">0x00007ffff39fe268</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">13</span> <span style="color:#ae81ff">0x00007ffff3b2b164</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">14</span> <span style="color:#ae81ff">0x00007ffff7788041</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">15</span> <span style="color:#ae81ff">0x00007ffff3af1639</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">16</span> <span style="color:#ae81ff">0x00007ffff3aed079</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">17</span> <span style="color:#ae81ff">0x00007ffff3aec7d9</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">18</span> <span style="color:#ae81ff">0x00007ffff3aebf59</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">19</span> <span style="color:#ae81ff">0x00007ffff3aea2b9</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">20</span> <span style="color:#ae81ff">0x0000000000000000</span> <span style="color:#66d9ef">in</span> <span style="color:#f92672">??</span> ()
+</span></span></code></pre></div><ol start="3">
 <li>fork的子进程会实际执行编译动作</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C++" data-lang="C++">CMD<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;$DART_BIN/dart --snapshot-kind=kernel --snapshot=hello.dill --verbosity=all $DART_SOURCE/hello.dart</span>
-dart<span style="color:#f92672">::</span>bin<span style="color:#f92672">::</span>Builtin_Process_Start(...)
-  ....
-  dart<span style="color:#f92672">::</span>bin<span style="color:#f92672">::</span>ProcessStarter starter(namespc, path, arguments, arguments_length,...)
-  starter.Start() {
-      pid_t pid <span style="color:#f92672">=</span> fork();
-      <span style="color:#66d9ef">if</span> (pid <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) {
-          NewProcess()
-             ExecProcess(){
-                <span style="color:#75715e">// CMD=&#34;$DART_BIN/dart --snapshot-kind=kernel --snapshot=hello.dill ....
-</span><span style="color:#75715e"></span>                execvp(realpath, <span style="color:#66d9ef">const_cast</span><span style="color:#f92672">&lt;</span><span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> <span style="color:#66d9ef">const</span><span style="color:#f92672">*&gt;</span>(program_arguments_));
-             }
-
-      }
-  }
-</code></pre></div></li>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C++" data-lang="C++"><span style="display:flex;"><span>CMD<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;$DART_BIN/dart --snapshot-kind=kernel --snapshot=hello.dill --verbosity=all $DART_SOURCE/hello.dart</span>
+</span></span><span style="display:flex;"><span>dart<span style="color:#f92672">::</span>bin<span style="color:#f92672">::</span>Builtin_Process_Start(...)
+</span></span><span style="display:flex;"><span>  ....
+</span></span><span style="display:flex;"><span>  dart<span style="color:#f92672">::</span>bin<span style="color:#f92672">::</span>ProcessStarter starter(namespc, path, arguments, arguments_length,...)
+</span></span><span style="display:flex;"><span>  starter.Start() {
+</span></span><span style="display:flex;"><span>      pid_t pid <span style="color:#f92672">=</span> fork();
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (pid <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>          NewProcess()
+</span></span><span style="display:flex;"><span>             ExecProcess(){
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">// CMD=&#34;$DART_BIN/dart --snapshot-kind=kernel --snapshot=hello.dill ....
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                execvp(realpath, <span style="color:#66d9ef">const_cast</span><span style="color:#f92672">&lt;</span><span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> <span style="color:#66d9ef">const</span><span style="color:#f92672">*&gt;</span>(program_arguments_));
+</span></span><span style="display:flex;"><span>             }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>  }
+</span></span></code></pre></div></li>
 </ul>
 <h3 id="三-转换后的dart命令执行流程">三、 转换后的dart命令执行流程</h3>
 <ul>
@@ -309,176 +309,175 @@ dart<span style="color:#f92672">::</span>bin<span style="color:#f92672">::</span
 </code></pre></li>
 <li>
 <p>在main isolate中启动kernel isolate(CFE)并初始化，同时向kernel isolate发起编译请求，把生成的AST写入dill文件。</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C++" data-lang="C++"><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">int</span> argc, <span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> argv[]) {
-    ...
-    RunMainIsolate(script_name, package_config_override, <span style="color:#f92672">&amp;</span>dart_options) {
-        <span style="color:#66d9ef">if</span> (Options<span style="color:#f92672">::</span>gen_snapshot_kind() <span style="color:#f92672">==</span> kKernel) {
-<span style="display:block;width:100%;background-color:#3c3d38">            Snapshot<span style="color:#f92672">::</span>GenerateKernel(Options<span style="color:#f92672">::</span>snapshot_filename(), script_name, ..) {
-</span>                dfe.ReadScript(script_name, kernel_buffer,..);
-                <span style="color:#66d9ef">if</span> (kernel_buffer <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nullptr</span>) {
-                    WriteSnapshotFile(snapshot_filename, kernel_buffer,..);
-                } <span style="color:#66d9ef">else</span> {
-                    <span style="color:#75715e">// 向kernel isolate(CFE)发起dart编译请求
-</span><span style="display:block;width:100%;background-color:#3c3d38"><span style="color:#75715e"></span>                    Dart_KernelCompilationResult result <span style="color:#f92672">=</span>
-</span><span style="display:block;width:100%;background-color:#3c3d38">                         dfe.CompileScript(script_name, false, package_config, true);
-</span>
-                    <span style="color:#75715e">// 请求成功后把编译结果写入dill文件
-</span><span style="display:block;width:100%;background-color:#3c3d38"><span style="color:#75715e"></span>                    WriteSnapshotFile(snapshot_filename, result.kernel, result.kernel_size);
-</span>                }
-            }
-        }
-    }
-}
-</code></pre></div></li>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;display:grid;"><code class="language-C++" data-lang="C++"><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">int</span> argc, <span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> argv[]) {
+</span></span><span style="display:flex;"><span>    ...
+</span></span><span style="display:flex;"><span>    RunMainIsolate(script_name, package_config_override, <span style="color:#f92672">&amp;</span>dart_options) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (Options<span style="color:#f92672">::</span>gen_snapshot_kind() <span style="color:#f92672">==</span> kKernel) {
+</span></span><span style="display:flex; background-color:#3c3d38"><span>            Snapshot<span style="color:#f92672">::</span>GenerateKernel(Options<span style="color:#f92672">::</span>snapshot_filename(), script_name, ..) {
+</span></span><span style="display:flex;"><span>                dfe.ReadScript(script_name, kernel_buffer,..);
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> (kernel_buffer <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nullptr</span>) {
+</span></span><span style="display:flex;"><span>                    WriteSnapshotFile(snapshot_filename, kernel_buffer,..);
+</span></span><span style="display:flex;"><span>                } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>                    <span style="color:#75715e">// 向kernel isolate(CFE)发起dart编译请求
+</span></span></span><span style="display:flex; background-color:#3c3d38"><span><span style="color:#75715e"></span>                    Dart_KernelCompilationResult result <span style="color:#f92672">=</span>
+</span></span><span style="display:flex; background-color:#3c3d38"><span>                         dfe.CompileScript(script_name, false, package_config, true);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#75715e">// 请求成功后把编译结果写入dill文件
+</span></span></span><span style="display:flex; background-color:#3c3d38"><span><span style="color:#75715e"></span>                    WriteSnapshotFile(snapshot_filename, result.kernel, result.kernel_size);
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div></li>
 <li>
 <p>启动kernel isolate，向kernel isolate CFE模块发起dart编译请求</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C++" data-lang="C++"> dfe.CompileScript(script_name, false, package_config, true);
-   Dart_CompileToKernel(sanitized_uri, platform_strong_dill,platform_strong_dill_size,...);
-      KernelIsolate<span style="color:#f92672">::</span>CompileToKernel(script_uri, platform_kernel, platform_kernel_size,..) {
-          <span style="color:#75715e">// Start the kernel Isolate if it is not already running.
-</span><span style="display:block;width:100%;background-color:#3c3d38"><span style="color:#75715e"></span>          <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>KernelIsolate<span style="color:#f92672">::</span>Start()) {
-</span>          }
-
-          <span style="color:#75715e">// This must be the main script to be loaded. Wait for Kernel isolate
-</span><span style="color:#75715e"></span>          <span style="color:#75715e">// to finish initialization.
-</span><span style="color:#75715e"></span>          Dart_Port kernel_port <span style="color:#f92672">=</span> WaitForKernelPort();  <span style="color:#75715e">// kernel_service.dart
-</span><span style="color:#75715e"></span>
-          KernelCompilationRequest request;
-          <span style="color:#75715e">// 向kernel isolate发起编译请求
-</span><span style="display:block;width:100%;background-color:#3c3d38"><span style="color:#75715e"></span>          <span style="color:#66d9ef">return</span> request.SendAndWaitForResponse(
-</span><span style="display:block;width:100%;background-color:#3c3d38">              kCompileTag, kernel_port, script_uri, platform_kernel,
-</span><span style="display:block;width:100%;background-color:#3c3d38">              platform_kernel_size, source_file_count, source_files,
-</span><span style="display:block;width:100%;background-color:#3c3d38">              incremental_compile, snapshot_compile, package_config,
-</span><span style="display:block;width:100%;background-color:#3c3d38">              multiroot_filepaths, multiroot_scheme, experimental_flags_, NULL,
-</span><span style="display:block;width:100%;background-color:#3c3d38">              verbosity);
-</span>
-      }
-
-</code></pre></div></li>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;display:grid;"><code class="language-C++" data-lang="C++"><span style="display:flex;"><span> dfe.CompileScript(script_name, false, package_config, true);
+</span></span><span style="display:flex;"><span>   Dart_CompileToKernel(sanitized_uri, platform_strong_dill,platform_strong_dill_size,...);
+</span></span><span style="display:flex;"><span>      KernelIsolate<span style="color:#f92672">::</span>CompileToKernel(script_uri, platform_kernel, platform_kernel_size,..) {
+</span></span><span style="display:flex;"><span>          <span style="color:#75715e">// Start the kernel Isolate if it is not already running.
+</span></span></span><span style="display:flex; background-color:#3c3d38"><span><span style="color:#75715e"></span>          <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>KernelIsolate<span style="color:#f92672">::</span>Start()) {
+</span></span><span style="display:flex;"><span>          }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>          <span style="color:#75715e">// This must be the main script to be loaded. Wait for Kernel isolate
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>          <span style="color:#75715e">// to finish initialization.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>          Dart_Port kernel_port <span style="color:#f92672">=</span> WaitForKernelPort();  <span style="color:#75715e">// kernel_service.dart
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>          KernelCompilationRequest request;
+</span></span><span style="display:flex;"><span>          <span style="color:#75715e">// 向kernel isolate发起编译请求
+</span></span></span><span style="display:flex; background-color:#3c3d38"><span><span style="color:#75715e"></span>          <span style="color:#66d9ef">return</span> request.SendAndWaitForResponse(
+</span></span><span style="display:flex; background-color:#3c3d38"><span>              kCompileTag, kernel_port, script_uri, platform_kernel,
+</span></span><span style="display:flex; background-color:#3c3d38"><span>              platform_kernel_size, source_file_count, source_files,
+</span></span><span style="display:flex; background-color:#3c3d38"><span>              incremental_compile, snapshot_compile, package_config,
+</span></span><span style="display:flex; background-color:#3c3d38"><span>              multiroot_filepaths, multiroot_scheme, experimental_flags_, NULL,
+</span></span><span style="display:flex; background-color:#3c3d38"><span>              verbosity);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>      }
+</span></span></code></pre></div></li>
 <li>
 <p>kernel isolate启动和初始化</p>
-<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">
-<table style="border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
-</span><span style="display:block;width:100%;background-color:#3c3d38"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
-</span></span><span style="display:block;width:100%;background-color:#3c3d38"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
-</span></span><span style="display:block;width:100%;background-color:#3c3d38"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
-</span></span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18
-</span><span style="display:block;width:100%;background-color:#3c3d38"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19
-</span></span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;display:grid;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;display:grid;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="background-color:#3c3d38"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span></span><span style="background-color:#3c3d38"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span></span><span style="background-color:#3c3d38"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
+</span></span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18
+</span><span style="background-color:#3c3d38"><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19
+</span></span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C++" data-lang="C++"> KernelIsolate<span style="color:#f92672">::</span>Start() {
-      Dart<span style="color:#f92672">::</span>thread_pool()<span style="color:#f92672">-&gt;</span>Run<span style="color:#f92672">&lt;</span>RunKernelTask<span style="color:#f92672">&gt;</span>();
-         <span style="color:#66d9ef">new</span> <span style="color:#66d9ef">thread</span><span style="color:#f92672">::</span>RunKernelTask<span style="color:#f92672">::</span>run() {
-              create_group_callback <span style="color:#f92672">=</span> KernelIsolate<span style="color:#f92672">::</span>create_group_callback() <span style="color:#75715e">// CreateIsolateGroupAndSetup;
-</span><span style="color:#75715e"></span>              CreateIsolateGroupAndSetup(<span style="color:#e6db74">&#34;kernel-service&#34;</span>, ..)
-                CreateAndSetupKernelIsolate(<span style="color:#e6db74">&#34;kernel-service&#34;</span>, ..)
-                  IsolateSetupHelper(...)
-                      <span style="color:#75715e">// 加载kernel-service的dart code
-</span><span style="color:#75715e"></span>                      <span style="color:#75715e">// 332	  if (isolate_run_app_snapshot) {
-</span><span style="color:#75715e"></span>                      <span style="color:#75715e">// (gdb) n
-</span><span style="color:#75715e"></span>                      <span style="color:#75715e">// 333	    Dart_Handle result = Loader::InitForSnapshot(script_uri, isolate_data);
-</span><span style="color:#75715e"></span>                      <span style="color:#75715e">// (gdb) p script_uri
-</span><span style="display:block;width:100%;background-color:#3c3d38"><span style="color:#75715e"></span>                      <span style="color:#75715e">// $2 = 0x55555896e3c0 &#34;/data/chunbo/aosp/dart-sdk/sdk/out/DebugX64/dart-sdk/bin/snapshots/kernel-service.dart.snapshot&#34;
-</span></span><span style="display:block;width:100%;background-color:#3c3d38"><span style="color:#75715e"></span>                      <span style="color:#66d9ef">if</span> (isolate_run_app_snapshot) {
-</span><span style="display:block;width:100%;background-color:#3c3d38">                         Dart_Handle result <span style="color:#f92672">=</span> Loader<span style="color:#f92672">::</span>InitForSnapshot(script_uri, isolate_data)
-</span>                      }
-      <span style="color:#75715e">// 执行kernel isolate的入口函数
-</span><span style="color:#75715e"></span>      RunMain(isolate);
-<span style="display:block;width:100%;background-color:#3c3d38">         DartEntry<span style="color:#f92672">::</span>InvokeFunction(<span style="color:#e6db74">&#34;kernel_service.dart::main&#34;</span>, empty args);
-</span>         <span style="color:#75715e">// kernel_service.dart
-</span><span style="color:#75715e"></span>           main([args]) {
-               <span style="color:#66d9ef">if</span> ((args<span style="color:#f92672">?</span>.length <span style="color:#f92672">??</span> <span style="color:#ae81ff">0</span>) <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">&amp;&amp;</span> args[<span style="color:#ae81ff">0</span>]....) {
-               } <span style="color:#66d9ef">else</span> {
-              <span style="color:#75715e">// Entry point for the Kernel isolate.
-</span><span style="color:#75715e"></span>                   <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">RawReceivePort</span>()..handler <span style="color:#f92672">=</span> _processLoadRequest;    
-               }
-           }
-
-  }
-</code></pre></td></tr></table>
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;display:grid;"><code class="language-C++" data-lang="C++"><span style="display:flex;"><span> KernelIsolate<span style="color:#f92672">::</span>Start() {
+</span></span><span style="display:flex;"><span>      Dart<span style="color:#f92672">::</span>thread_pool()<span style="color:#f92672">-&gt;</span>Run<span style="color:#f92672">&lt;</span>RunKernelTask<span style="color:#f92672">&gt;</span>();
+</span></span><span style="display:flex;"><span>         <span style="color:#66d9ef">new</span> <span style="color:#66d9ef">thread</span><span style="color:#f92672">::</span>RunKernelTask<span style="color:#f92672">::</span>run() {
+</span></span><span style="display:flex;"><span>              create_group_callback <span style="color:#f92672">=</span> KernelIsolate<span style="color:#f92672">::</span>create_group_callback() <span style="color:#75715e">// CreateIsolateGroupAndSetup;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>              CreateIsolateGroupAndSetup(<span style="color:#e6db74">&#34;kernel-service&#34;</span>, ..)
+</span></span><span style="display:flex;"><span>                CreateAndSetupKernelIsolate(<span style="color:#e6db74">&#34;kernel-service&#34;</span>, ..)
+</span></span><span style="display:flex;"><span>                  IsolateSetupHelper(...)
+</span></span><span style="display:flex;"><span>                      <span style="color:#75715e">// 加载kernel-service的dart code
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                      <span style="color:#75715e">// 332	  if (isolate_run_app_snapshot) {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                      <span style="color:#75715e">// (gdb) n
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                      <span style="color:#75715e">// 333	    Dart_Handle result = Loader::InitForSnapshot(script_uri, isolate_data);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                      <span style="color:#75715e">// (gdb) p script_uri
+</span></span></span><span style="display:flex; background-color:#3c3d38"><span><span style="color:#75715e"></span>                      <span style="color:#75715e">// $2 = 0x55555896e3c0 &#34;/data/chunbo/aosp/dart-sdk/sdk/out/DebugX64/dart-sdk/bin/snapshots/kernel-service.dart.snapshot&#34;
+</span></span></span><span style="display:flex; background-color:#3c3d38"><span><span style="color:#75715e"></span>                      <span style="color:#66d9ef">if</span> (isolate_run_app_snapshot) {
+</span></span><span style="display:flex; background-color:#3c3d38"><span>                         Dart_Handle result <span style="color:#f92672">=</span> Loader<span style="color:#f92672">::</span>InitForSnapshot(script_uri, isolate_data)
+</span></span><span style="display:flex;"><span>                      }
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">// 执行kernel isolate的入口函数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      RunMain(isolate);
+</span></span><span style="display:flex; background-color:#3c3d38"><span>         DartEntry<span style="color:#f92672">::</span>InvokeFunction(<span style="color:#e6db74">&#34;kernel_service.dart::main&#34;</span>, empty args);
+</span></span><span style="display:flex;"><span>         <span style="color:#75715e">// kernel_service.dart
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>           main([args]) {
+</span></span><span style="display:flex;"><span>               <span style="color:#66d9ef">if</span> ((args<span style="color:#f92672">?</span>.length <span style="color:#f92672">??</span> <span style="color:#ae81ff">0</span>) <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">&amp;&amp;</span> args[<span style="color:#ae81ff">0</span>]....) {
+</span></span><span style="display:flex;"><span>               } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>              <span style="color:#75715e">// Entry point for the Kernel isolate.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                   <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">RawReceivePort</span>()..handler <span style="color:#f92672">=</span> _processLoadRequest;    
+</span></span><span style="display:flex;"><span>               }
+</span></span><span style="display:flex;"><span>           }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  }
+</span></span></code></pre></td></tr></table>
 </div>
 </div></li>
 <li>
 <p>kernel isolate接收来自的main isolate的编译请求</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-dart" data-lang="dart"><span style="color:#75715e">// kernel_service.dart
-</span><span style="color:#75715e"></span>main([args]) {
-  <span style="color:#66d9ef">if</span> ((args<span style="color:#f92672">?</span>.length <span style="color:#f92672">??</span> <span style="color:#ae81ff">0</span>) <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">&amp;&amp;</span> args[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;--train&#39;</span>) {
-    <span style="color:#75715e">// This entry point is used when creating an app snapshot.
-</span><span style="color:#75715e"></span>    <span style="color:#75715e">// It takes the following extra arguments:
-</span><span style="color:#75715e"></span>    <span style="color:#75715e">// 1) Script to compile.
-</span><span style="color:#75715e"></span>    <span style="color:#75715e">// 2) Optional platform kernel path.
-</span><span style="color:#75715e"></span>    train(script, platform);
-       trainInternal(scriptUri, platformKernelPath);
-          _processLoadRequest(request)
-  } <span style="color:#66d9ef">else</span> {
-    <span style="color:#75715e">// Entry point for the Kernel isolate.
-</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> RawReceivePort()..handler <span style="color:#f92672">=</span> _processLoadRequest;
-  }
-}
-</code></pre></div></li>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-dart" data-lang="dart"><span style="display:flex;"><span><span style="color:#75715e">// kernel_service.dart
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>main([args]) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> ((args<span style="color:#f92672">?</span>.length <span style="color:#f92672">??</span> <span style="color:#ae81ff">0</span>) <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">&amp;&amp;</span> args[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;--train&#39;</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// This entry point is used when creating an app snapshot.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// It takes the following extra arguments:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// 1) Script to compile.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// 2) Optional platform kernel path.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    train(script, platform);
+</span></span><span style="display:flex;"><span>       trainInternal(scriptUri, platformKernelPath);
+</span></span><span style="display:flex;"><span>          _processLoadRequest(request)
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Entry point for the Kernel isolate.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> RawReceivePort()..handler <span style="color:#f92672">=</span> _processLoadRequest;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div></li>
 <li>
 <p>编译dart code，词法分析，语法分析和语义分析并返回结果给main isolate</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-dart" data-lang="dart">_processLoadRequest(request) {
-    Compiler<span style="color:#f92672">?</span> compiler;
-    <span style="color:#66d9ef">if</span> (incremental) {
-       compiler <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> lookupOrBuildNewIncrementalCompiler(..)
-    } <span style="color:#66d9ef">else</span> {
-       compiler <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> SingleShotCompilerWrapper(..);
-    }
-    CompilerResult compilerResult <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> compiler.compile(script<span style="color:#f92672">!</span>);
-       SingleShotCompilerWrapper:<span style="color:#f92672">:</span>compileInternal(Uri script) <span style="color:#66d9ef">async</span> 
-          kernelForProgram(Uri <span style="color:#66d9ef">source</span>, ..)
-            kernelForProgramInternal(<span style="color:#66d9ef">source</span>, ...);
-            ....
-}
-</code></pre></div></li>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-dart" data-lang="dart"><span style="display:flex;"><span>_processLoadRequest(request) {
+</span></span><span style="display:flex;"><span>    Compiler<span style="color:#f92672">?</span> compiler;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (incremental) {
+</span></span><span style="display:flex;"><span>       compiler <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> lookupOrBuildNewIncrementalCompiler(..)
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>       compiler <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> SingleShotCompilerWrapper(..);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    CompilerResult compilerResult <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> compiler.compile(script<span style="color:#f92672">!</span>);
+</span></span><span style="display:flex;"><span>       SingleShotCompilerWrapper:<span style="color:#f92672">:</span>compileInternal(Uri script) <span style="color:#66d9ef">async</span> 
+</span></span><span style="display:flex;"><span>          kernelForProgram(Uri <span style="color:#66d9ef">source</span>, ..)
+</span></span><span style="display:flex;"><span>            kernelForProgramInternal(<span style="color:#66d9ef">source</span>, ...);
+</span></span><span style="display:flex;"><span>            ....
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div></li>
 <li>
 <p>main isolate收到编译好的Kernel AST写入dill文件</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C++" data-lang="C++"><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">int</span> argc, <span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> argv[]) {
-    ...
-    RunMainIsolate(script_name, package_config_override, <span style="color:#f92672">&amp;</span>dart_options) {
-        <span style="color:#66d9ef">if</span> (Options<span style="color:#f92672">::</span>gen_snapshot_kind() <span style="color:#f92672">==</span> kKernel) {
-            Snapshot<span style="color:#f92672">::</span>GenerateKernel(Options<span style="color:#f92672">::</span>snapshot_filename(), script_name, ..) {
-                dfe.ReadScript(script_name, kernel_buffer,..);
-                <span style="color:#66d9ef">if</span> (kernel_buffer <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nullptr</span>) {
-                    WriteSnapshotFile(snapshot_filename, kernel_buffer,..);
-                } <span style="color:#66d9ef">else</span> {
-                    <span style="color:#75715e">// 向kernel isolate(CFE)发起dart编译请求
-</span><span style="color:#75715e"></span>                    Dart_KernelCompilationResult result <span style="color:#f92672">=</span>
-                         dfe.CompileScript(script_name, false, package_config, true);
-
-                    <span style="color:#75715e">// 请求成功后把编译结果写入dill文件
-</span><span style="display:block;width:100%;background-color:#3c3d38"><span style="color:#75715e"></span>                    WriteSnapshotFile(snapshot_filename, result.kernel, result.kernel_size);
-</span>                }
-            }
-        }
-    }
-}
-</code></pre></div><p><strong>至此dill的编译流程结束，下篇会介绍下CFE的编译过程</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;display:grid;"><code class="language-C++" data-lang="C++"><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">int</span> argc, <span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> argv[]) {
+</span></span><span style="display:flex;"><span>    ...
+</span></span><span style="display:flex;"><span>    RunMainIsolate(script_name, package_config_override, <span style="color:#f92672">&amp;</span>dart_options) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (Options<span style="color:#f92672">::</span>gen_snapshot_kind() <span style="color:#f92672">==</span> kKernel) {
+</span></span><span style="display:flex;"><span>            Snapshot<span style="color:#f92672">::</span>GenerateKernel(Options<span style="color:#f92672">::</span>snapshot_filename(), script_name, ..) {
+</span></span><span style="display:flex;"><span>                dfe.ReadScript(script_name, kernel_buffer,..);
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> (kernel_buffer <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nullptr</span>) {
+</span></span><span style="display:flex;"><span>                    WriteSnapshotFile(snapshot_filename, kernel_buffer,..);
+</span></span><span style="display:flex;"><span>                } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>                    <span style="color:#75715e">// 向kernel isolate(CFE)发起dart编译请求
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                    Dart_KernelCompilationResult result <span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span>                         dfe.CompileScript(script_name, false, package_config, true);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#75715e">// 请求成功后把编译结果写入dill文件
+</span></span></span><span style="display:flex; background-color:#3c3d38"><span><span style="color:#75715e"></span>                    WriteSnapshotFile(snapshot_filename, result.kernel, result.kernel_size);
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><strong>至此dill的编译流程结束，下篇会介绍下CFE的编译过程</strong></p>
 </li>
 </ul>
 
@@ -515,7 +514,7 @@ dart<span style="color:#f92672">::</span>bin<span style="color:#f92672">::</span
 
                     <footer id="footer">
     <div>
-        &copy; 2023 <a href="https://songchunbo.github.io/">心在路上 By 心在路上</a>
+        &copy; 2024 <a href="https://songchunbo.github.io/">心在路上 By 心在路上</a>
         
     </div>
     <br />
@@ -569,6 +568,10 @@ dart<span style="color:#f92672">::</span>bin<span style="color:#f92672">::</span
 <ul class="widget-list">
     
     <li>
+        <a href="https://songchunbo.github.io/post/openssl_tls/" title=" OpenSSL 源码分析（一） "> OpenSSL 源码分析（一） </a>
+    </li>
+    
+    <li>
         <a href="https://songchunbo.github.io/post/android_packer/" title="Android Packer">Android Packer</a>
     </li>
     
@@ -602,10 +605,6 @@ dart<span style="color:#f92672">::</span>bin<span style="color:#f92672">::</span
     
     <li>
         <a href="https://songchunbo.github.io/post/galois_math/" title="纠删码基础知识">纠删码基础知识</a>
-    </li>
-    
-    <li>
-        <a href="https://songchunbo.github.io/post/primitive_poly/" title="本原多项式的生成方法">本原多项式的生成方法</a>
     </li>
     
 </ul>

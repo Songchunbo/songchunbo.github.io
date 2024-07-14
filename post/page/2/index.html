@@ -74,6 +74,25 @@
     <article class="post">
         <header>
             <h1 class="post-title">
+                <a href="https://songchunbo.github.io/post/primitive_poly/" title="本原多项式的生成方法">本原多项式的生成方法</a>
+            </h1>
+        </header>
+        <date class="post-meta meta-date">
+            2017年8月23日
+        </date>
+        
+        <div class="post-content">
+            本原多项式的生成方法
+暴力枚举所有的多项式，看看哪个多项式能生成一个有限域 // only support degree 63 typedef struct { uint64_t state; uint64_t taps; uint64_t ymask; } LFSR_T; /* Galois implementation of LFSR */ bool lfsr_step(LFSR_T *plfsr) { plfsr-&gt;state &lt;&lt;= 1; // shift left bool out = (plfsr-&gt;state &amp; plfsr-&gt;ymask) !……
+        </div>
+        <p class="readmore"><a href="https://songchunbo.github.io/post/primitive_poly/">阅读全文</a></p>
+    </article>
+    
+    
+    
+    <article class="post">
+        <header>
+            <h1 class="post-title">
                 <a href="https://songchunbo.github.io/post/3npacker_jiagu.png/" title=""></a>
             </h1>
         </header>
@@ -118,7 +137,7 @@
 
                     <footer id="footer">
     <div>
-        &copy; 2023 <a href="https://songchunbo.github.io/">心在路上 By 心在路上</a>
+        &copy; 2024 <a href="https://songchunbo.github.io/">心在路上 By 心在路上</a>
         
     </div>
     <br />
@@ -162,6 +181,10 @@
 <ul class="widget-list">
     
     <li>
+        <a href="https://songchunbo.github.io/post/openssl_tls/" title=" OpenSSL 源码分析（一） "> OpenSSL 源码分析（一） </a>
+    </li>
+    
+    <li>
         <a href="https://songchunbo.github.io/post/android_packer/" title="Android Packer">Android Packer</a>
     </li>
     
@@ -195,10 +218,6 @@
     
     <li>
         <a href="https://songchunbo.github.io/post/galois_math/" title="纠删码基础知识">纠删码基础知识</a>
-    </li>
-    
-    <li>
-        <a href="https://songchunbo.github.io/post/primitive_poly/" title="本原多项式的生成方法">本原多项式的生成方法</a>
     </li>
     
 </ul>
