@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en-us">
-<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+<head>
 
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -20,7 +20,7 @@
     <meta name="description" content=" TLS 1.2 在 OpenSSL 中的实现(一） ">
         
     <meta name="author" content="心在路上">
-    <meta property="og:url" content="http://localhost:1313/post/openssl_tls/">
+    <meta property="og:url" content="https://songchunbo.github.io/post/openssl_tls12/">
     <link rel="shortcut icon" href='/favicon.ico'  type="image/x-icon">
 
     <link rel="stylesheet" href='/css/normalize.css'>
@@ -45,7 +45,7 @@
         <div class="col-group">
             <div class="site-name ">
                 
-                    <a id="logo" href="http://localhost:1313/">
+                    <a id="logo" href="https://songchunbo.github.io/">
                         心在路上
                     </a>
                 
@@ -53,11 +53,11 @@
             </div>
             <div>
                 <nav id="nav-menu" class="clearfix">
-                    <a class="current" href="http://localhost:1313/">首页</a>
+                    <a class="current" href="https://songchunbo.github.io/">首页</a>
                     
-                    <a  href="http://localhost:1313/archives/" title="存档">存档</a>
+                    <a  href="https://songchunbo.github.io/archives/" title="存档">存档</a>
                     
-                    <a  href="http://localhost:1313/about/" title="关于">关于</a>
+                    <a  href="https://songchunbo.github.io/about/" title="关于">关于</a>
                     
                 </nav>
             </div>
@@ -86,7 +86,11 @@
         <div class="post-content">
             <!-- # 解析 OpenSSL 源码，深入理解 TLS 安全通信协议 -->
 <p>最近需要做一些加解密的事情，简单分析了一下TLS安全机制在OpenSSL中的实现，记录一下。</p>
-<p>分为两篇介绍，本篇主要介绍TLS 1.2，加密套件选取ECDHE_RSA_AES128_GCM_SHA256；下篇介绍TLS 1.3加密套件选取TLS_AES_256_GCM_SHA384，这两种协议及其加密套件覆盖了主流网站采用的 TLS 安全机制。</p>
+<ul>
+<li>上篇介绍 TLS 1.2， 加密套件选取ECDHE_RSA_AES128_GCM_SHA256.</li>
+<li>下篇介绍 TLS 1.3， 加密套件选取TLS_AES_256_GCM_SHA384</li>
+</ul>
+<p>这两种协议及其加密套件覆盖了主流网站采用的 TLS 安全机制。</p>
 <h2 id="1-tls-安全机制介绍">1. <strong>TLS 安全机制介绍</strong></h2>
 <p>TLS 是一种用于在互联网上进行安全通信的协议，其主要功能包括：</p>
 <ul>
@@ -284,9 +288,7 @@
   |&lt;------Application  Data ------&gt; |  使用AES256-GCM对数据包进行加密加签
   |&lt;------Application  Data ------&gt; | 
   |                                 |
-</code></pre><p>接下来，我们以 ECDHE_RSA_AES128_GCM_SHA256 加密套件为例，分析 TLS 1.2 安全通信协议的实现。下一篇将分析基于 TLS 1.3 的加密套件 TLS_AES_256_GCM_SHA384。
-<br/></p>
-<h2 id="3-基于-ecdhe_rsa_aes128_gcm_sha256-加密套件的-tls-安全机制">3. <strong>基于 ECDHE_RSA_AES128_GCM_SHA256 加密套件的 TLS 安全机制</strong></h2>
+</code></pre><h2 id="3-基于-ecdhe_rsa_aes128_gcm_sha256-加密套件的-tls-安全机制">3. <strong>基于 ECDHE_RSA_AES128_GCM_SHA256 加密套件的 TLS 安全机制</strong></h2>
 <p>基于 ECDHE_RSA_AES128_GCM_SHA256 的 TLS 通信过程主要包括以下步骤：</p>
 <ul>
 <li>通过数字证书来验证通信双方的身份。</li>
@@ -779,7 +781,7 @@ IV(4) = E8 01 F4 B7
 
                     <footer id="footer">
     <div>
-        &copy; 2024 <a href="http://localhost:1313/">心在路上 By 心在路上</a>
+        &copy; 2024 <a href="https://songchunbo.github.io/">心在路上 By 心在路上</a>
         
     </div>
     <br />
@@ -820,10 +822,10 @@ IV(4) = E8 01 F4 B7
 
                 <div id="secondary">
     <section class="widget">
-        <form id="search" action='http://localhost:1313/search/' method="get" accept-charset="utf-8" target="_blank" _lpchecked="1">
+        <form id="search" action='https://songchunbo.github.io/search/' method="get" accept-charset="utf-8" target="_blank" _lpchecked="1">
       
       <input type="text" name="q" maxlength="20" placeholder="Search">
-      <input type="hidden" name="sitesearch" value="http://localhost:1313/">
+      <input type="hidden" name="sitesearch" value="https://songchunbo.github.io/">
       <button type="submit" class="submit icon-search"></button>
 </form>
     </section>
@@ -833,43 +835,43 @@ IV(4) = E8 01 F4 B7
 <ul class="widget-list">
     
     <li>
-        <a href="http://localhost:1313/post/openssl_tls13/" title="TLS 1.3 在 OpenSSL 中的实现(二）">TLS 1.3 在 OpenSSL 中的实现(二）</a>
+        <a href="https://songchunbo.github.io/post/openssl_tls13/" title="TLS 1.3 在 OpenSSL 中的实现(二）">TLS 1.3 在 OpenSSL 中的实现(二）</a>
     </li>
     
     <li>
-        <a href="http://localhost:1313/post/openssl_tls/" title=" TLS 1.2 在 OpenSSL 中的实现(一） "> TLS 1.2 在 OpenSSL 中的实现(一） </a>
+        <a href="https://songchunbo.github.io/post/openssl_tls12/" title=" TLS 1.2 在 OpenSSL 中的实现(一） "> TLS 1.2 在 OpenSSL 中的实现(一） </a>
     </li>
     
     <li>
-        <a href="http://localhost:1313/post/android_packer/" title="Android Packer">Android Packer</a>
+        <a href="https://songchunbo.github.io/post/android_packer/" title="Android Packer">Android Packer</a>
     </li>
     
     <li>
-        <a href="http://localhost:1313/post/andorid_file_io/" title="Android文件IO路径小记">Android文件IO路径小记</a>
+        <a href="https://songchunbo.github.io/post/andorid_file_io/" title="Android文件IO路径小记">Android文件IO路径小记</a>
     </li>
     
     <li>
-        <a href="http://localhost:1313/post/apt_summary/" title="APT Summary">APT Summary</a>
+        <a href="https://songchunbo.github.io/post/apt_summary/" title="APT Summary">APT Summary</a>
     </li>
     
     <li>
-        <a href="http://localhost:1313/post/dart_vm_lex_syntax/" title="Dart VM源码分析之CFE">Dart VM源码分析之CFE</a>
+        <a href="https://songchunbo.github.io/post/dart_vm_lex_syntax/" title="Dart VM源码分析之CFE">Dart VM源码分析之CFE</a>
     </li>
     
     <li>
-        <a href="http://localhost:1313/post/dart_vm_how_compile_works/" title="Dart VM源码分析之编译dill">Dart VM源码分析之编译dill</a>
+        <a href="https://songchunbo.github.io/post/dart_vm_how_compile_works/" title="Dart VM源码分析之编译dill">Dart VM源码分析之编译dill</a>
     </li>
     
     <li>
-        <a href="http://localhost:1313/post/dart_vm_quick_start/" title="Dart VM命令行工具">Dart VM命令行工具</a>
+        <a href="https://songchunbo.github.io/post/dart_vm_quick_start/" title="Dart VM命令行工具">Dart VM命令行工具</a>
     </li>
     
     <li>
-        <a href="http://localhost:1313/post/art_commit_history/" title="ART Commit History">ART Commit History</a>
+        <a href="https://songchunbo.github.io/post/art_commit_history/" title="ART Commit History">ART Commit History</a>
     </li>
     
     <li>
-        <a href="http://localhost:1313/post/x86_arm_callconvention/" title="X86 and ARM Call Convention">X86 and ARM Call Convention</a>
+        <a href="https://songchunbo.github.io/post/x86_arm_callconvention/" title="X86 and ARM Call Convention">X86 and ARM Call Convention</a>
     </li>
     
 </ul>
@@ -911,7 +913,7 @@ IV(4) = E8 01 F4 B7
     <section class="widget">
         <h3 class="widget-title">其它</h3>
         <ul class="widget-list">
-            <li><a href="http://localhost:1313/index.xml">文章 RSS</a></li>
+            <li><a href="https://songchunbo.github.io/index.xml">文章 RSS</a></li>
         </ul>
     </section>
 </div>

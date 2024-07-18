@@ -72,7 +72,24 @@
     <article class="post">
         <header>
             <h1 class="post-title">
-                <a href="https://songchunbo.github.io/post/openssl_tls/" title=" OpenSSL 源码分析（一） "> OpenSSL 源码分析（一） </a>
+                <a href="https://songchunbo.github.io/post/openssl_tls13/" title="TLS 1.3 在 OpenSSL 中的实现(二）">TLS 1.3 在 OpenSSL 中的实现(二）</a>
+            </h1>
+        </header>
+        <date class="post-meta meta-date">
+            2024年7月18日
+        </date>
+        
+        <div class="post-content">
+            本篇主要介绍TLS 1.3在 OpenSSL 中的实现，加密套件选取TLS_AES_256_GCM_SHA384
+1. 加密套件TLS_AES_256_GCM_SHA384 TLS_AES_256_GCM_SHA384基于 TLS 1.……
+        </div>
+        <p class="readmore"><a href="https://songchunbo.github.io/post/openssl_tls13/">阅读全文</a></p>
+    </article>
+    
+    <article class="post">
+        <header>
+            <h1 class="post-title">
+                <a href="https://songchunbo.github.io/post/openssl_tls12/" title=" TLS 1.2 在 OpenSSL 中的实现(一） "> TLS 1.2 在 OpenSSL 中的实现(一） </a>
             </h1>
         </header>
         <date class="post-meta meta-date">
@@ -81,9 +98,9 @@
         
         <div class="post-content">
             最近需要做一些加解密的事情，简单分析了一下TLS安全机制在OpenSSL中的实现，记录一下。
-1. TLS 安全机制介绍 TLS（传输层安全协议）是一种用于在互联网上进行安全通信的协议。它通过加密和身份验证来保护数据传输的安全性，它的主要功能包括：……
+上篇介绍 TLS 1.2， 加密套件选取ECDHE_RSA_AES128_GCM_SHA256.……
         </div>
-        <p class="readmore"><a href="https://songchunbo.github.io/post/openssl_tls/">阅读全文</a></p>
+        <p class="readmore"><a href="https://songchunbo.github.io/post/openssl_tls12/">阅读全文</a></p>
     </article>
     
     <article class="post">
@@ -219,23 +236,6 @@ https://android.googlesource.com/platform/art/+/refs/tags/android-11.0.0_r35/run
         <p class="readmore"><a href="https://songchunbo.github.io/post/x86_arm_callconvention/">阅读全文</a></p>
     </article>
     
-    <article class="post">
-        <header>
-            <h1 class="post-title">
-                <a href="https://songchunbo.github.io/post/galois_math/" title="纠删码基础知识">纠删码基础知识</a>
-            </h1>
-        </header>
-        <date class="post-meta meta-date">
-            2017年9月3日
-        </date>
-        
-        <div class="post-content">
-            RS纠删码算法实现需要伽罗瓦域和矩阵的一些知识。
-1 伽罗瓦域的四则运算 提到伽罗瓦域（也称有限域），不得不提一嘴伽罗瓦Évariste Galois，非常传奇的一位法国天才数学家，现代数学群论的创立者，人们称之为伽罗瓦理论，21岁时死于一次决斗，关于伽罗域的基本概念和理论，可以参考《古典数学难题与伽罗瓦理论》。……
-        </div>
-        <p class="readmore"><a href="https://songchunbo.github.io/post/galois_math/">阅读全文</a></p>
-    </article>
-    
     
 
 
@@ -310,7 +310,11 @@ https://android.googlesource.com/platform/art/+/refs/tags/android-11.0.0_r35/run
 <ul class="widget-list">
     
     <li>
-        <a href="https://songchunbo.github.io/post/openssl_tls/" title=" OpenSSL 源码分析（一） "> OpenSSL 源码分析（一） </a>
+        <a href="https://songchunbo.github.io/post/openssl_tls13/" title="TLS 1.3 在 OpenSSL 中的实现(二）">TLS 1.3 在 OpenSSL 中的实现(二）</a>
+    </li>
+    
+    <li>
+        <a href="https://songchunbo.github.io/post/openssl_tls12/" title=" TLS 1.2 在 OpenSSL 中的实现(一） "> TLS 1.2 在 OpenSSL 中的实现(一） </a>
     </li>
     
     <li>
@@ -343,10 +347,6 @@ https://android.googlesource.com/platform/art/+/refs/tags/android-11.0.0_r35/run
     
     <li>
         <a href="https://songchunbo.github.io/post/x86_arm_callconvention/" title="X86 and ARM Call Convention">X86 and ARM Call Convention</a>
-    </li>
-    
-    <li>
-        <a href="https://songchunbo.github.io/post/galois_math/" title="纠删码基础知识">纠删码基础知识</a>
     </li>
     
 </ul>

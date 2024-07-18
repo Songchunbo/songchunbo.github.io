@@ -1,0 +1,671 @@
+<!doctype html>
+<html lang="en-us">
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+
+    <title>TLS 1.3 在 OpenSSL 中的实现(二） | 心在路上</title>
+    <meta property="og:title" content="TLS 1.3 在 OpenSSL 中的实现(二） - 心在路上">
+    <meta property="og:type" content="article">
+        
+    <meta property="article:published_time" content='2024-07-18T21:00:50&#43;08:00'>
+        
+        
+    <meta property="article:modified_time" content='2024-07-18T21:00:50&#43;08:00'>
+        
+    <meta name="Keywords" content="">
+    <meta name="description" content="TLS 1.3 在 OpenSSL 中的实现(二）">
+        
+    <meta name="author" content="心在路上">
+    <meta property="og:url" content="https://songchunbo.github.io/post/openssl_tls13/">
+    <link rel="shortcut icon" href='/favicon.ico'  type="image/x-icon">
+
+    <link rel="stylesheet" href='/css/normalize.css'>
+    <link rel="stylesheet" href='/css/style.css'>
+    
+    
+    
+    <script type="text/javascript" src="//cdn.bootcdn.net/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+    
+    
+    
+    
+    
+    
+</head>
+
+
+<body>
+    <header id="header" class="clearfix">
+    <div class="container">
+        <div class="col-group">
+            <div class="site-name ">
+                
+                    <a id="logo" href="https://songchunbo.github.io/">
+                        心在路上
+                    </a>
+                
+                <p class="description">专注于移动安全，虚拟机技术, Android沙箱，Android Framework, ART Runtime, Dart Runtime 病毒检测，逆向</p>
+            </div>
+            <div>
+                <nav id="nav-menu" class="clearfix">
+                    <a class="current" href="https://songchunbo.github.io/">首页</a>
+                    
+                    <a  href="https://songchunbo.github.io/archives/" title="存档">存档</a>
+                    
+                    <a  href="https://songchunbo.github.io/about/" title="关于">关于</a>
+                    
+                </nav>
+            </div>
+        </div>
+    </div>
+</header>
+
+    <div id="body">
+        <div class="container">
+            <div class="col-group">
+
+                <div class="col-8" id="main">
+                    
+<div class="res-cons">
+    
+    <article class="post">
+        <header>
+            <h1 class="post-title">TLS 1.3 在 OpenSSL 中的实现(二）</h1>
+        </header>
+        <date class="post-meta meta-date">
+            2024年7月18日
+        </date>
+        
+        
+        
+        <div class="post-content">
+            <p>本篇主要介绍TLS 1.3在 OpenSSL 中的实现，加密套件选取TLS_AES_256_GCM_SHA384</p>
+<h2 id="1-加密套件tls_aes_256_gcm_sha384">1. 加密套件TLS_AES_256_GCM_SHA384</h2>
+<p>TLS_AES_256_GCM_SHA384基于 TLS 1.3， 提供更强的加密和哈希安全性，适合需要高安全性的场景, 主要交互流程如下：</p>
+<pre tabindex="0"><code>Client                            Server
+  |                                 |
+  |------ ClientHello -------------&gt;|
+  |                                 |
+  |&lt;------ ServerHello -------------|  密钥交换, 默认采用 ECDHE 进行密钥交换，椭圆曲线选用 x25519
+  |                                 |  密钥交换完成生成pre-master-secret 
+  |&lt;------ ChangeCipherSpec --------|  使用HKDF算法，根据pre-master-secret派生出【握手密钥】对握手消息加密
+  |                                 |  握手密钥分为client_handshake_traffic_secret和server_handshake_traffic_secret分别用于客户端和服务端握手消息加密
+  |                                 |  
+  |                                 |  以下握手消息都是用handshake secret进行加密的
+  |&lt;------ Application Data --------|  Server EncryptedExtensions消息
+  |&lt;------ Application Data --------|  Server Certificate消息，用于身份认证，验证服务端证书签名
+  |&lt;------ Application Data --------|  Server CertificateVerify消息，用于对握手消息进行验签
+  |&lt;------ Application Data --------|  Server Finished消息 , TLS 1.3 密钥派生：https://datatracker.ietf.org/doc/html/rfc8446#section-7.1
+  |                                 |
+  |------ ChangeCipherSpec  -------&gt;|  通过HKDF算法派生出master secret
+  |                                 |  最终派生出client_app_traffic_secret, server_app_traffic_secret分别用于客户端和服务端数据加密
+  |------ Application Data --------&gt;|  Client Finished消息
+  |                                 |
+  |&lt;------Application  Data ------&gt; |  使用AES256-GCM对数据包进行加密加签
+  |&lt;------Application  Data ------&gt; | 
+  |                                 |
+</code></pre><h2 id="2-密钥交换">2. 密钥交换</h2>
+<p>TLS 1.3安全协议中默认采用ECDHE密钥交换算法，椭圆曲线选取x25519</p>
+<h3 id="21-客户端生成ec公私钥对发送ec公钥到服务端">2.1 客户端生成EC公私钥对，发送EC公钥到服务端</h3>
+<p>在客户端生成EC公私钥对，通过ClientHello消息中的key share携带EC公钥到服务端，生成密钥代码以及调用栈如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C" data-lang="C"><span style="display:flex;"><span><span style="color:#ae81ff">1</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x00000001089f8ec6</span> ssl_generate_pkey_group <span style="color:#f92672">+</span> <span style="color:#ae81ff">54</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">2</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x0000000108a1f466</span> add_key_share <span style="color:#f92672">+</span> <span style="color:#ae81ff">214</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">3</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x0000000108a1f30b</span> tls_construct_ctos_key_share <span style="color:#f92672">+</span> <span style="color:#ae81ff">427</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">4</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x0000000108a1b040</span> tls_construct_extensions <span style="color:#f92672">+</span> <span style="color:#ae81ff">496</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">5</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x0000000108a2eb9f</span> tls_construct_client_hello <span style="color:#f92672">+</span> <span style="color:#ae81ff">1967</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">6</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x0000000108a2c039</span> write_state_machine <span style="color:#f92672">+</span> <span style="color:#ae81ff">1049</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">7</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x0000000108a2b1cf</span> state_machine <span style="color:#f92672">+</span> <span style="color:#ae81ff">1295</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">8</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x0000000108a2acb7</span> ossl_statem_connect <span style="color:#f92672">+</span> <span style="color:#ae81ff">23</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">9</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x00000001089e6827</span> ssl3_write_bytes <span style="color:#f92672">+</span> <span style="color:#ae81ff">503</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">10</span>  libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x00000001089f83d9</span> ssl3_write <span style="color:#f92672">+</span> <span style="color:#ae81ff">105</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">11</span>  libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x0000000108a09685</span> ssl_write_internal <span style="color:#f92672">+</span> <span style="color:#ae81ff">437</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">12</span>  libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x0000000108a096ff</span> SSL_write <span style="color:#f92672">+</span> <span style="color:#ae81ff">95</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">13</span>  openssl                             <span style="color:#ae81ff">0x000000010883454c</span> s_client_main <span style="color:#f92672">+</span> <span style="color:#ae81ff">24076</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">14</span>  openssl                             <span style="color:#ae81ff">0x000000010881bd59</span> do_cmd <span style="color:#f92672">+</span> <span style="color:#ae81ff">233</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">15</span>  openssl                             <span style="color:#ae81ff">0x000000010881b71b</span> main <span style="color:#f92672">+</span> <span style="color:#ae81ff">651</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">16</span>  dyld                                <span style="color:#ae81ff">0x00007ff80337a41f</span> start <span style="color:#f92672">+</span> <span style="color:#ae81ff">1903</span>
+</span></span><span style="display:flex;"><span>chunbo client generated public key
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">47</span> A8 B0 <span style="color:#ae81ff">6</span>A <span style="color:#ae81ff">47</span> <span style="color:#ae81ff">51</span> <span style="color:#ae81ff">5</span>A FA F4 <span style="color:#ae81ff">4</span>E <span style="color:#ae81ff">17</span> <span style="color:#ae81ff">7</span>E A4 <span style="color:#ae81ff">0</span>A E7 <span style="color:#ae81ff">0</span>E 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">17</span> D5 AD EC D4 <span style="color:#ae81ff">21</span> <span style="color:#ae81ff">04</span> <span style="color:#ae81ff">53</span> <span style="color:#ae81ff">60</span> B7 <span style="color:#ae81ff">93</span> <span style="color:#ae81ff">3</span>A <span style="color:#ae81ff">50</span> <span style="color:#ae81ff">18</span> BF <span style="color:#ae81ff">5</span>E 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">static</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">add_key_share</span>(SSL <span style="color:#f92672">*</span>s, WPACKET <span style="color:#f92672">*</span>pkt, <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> curve_id) {
+</span></span><span style="display:flex;"><span>    EVP_PKEY <span style="color:#f92672">*</span>key_share_key <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>    key_share_key <span style="color:#f92672">=</span> <span style="color:#a6e22e">ssl_generate_pkey_group</span>(s, curve_id);
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/* Encode the public key. */</span>
+</span></span><span style="display:flex;"><span>    encodedlen <span style="color:#f92672">=</span> <span style="color:#a6e22e">EVP_PKEY_get1_tls_encodedpoint</span>(key_share_key,
+</span></span><span style="display:flex;"><span>                                                <span style="color:#f92672">&amp;</span>encoded_point);
+</span></span><span style="display:flex;"><span>    ...
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>发送的ClientHello消息实例：</p>
+<pre tabindex="0"><code>Transport Layer Security
+    TLSv1.3 Record Layer: Handshake Protocol: Client Hello
+        Content Type: Handshake (22)
+        Version: TLS 1.0 (0x0301)
+        Length: 312
+        Handshake Protocol: Client Hello
+            Handshake Type: Client Hello (1)
+            Length: 308
+            Version: TLS 1.2 (0x0303)
+            Random: f91d878cc5c039b6d309d0619d033785a760c2436ec844cbc403730c28363362
+            Session ID Length: 32
+            Session ID: eb68913f606d2aec3fd6e433338464b9d94cef88d904586b5473642c070090d1
+            Cipher Suites Length: 62
+            Cipher Suites (31 suites)
+                Cipher Suite: TLS_AES_256_GCM_SHA384 (0x1302)
+                Cipher Suite: TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256 (0xc02f)
+                ...
+            Compression Methods Length: 1
+            Compression Methods (1 method)
+            Extensions Length: 173
+            Extension: server_name (len=20) name=www.sina.com.cn
+                Type: server_name (0)
+                Length: 20
+                Server Name Indication extension
+            ...
+            Extension: key_share (len=38) x25519
+                Type: key_share (51)
+                Length: 38
+                Key Share extension
+                    Client Key Share Length: 36
+                    Key Share Entry: Group: x25519, Key Exchange length: 32
+                        Group: x25519 (29)
+                        Key Exchange Length: 32
+                        Key Exchange: d4216c1bc006e77828791b89a60466e62d504101cf19325d375d1c54499e4b0e
+</code></pre><h3 id="22-接收服务端的ec公钥生成预主密钥pre-master-secret">2.2 接收服务端的EC公钥，生成预主密钥Pre Master Secret</h3>
+<p>接收到的服务端ServerHello消息，扩展属性会携带服务端的EC公钥，根据服务端的EC公钥和客户端的EC私钥生成预主密钥Pre Master Secret</p>
+<ul>
+<li>服务端ServerHello实例 :</li>
+</ul>
+<pre tabindex="0"><code>Transport Layer Security
+    TLSv1.3 Record Layer: Handshake Protocol: Server Hello
+        Content Type: Handshake (22)
+        Version: TLS 1.2 (0x0303)
+        Length: 122
+        Handshake Protocol: Server Hello
+            Handshake Type: Server Hello (2)
+            Length: 118
+            Version: TLS 1.2 (0x0303)
+            Random: 6ef03ada63c4c3d6e5b49758cdf41a3fa54136ed6a819d9d0454298e6daf8af4
+            Session ID Length: 32
+            Session ID: eb68913f606d2aec3fd6e433338464b9d94cef88d904586b5473642c070090d1
+            Cipher Suite: TLS_AES_256_GCM_SHA384 (0x1302)
+            Compression Method: null (0)
+            Extensions Length: 46
+            Extension: supported_versions (len=2) TLS 1.3
+                Type: supported_versions (43)
+                Length: 2
+                Supported Version: TLS 1.3 (0x0304)
+            Extension: key_share (len=36) x25519
+                Type: key_share (51)
+                Length: 36
+                Key Share extension
+                    Key Share Entry: Group: x25519, Key Exchange length: 32
+                        Group: x25519 (29)
+                        Key Exchange Length: 32
+                        Key Exchange: 9afba7217dce9e28b6748339ec0d7273021252ae06c7ce9538e60b557d48fc7e
+</code></pre><ul>
+<li>根据预主密钥Pre-Master-Secret派生出握手密钥Handshake Secret</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C" data-lang="C"><span style="display:flex;"><span><span style="color:#ae81ff">1</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x0000000108a52e17</span> tls13_generate_secret <span style="color:#f92672">+</span> <span style="color:#ae81ff">119</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">2</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x00000001089f9418</span> ssl_derive <span style="color:#f92672">+</span> <span style="color:#ae81ff">536</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">3</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x0000000108a22b1e</span> tls_parse_stoc_key_share <span style="color:#f92672">+</span> <span style="color:#ae81ff">1182</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">4</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x0000000108a1abca</span> tls_parse_extension <span style="color:#f92672">+</span> <span style="color:#ae81ff">282</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">5</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x0000000108a1acb5</span> tls_parse_all_extensions <span style="color:#f92672">+</span> <span style="color:#ae81ff">117</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">6</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x0000000108a30264</span> tls_process_server_hello <span style="color:#f92672">+</span> <span style="color:#ae81ff">2948</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">7</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x0000000108a2f507</span> ossl_statem_client_process_message <span style="color:#f92672">+</span> <span style="color:#ae81ff">135</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">8</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x0000000108a2b965</span> read_state_machine <span style="color:#f92672">+</span> <span style="color:#ae81ff">901</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">9</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x0000000108a2b18a</span> state_machine <span style="color:#f92672">+</span> <span style="color:#ae81ff">1226</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">10</span>  libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x0000000108a2acb7</span> ossl_statem_connect <span style="color:#f92672">+</span> <span style="color:#ae81ff">23</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">11</span>  libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x00000001089e6827</span> ssl3_write_bytes <span style="color:#f92672">+</span> <span style="color:#ae81ff">503</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">12</span>  libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x00000001089f83d9</span> ssl3_write <span style="color:#f92672">+</span> <span style="color:#ae81ff">105</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">13</span>  libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x0000000108a09685</span> ssl_write_internal <span style="color:#f92672">+</span> <span style="color:#ae81ff">437</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">14</span>  libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x0000000108a096ff</span> SSL_write <span style="color:#f92672">+</span> <span style="color:#ae81ff">95</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">15</span>  openssl                             <span style="color:#ae81ff">0x000000010883454c</span> s_client_main <span style="color:#f92672">+</span> <span style="color:#ae81ff">24076</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">16</span>  openssl                             <span style="color:#ae81ff">0x000000010881bd59</span> do_cmd <span style="color:#f92672">+</span> <span style="color:#ae81ff">233</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">17</span>  openssl                             <span style="color:#ae81ff">0x000000010881b71b</span> main <span style="color:#f92672">+</span> <span style="color:#ae81ff">651</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">18</span>  dyld                                <span style="color:#ae81ff">0x00007ff80337a41f</span> start <span style="color:#f92672">+</span> <span style="color:#ae81ff">1903</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">ssl_derive</span>(SSL <span style="color:#f92672">*</span>s, EVP_PKEY <span style="color:#f92672">*</span>privkey, EVP_PKEY <span style="color:#f92672">*</span>pubkey, <span style="color:#66d9ef">int</span> gensecret) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    pctx <span style="color:#f92672">=</span> <span style="color:#a6e22e">EVP_PKEY_CTX_new</span>(privkey, NULL);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">EVP_PKEY_derive_init</span>(pctx);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">EVP_PKEY_derive_set_peer</span>(pctx, pubkey);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">EVP_PKEY_derive</span>(pctx, NULL, <span style="color:#f92672">&amp;</span>pmslen);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 根据本地EC私钥privkey和服务端EC公钥pubkey生成预主密钥Pre-Master-Secret
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">EVP_PKEY_derive</span>(pctx, pms, <span style="color:#f92672">&amp;</span>pmslen);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (gensecret) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 生成ealy_secret
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">tls13_generate_secret</span>(s, <span style="color:#a6e22e">ssl_handshake_md</span>(s), NULL, NULL, <span style="color:#ae81ff">0</span>, (<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>)<span style="color:#f92672">&amp;</span>s<span style="color:#f92672">-&gt;</span>early_secret);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 使用HKDF算法, 通过Pre-Master-Secret派生出握手密钥用于握手消息加密
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">tls13_generate_handshake_secret</span>(s, pms, pmslen); {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">tls13_generate_secret</span>(s, <span style="color:#a6e22e">ssl_handshake_md</span>(s), s<span style="color:#f92672">-&gt;</span>early_secret,
+</span></span><span style="display:flex;"><span>                                        insecret, insecretlen,
+</span></span><span style="display:flex;"><span>                                        (<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>)<span style="color:#f92672">&amp;</span>s<span style="color:#f92672">-&gt;</span>handshake_secret);            
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/*
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * Given the previous secret |prevsecret| and a new input secret |insecret| of
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * length |insecretlen|, generate a new secret and store it in the location
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * pointed to by |outsecret|. Returns 1 on success  0 on failure.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">tls13_generate_secret</span>(SSL <span style="color:#f92672">*</span>s, <span style="color:#66d9ef">const</span> EVP_MD <span style="color:#f92672">*</span>md,
+</span></span><span style="display:flex;"><span>                          <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>prevsecret,
+</span></span><span style="display:flex;"><span>                          <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>insecret,
+</span></span><span style="display:flex;"><span>                          <span style="color:#66d9ef">size_t</span> insecretlen,
+</span></span><span style="display:flex;"><span>                          <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>outsecret)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">/* Generate the pre-extract secret */</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">tls13_hkdf_expand</span>(s, md, prevsecret,
+</span></span><span style="display:flex;"><span>                               (<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>)derived_secret_label,
+</span></span><span style="display:flex;"><span>                               <span style="color:#66d9ef">sizeof</span>(derived_secret_label) <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>, hash, mdlen,
+</span></span><span style="display:flex;"><span>                               preextractsec, mdlen, <span style="color:#ae81ff">1</span>));
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">EVP_PKEY_derive_init</span>(pctx);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">EVP_PKEY_CTX_hkdf_mode</span>(pctx, EVP_PKEY_HKDEF_MODE_EXTRACT_ONLY);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">EVP_PKEY_CTX_set_hkdf_md</span>(pctx, md);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">EVP_PKEY_CTX_set1_hkdf_key</span>(pctx, insecret, insecretlen);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">EVP_PKEY_CTX_set1_hkdf_salt</span>(pctx, prevsecret, prevsecretlen);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">EVP_PKEY_derive</span>(pctx, outsecret, <span style="color:#f92672">&amp;</span>mdlen);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="3-生成握手密钥继续握手">3. 生成握手密钥，继续握手</h2>
+<p>在握手完成后，会接着发送四条加密的握手消息，分别是Server EncryptedExtensions消息, Server Certificate消息, Server CertificateVerify消息 , Server Finished消息, 如下：</p>
+<pre tabindex="0"><code>     |&lt;------ Application Data --------|  Server EncryptedExtensions消息
+     |&lt;------ Application Data --------|  Server Certificate消息，用于身份认证，验证服务端证书签名
+     |&lt;------ Application Data --------|  Server CertificateVerify消息，用于对握手消息进行验签
+     |&lt;------ Application Data --------|  Server Finished消息 , TLS 1.3 密钥派生：https://datatracker.ietf.org/doc/html/rfc8446#section-7.1
+</code></pre><ul>
+<li>Server Certificate
+主要是对服务端身份进行校验，校验过程同TLS 1.2中的身份认证，不再赘述。</li>
+</ul>
+<h2 id="4-握手完成派生出应用数据加密密钥">4. 握手完成派生出应用数据加密密钥</h2>
+<h3 id="41-tls-13密钥派生关系">4.1 TLS 1.3密钥派生关系</h3>
+<p>完成握手后，会继续生成应用数据加密密钥，派生关系是： handshake secret -&gt; master secret -&gt; app_traffic_secret</p>
+<p>详细的密钥派生关系参见： <a href="https://datatracker.ietf.org/doc/html/rfc8446#section-10">https://datatracker.ietf.org/doc/html/rfc8446#section-10</a></p>
+<pre tabindex="0"><code>           0
+             |
+             v
+   PSK -&gt;  HKDF-Extract = Early Secret
+             |
+             +-----&gt; Derive-Secret(., &#34;ext binder&#34; | &#34;res binder&#34;, &#34;&#34;)
+             |                     = binder_key
+             |
+             +-----&gt; Derive-Secret(., &#34;c e traffic&#34;, ClientHello)
+             |                     = client_early_traffic_secret
+             |
+             +-----&gt; Derive-Secret(., &#34;e exp master&#34;, ClientHello)
+             |                     = early_exporter_master_secret
+             v
+       Derive-Secret(., &#34;derived&#34;, &#34;&#34;)
+             |
+             v
+   (EC)DHE -&gt; HKDF-Extract = Handshake Secret
+             |
+             +-----&gt; Derive-Secret(., &#34;c hs traffic&#34;,
+             |                     ClientHello...ServerHello)
+             |                     = client_handshake_traffic_secret
+             |
+             +-----&gt; Derive-Secret(., &#34;s hs traffic&#34;,
+             |                     ClientHello...ServerHello)
+             |                     = server_handshake_traffic_secret
+             v
+       Derive-Secret(., &#34;derived&#34;, &#34;&#34;)
+             |
+             v
+   0 -&gt; HKDF-Extract = Master Secret
+             |
+             +-----&gt; Derive-Secret(., &#34;c ap traffic&#34;,
+             |                     ClientHello...server Finished)
+             |                     = client_application_traffic_secret_0
+             |
+             +-----&gt; Derive-Secret(., &#34;s ap traffic&#34;,
+             |                     ClientHello...server Finished)
+             |                     = server_application_traffic_secret_0
+             |
+             +-----&gt; Derive-Secret(., &#34;exp master&#34;,
+             |                     ClientHello...server Finished)
+             |                     = exporter_master_secret
+             |
+             +-----&gt; Derive-Secret(., &#34;res master&#34;,
+                                   ClientHello...client Finished)
+                                   = resumption_master_secret
+</code></pre><h3 id="42-根据handshake-secret派生master-secret">4.2 根据handshake secret派生master-secret</h3>
+<p>生成master secret的代码以及调用关系如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C" data-lang="C"><span style="display:flex;"><span><span style="color:#ae81ff">1</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010bfd3da7</span> tls13_generate_secret <span style="color:#f92672">+</span> <span style="color:#ae81ff">119</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">2</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010bfd43e8</span> tls13_generate_master_secret <span style="color:#f92672">+</span> <span style="color:#ae81ff">120</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">3</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010bfbcc76</span> tls_process_finished <span style="color:#f92672">+</span> <span style="color:#ae81ff">1190</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">4</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010bfb0569</span> ossl_statem_client_process_message <span style="color:#f92672">+</span> <span style="color:#ae81ff">345</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">5</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010bfac8f5</span> read_state_machine <span style="color:#f92672">+</span> <span style="color:#ae81ff">901</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">6</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010bfac11a</span> state_machine <span style="color:#f92672">+</span> <span style="color:#ae81ff">1226</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">7</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010bfabc47</span> ossl_statem_connect <span style="color:#f92672">+</span> <span style="color:#ae81ff">23</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">8</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010bf67797</span> ssl3_write_bytes <span style="color:#f92672">+</span> <span style="color:#ae81ff">503</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">9</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010bf79369</span> ssl3_write <span style="color:#f92672">+</span> <span style="color:#ae81ff">105</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">10</span>  libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010bf8a615</span> ssl_write_internal <span style="color:#f92672">+</span> <span style="color:#ae81ff">437</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">11</span>  libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010bf8a68f</span> SSL_write <span style="color:#f92672">+</span> <span style="color:#ae81ff">95</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">12</span>  openssl                             <span style="color:#ae81ff">0x000000010bdb554c</span> s_client_main <span style="color:#f92672">+</span> <span style="color:#ae81ff">24076</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">13</span>  openssl                             <span style="color:#ae81ff">0x000000010bd9cd59</span> do_cmd <span style="color:#f92672">+</span> <span style="color:#ae81ff">233</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">14</span>  openssl                             <span style="color:#ae81ff">0x000000010bd9c71b</span> main <span style="color:#f92672">+</span> <span style="color:#ae81ff">651</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">15</span>  dyld                                <span style="color:#ae81ff">0x00007ff80337a41f</span> start <span style="color:#f92672">+</span> <span style="color:#ae81ff">1903</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>MSG_PROCESS_RETURN <span style="color:#a6e22e">tls_process_finished</span>(SSL <span style="color:#f92672">*</span>s, PACKET <span style="color:#f92672">*</span>pkt) {
+</span></span><span style="display:flex;"><span>    ...
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">SSL_IS_TLS13</span>(s)) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (s<span style="color:#f92672">-&gt;</span>server) {
+</span></span><span style="display:flex;"><span>            ...
+</span></span><span style="display:flex;"><span>        } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">/* TLS 1.3 gets the secret size from the handshake md */</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">size_t</span> dummy;
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 根据握手密钥派生出主密钥
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>s<span style="color:#f92672">-&gt;</span>method<span style="color:#f92672">-&gt;</span>ssl3_enc<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">generate_master_secret</span>(s,
+</span></span><span style="display:flex;"><span>                    s<span style="color:#f92672">-&gt;</span>master_secret, s<span style="color:#f92672">-&gt;</span>handshake_secret, <span style="color:#ae81ff">0</span>,
+</span></span><span style="display:flex;"><span>                    <span style="color:#f92672">&amp;</span>dummy)) {
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>s<span style="color:#f92672">-&gt;</span>method<span style="color:#f92672">-&gt;</span>ssl3_enc<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">change_cipher_state</span>(s,
+</span></span><span style="display:flex;"><span>                    SSL3_CC_APPLICATION <span style="color:#f92672">|</span> SSL3_CHANGE_CIPHER_CLIENT_READ)) {
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="43--主密钥master-secret派生出应用数据加密加签密钥">4.3  主密钥master secret派生出应用数据加密加签密钥；</h3>
+<p>最终派生出client_app_traffic_secret, server_app_traffic_secret分别用于客户端和服务端数据加密</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C" data-lang="C"><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">tls13_change_cipher_state</span>(SSL <span style="color:#f92672">*</span>s, <span style="color:#66d9ef">int</span> which) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> client_early_traffic[] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;c e traffic&#34;</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> client_handshake_traffic[] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;c hs traffic&#34;</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> client_application_traffic[] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;c ap traffic&#34;</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> server_handshake_traffic[] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;s hs traffic&#34;</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> server_application_traffic[] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;s ap traffic&#34;</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> exporter_master_secret[] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;exp master&#34;</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> resumption_master_secret[] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;res master&#34;</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> early_exporter_master_secret[] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;e exp master&#34;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>iv;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> secret[EVP_MAX_MD_SIZE];
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> hashval[EVP_MAX_MD_SIZE];
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>hash <span style="color:#f92672">=</span> hashval;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>insecret;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>finsecret <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>label;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (which <span style="color:#f92672">&amp;</span> SSL3_CC_READ) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (((which <span style="color:#f92672">&amp;</span> SSL3_CC_CLIENT) <span style="color:#f92672">&amp;&amp;</span> (which <span style="color:#f92672">&amp;</span> SSL3_CC_WRITE)) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (which <span style="color:#f92672">&amp;</span> SSL3_CC_HANDSHAKE) {
+</span></span><span style="display:flex;"><span>            insecret <span style="color:#f92672">=</span> s<span style="color:#f92672">-&gt;</span>handshake_secret;
+</span></span><span style="display:flex;"><span>            label <span style="color:#f92672">=</span> client_handshake_traffic;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>            insecret <span style="color:#f92672">=</span> s<span style="color:#f92672">-&gt;</span>master_secret;
+</span></span><span style="display:flex;"><span>            label <span style="color:#f92672">=</span> client_application_traffic;
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (which <span style="color:#f92672">&amp;</span> SSL3_CC_HANDSHAKE) {
+</span></span><span style="display:flex;"><span>            insecret <span style="color:#f92672">=</span> s<span style="color:#f92672">-&gt;</span>handshake_secret;
+</span></span><span style="display:flex;"><span>            label <span style="color:#f92672">=</span> server_handshake_traffic;
+</span></span><span style="display:flex;"><span>        } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>            insecret <span style="color:#f92672">=</span> s<span style="color:#f92672">-&gt;</span>master_secret;
+</span></span><span style="display:flex;"><span>            label <span style="color:#f92672">=</span> server_application_traffic;
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 派生出密钥
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">derive_secret_key_and_iv</span>(s, which <span style="color:#f92672">&amp;</span> SSL3_CC_WRITE, md, cipher,
+</span></span><span style="display:flex;"><span>                                  insecret, hash, label, labellen, secret, iv,
+</span></span><span style="display:flex;"><span>                                  ciph_ctx)) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">/* SSLfatal() already called */</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">goto</span> err;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 服务端加密加签密钥
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (label <span style="color:#f92672">==</span> server_application_traffic) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">memcpy</span>(s<span style="color:#f92672">-&gt;</span>server_app_traffic_secret, secret, hashlen);
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (label <span style="color:#f92672">==</span> client_application_traffic)
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 客户端加密加签密钥
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">memcpy</span>(s<span style="color:#f92672">-&gt;</span>client_app_traffic_secret, secret, hashlen);
+</span></span><span style="display:flex;"><span>    
+</span></span></code></pre></div><h3 id="43-使用应用数据加密密钥">4.3 使用应用数据加密密钥；</h3>
+<p>加密调用代码以及调用栈如下, AES_GCM加密加签代码与TLS 1.2加密套件ECDHE_RSA_AES128_GCM_SHA256相同:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C" data-lang="C"><span style="display:flex;"><span><span style="color:#ae81ff">1</span>   libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x000000010c55218a</span> CRYPTO_gcm128_encrypt_ctr32 <span style="color:#f92672">+</span> <span style="color:#ae81ff">106</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">2</span>   libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x000000010c5195fb</span> aes_gcm_cipher <span style="color:#f92672">+</span> <span style="color:#ae81ff">571</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">3</span>   libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x000000010c530a2f</span> evp_EncryptDecryptUpdate <span style="color:#f92672">+</span> <span style="color:#ae81ff">303</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">4</span>   libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x000000010c52fd70</span> EVP_EncryptUpdate <span style="color:#f92672">+</span> <span style="color:#ae81ff">112</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">5</span>   libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x000000010c52fcd3</span> EVP_CipherUpdate <span style="color:#f92672">+</span> <span style="color:#ae81ff">67</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">6</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010bf72464</span> tls13_enc <span style="color:#f92672">+</span> <span style="color:#ae81ff">1956</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">7</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010bf69a8c</span> do_ssl3_write <span style="color:#f92672">+</span> <span style="color:#ae81ff">4924</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">8</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010bf7a886</span> ssl3_dispatch_alert <span style="color:#f92672">+</span> <span style="color:#ae81ff">102</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">9</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010bf7a7fb</span> ssl3_send_alert <span style="color:#f92672">+</span> <span style="color:#ae81ff">475</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">10</span>  libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010bf791d3</span> ssl3_shutdown <span style="color:#f92672">+</span> <span style="color:#ae81ff">115</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">11</span>  libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010bf8aaae</span> SSL_shutdown <span style="color:#f92672">+</span> <span style="color:#ae81ff">222</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">12</span>  openssl                             <span style="color:#ae81ff">0x000000010bdb8145</span> do_ssl_shutdown <span style="color:#f92672">+</span> <span style="color:#ae81ff">21</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">13</span>  openssl                             <span style="color:#ae81ff">0x000000010bdb6047</span> s_client_main <span style="color:#f92672">+</span> <span style="color:#ae81ff">26887</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">14</span>  openssl                             <span style="color:#ae81ff">0x000000010bd9cd59</span> do_cmd <span style="color:#f92672">+</span> <span style="color:#ae81ff">233</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">15</span>  openssl                             <span style="color:#ae81ff">0x000000010bd9c71b</span> main <span style="color:#f92672">+</span> <span style="color:#ae81ff">651</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">static</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">aes_gcm_tls_cipher</span>(EVP_CIPHER_CTX <span style="color:#f92672">*</span>ctx, <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>out,
+</span></span><span style="display:flex;"><span>                          <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>in, <span style="color:#66d9ef">size_t</span> len)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    EVP_AES_GCM_CTX <span style="color:#f92672">*</span>gctx <span style="color:#f92672">=</span> <span style="color:#a6e22e">EVP_C_DATA</span>(EVP_AES_GCM_CTX,ctx);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">EVP_CIPHER_CTX_ctrl</span>(ctx, ctx<span style="color:#f92672">-&gt;</span>encrypt <span style="color:#f92672">?</span> EVP_CTRL_GCM_IV_GEN
+</span></span><span style="display:flex;"><span>                                              : EVP_CTRL_GCM_SET_IV_INV,
+</span></span><span style="display:flex;"><span>                            EVP_GCM_TLS_EXPLICIT_IV_LEN, out) <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/* Use saved AAD */</span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 输入认证附加数据
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">CRYPTO_gcm128_aad</span>(<span style="color:#f92672">&amp;</span>gctx<span style="color:#f92672">-&gt;</span>gcm, ctx<span style="color:#f92672">-&gt;</span>buf, gctx<span style="color:#f92672">-&gt;</span>tls_aad_len))
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">goto</span> err;
+</span></span><span style="display:flex;"><span>    in <span style="color:#f92672">+=</span> EVP_GCM_TLS_EXPLICIT_IV_LEN; (<span style="color:#ae81ff">8</span>)
+</span></span><span style="display:flex;"><span>    out <span style="color:#f92672">+=</span> EVP_GCM_TLS_EXPLICIT_IV_LEN;
+</span></span><span style="display:flex;"><span>    len <span style="color:#f92672">-=</span> EVP_GCM_TLS_EXPLICIT_IV_LEN <span style="color:#f92672">+</span> <span style="color:#a6e22e">EVP_GCM_TLS_TAG_LEN</span>(<span style="color:#ae81ff">16</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (ctx<span style="color:#f92672">-&gt;</span>encrypt) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">/* Encrypt payload  */</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 进行数据加密
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> (gctx<span style="color:#f92672">-&gt;</span>ctr) {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">size_t</span> bulk <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> (len <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">32</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">AES_GCM_ASM</span>(gctx)) {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">CRYPTO_gcm128_encrypt</span>(<span style="color:#f92672">&amp;</span>gctx<span style="color:#f92672">-&gt;</span>gcm, NULL, NULL, <span style="color:#ae81ff">0</span>))
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>                bulk <span style="color:#f92672">=</span> <span style="color:#a6e22e">AES_gcm_encrypt</span>(in, out, len,
+</span></span><span style="display:flex;"><span>                                       gctx<span style="color:#f92672">-&gt;</span>gcm.key,
+</span></span><span style="display:flex;"><span>                                       gctx<span style="color:#f92672">-&gt;</span>gcm.Yi.c, gctx<span style="color:#f92672">-&gt;</span>gcm.Xi.u);
+</span></span><span style="display:flex;"><span>                gctx<span style="color:#f92672">-&gt;</span>gcm.len.u[<span style="color:#ae81ff">1</span>] <span style="color:#f92672">+=</span> bulk;
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        } 
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    out <span style="color:#f92672">+=</span> len;
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/* Finally write tag  */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 数据加签，生成认证tag，防止数据被篡改。
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">CRYPTO_gcm128_tag</span>(<span style="color:#f92672">&amp;</span>gctx<span style="color:#f92672">-&gt;</span>gcm, out, EVP_GCM_TLS_TAG_LEN);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>        
+</span></span></code></pre></div>
+        </div>
+
+        
+
+
+        
+
+
+        <div class="post-meta meta-tags">
+            
+            没有标签
+            
+        </div>
+    </article>
+    
+    
+
+    
+    
+    <div class="post bg-white">
+      <script src="https://utteranc.es/client.js"
+            repo= "Songchunbo/blog-comment"
+            issue-term="pathname"
+            theme="github-light"
+            crossorigin="anonymous"
+            async>
+      </script>
+    </div>
+    
+</div>
+
+                    <footer id="footer">
+    <div>
+        &copy; 2024 <a href="https://songchunbo.github.io/">心在路上 By 心在路上</a>
+        
+    </div>
+    <br />
+    <div>
+        <div class="github-badge">
+            <a href="https://gohugo.io/" target="_black" rel="nofollow"><span class="badge-subject">Powered by</span><span class="badge-value bg-blue">Hugo</span></a>
+        </div>
+        <div class="github-badge">
+            <a href="https://www.flysnow.org/" target="_black"><span class="badge-subject">Design by</span><span class="badge-value bg-brightgreen">飞雪无情</span></a>
+        </div>
+        <div class="github-badge">
+            <a href="https://github.com/flysnow-org/maupassant-hugo" target="_black"><span class="badge-subject">Theme</span><span class="badge-value bg-yellowgreen">Maupassant</span></a>
+        </div>
+    </div>
+</footer>
+
+
+    
+    <script type="text/javascript">
+        window.MathJax = {
+            tex2jax: {
+                inlineMath: [['$', '$']],
+                processEscapes: true
+                }
+            };
+    </script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+
+<a id="rocket" href="#top"></a>
+<script type="text/javascript" src='/js/totop.js?v=0.0.0' async=""></script>
+
+
+
+
+
+
+                </div>
+
+                <div id="secondary">
+    <section class="widget">
+        <form id="search" action='https://songchunbo.github.io/search/' method="get" accept-charset="utf-8" target="_blank" _lpchecked="1">
+      
+      <input type="text" name="q" maxlength="20" placeholder="Search">
+      <input type="hidden" name="sitesearch" value="https://songchunbo.github.io/">
+      <button type="submit" class="submit icon-search"></button>
+</form>
+    </section>
+    
+    <section class="widget">
+        <h3 class="widget-title">最近文章</h3>
+<ul class="widget-list">
+    
+    <li>
+        <a href="https://songchunbo.github.io/post/openssl_tls13/" title="TLS 1.3 在 OpenSSL 中的实现(二）">TLS 1.3 在 OpenSSL 中的实现(二）</a>
+    </li>
+    
+    <li>
+        <a href="https://songchunbo.github.io/post/openssl_tls12/" title=" TLS 1.2 在 OpenSSL 中的实现(一） "> TLS 1.2 在 OpenSSL 中的实现(一） </a>
+    </li>
+    
+    <li>
+        <a href="https://songchunbo.github.io/post/android_packer/" title="Android Packer">Android Packer</a>
+    </li>
+    
+    <li>
+        <a href="https://songchunbo.github.io/post/andorid_file_io/" title="Android文件IO路径小记">Android文件IO路径小记</a>
+    </li>
+    
+    <li>
+        <a href="https://songchunbo.github.io/post/apt_summary/" title="APT Summary">APT Summary</a>
+    </li>
+    
+    <li>
+        <a href="https://songchunbo.github.io/post/dart_vm_lex_syntax/" title="Dart VM源码分析之CFE">Dart VM源码分析之CFE</a>
+    </li>
+    
+    <li>
+        <a href="https://songchunbo.github.io/post/dart_vm_how_compile_works/" title="Dart VM源码分析之编译dill">Dart VM源码分析之编译dill</a>
+    </li>
+    
+    <li>
+        <a href="https://songchunbo.github.io/post/dart_vm_quick_start/" title="Dart VM命令行工具">Dart VM命令行工具</a>
+    </li>
+    
+    <li>
+        <a href="https://songchunbo.github.io/post/art_commit_history/" title="ART Commit History">ART Commit History</a>
+    </li>
+    
+    <li>
+        <a href="https://songchunbo.github.io/post/x86_arm_callconvention/" title="X86 and ARM Call Convention">X86 and ARM Call Convention</a>
+    </li>
+    
+</ul>
+    </section>
+
+    
+
+    <section class="widget">
+        <h3 class="widget-title"><a href='/categories/'>分类</a></h3>
+<ul class="widget-list">
+    
+</ul>
+    </section>
+
+    <section class="widget">
+        <h3 class="widget-title"><a href='/tags/'>标签</a></h3>
+<div class="tagcloud">
+    
+</div>
+    </section>
+
+    
+<section class="widget">
+    <h3 class="widget-title">友情链接</h3>
+    <ul class="widget-list">
+        
+        <li>
+            <a target="_blank" href="https://android.googlesource.com/" title="AOSP">AOSP</a>
+        </li>
+        
+        <li>
+            <a target="_blank" href="https://android.googlesource.com/platform/art/" title="ART mirror">ART mirror</a>
+        </li>
+        
+    </ul>
+</section>
+
+
+    <section class="widget">
+        <h3 class="widget-title">其它</h3>
+        <ul class="widget-list">
+            <li><a href="https://songchunbo.github.io/index.xml">文章 RSS</a></li>
+        </ul>
+    </section>
+</div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
