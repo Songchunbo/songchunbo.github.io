@@ -440,57 +440,62 @@
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">memcpy</span>(s<span style="color:#f92672">-&gt;</span>client_app_traffic_secret, secret, hashlen);
 </span></span><span style="display:flex;"><span>    
 </span></span></code></pre></div><h3 id="43-使用应用数据加密密钥">4.3 使用应用数据加密密钥；</h3>
-<p>加密调用代码以及调用栈如下, AES_GCM加密加签代码与TLS 1.2加密套件ECDHE_RSA_AES128_GCM_SHA256相同:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C" data-lang="C"><span style="display:flex;"><span><span style="color:#ae81ff">1</span>   libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x000000010c55218a</span> CRYPTO_gcm128_encrypt_ctr32 <span style="color:#f92672">+</span> <span style="color:#ae81ff">106</span>
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">2</span>   libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x000000010c5195fb</span> aes_gcm_cipher <span style="color:#f92672">+</span> <span style="color:#ae81ff">571</span>
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">3</span>   libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x000000010c530a2f</span> evp_EncryptDecryptUpdate <span style="color:#f92672">+</span> <span style="color:#ae81ff">303</span>
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">4</span>   libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x000000010c52fd70</span> EVP_EncryptUpdate <span style="color:#f92672">+</span> <span style="color:#ae81ff">112</span>
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">5</span>   libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x000000010c52fcd3</span> EVP_CipherUpdate <span style="color:#f92672">+</span> <span style="color:#ae81ff">67</span>
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">6</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010bf72464</span> tls13_enc <span style="color:#f92672">+</span> <span style="color:#ae81ff">1956</span>
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">7</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010bf69a8c</span> do_ssl3_write <span style="color:#f92672">+</span> <span style="color:#ae81ff">4924</span>
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">8</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010bf7a886</span> ssl3_dispatch_alert <span style="color:#f92672">+</span> <span style="color:#ae81ff">102</span>
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">9</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010bf7a7fb</span> ssl3_send_alert <span style="color:#f92672">+</span> <span style="color:#ae81ff">475</span>
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">10</span>  libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010bf791d3</span> ssl3_shutdown <span style="color:#f92672">+</span> <span style="color:#ae81ff">115</span>
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">11</span>  libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x000000010bf8aaae</span> SSL_shutdown <span style="color:#f92672">+</span> <span style="color:#ae81ff">222</span>
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">12</span>  openssl                             <span style="color:#ae81ff">0x000000010bdb8145</span> do_ssl_shutdown <span style="color:#f92672">+</span> <span style="color:#ae81ff">21</span>
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">13</span>  openssl                             <span style="color:#ae81ff">0x000000010bdb6047</span> s_client_main <span style="color:#f92672">+</span> <span style="color:#ae81ff">26887</span>
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">14</span>  openssl                             <span style="color:#ae81ff">0x000000010bd9cd59</span> do_cmd <span style="color:#f92672">+</span> <span style="color:#ae81ff">233</span>
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">15</span>  openssl                             <span style="color:#ae81ff">0x000000010bd9c71b</span> main <span style="color:#f92672">+</span> <span style="color:#ae81ff">651</span>
+<p>加密调用代码以及调用栈如下, AES_GCM加密加签代码与TLS 1.2加密套件ECDHE_RSA_AES128_GCM_SHA256类似:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C" data-lang="C"><span style="display:flex;"><span><span style="color:#ae81ff">1</span>   libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x000000010a15c949</span> aes_gcm_cipher <span style="color:#f92672">+</span> <span style="color:#ae81ff">73</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">2</span>   libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x000000010a173a2f</span> evp_EncryptDecryptUpdate <span style="color:#f92672">+</span> <span style="color:#ae81ff">303</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">3</span>   libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x000000010a172d70</span> EVP_EncryptUpdate <span style="color:#f92672">+</span> <span style="color:#ae81ff">112</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">4</span>   libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x000000010a172cd3</span> EVP_CipherUpdate <span style="color:#f92672">+</span> <span style="color:#ae81ff">67</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">5</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x0000000109bb5464</span> tls13_enc <span style="color:#f92672">+</span> <span style="color:#ae81ff">1956</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">6</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x0000000109baca8c</span> do_ssl3_write <span style="color:#f92672">+</span> <span style="color:#ae81ff">4924</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">7</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x0000000109bab2f0</span> ssl3_write_bytes <span style="color:#f92672">+</span> <span style="color:#ae81ff">3408</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">8</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x0000000109bbc369</span> ssl3_write <span style="color:#f92672">+</span> <span style="color:#ae81ff">105</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">9</span>   libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x0000000109bcd615</span> ssl_write_internal <span style="color:#f92672">+</span> <span style="color:#ae81ff">437</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">10</span>  libssl<span style="color:#ae81ff">.1.1</span>.dylib                    <span style="color:#ae81ff">0x0000000109bcd68f</span> SSL_write <span style="color:#f92672">+</span> <span style="color:#ae81ff">95</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">11</span>  openssl                             <span style="color:#ae81ff">0x00000001099f854c</span> s_client_main <span style="color:#f92672">+</span> <span style="color:#ae81ff">24076</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">12</span>  openssl                             <span style="color:#ae81ff">0x00000001099dfd59</span> do_cmd <span style="color:#f92672">+</span> <span style="color:#ae81ff">233</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">13</span>  openssl                             <span style="color:#ae81ff">0x00000001099df71b</span> main <span style="color:#f92672">+</span> <span style="color:#ae81ff">651</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">14</span>  dyld                                <span style="color:#ae81ff">0x00007ff80337a41f</span> start <span style="color:#f92672">+</span> <span style="color:#ae81ff">1903</span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">static</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">aes_gcm_tls_cipher</span>(EVP_CIPHER_CTX <span style="color:#f92672">*</span>ctx, <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>out,
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">static</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">aes_gcm_cipher</span>(EVP_CIPHER_CTX <span style="color:#f92672">*</span>ctx, <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>out,
 </span></span><span style="display:flex;"><span>                          <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>in, <span style="color:#66d9ef">size_t</span> len)
 </span></span><span style="display:flex;"><span>{
-</span></span><span style="display:flex;"><span>    EVP_AES_GCM_CTX <span style="color:#f92672">*</span>gctx <span style="color:#f92672">=</span> <span style="color:#a6e22e">EVP_C_DATA</span>(EVP_AES_GCM_CTX,ctx);
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">EVP_CIPHER_CTX_ctrl</span>(ctx, ctx<span style="color:#f92672">-&gt;</span>encrypt <span style="color:#f92672">?</span> EVP_CTRL_GCM_IV_GEN
-</span></span><span style="display:flex;"><span>                                              : EVP_CTRL_GCM_SET_IV_INV,
-</span></span><span style="display:flex;"><span>                            EVP_GCM_TLS_EXPLICIT_IV_LEN, out) <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">0</span>)
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/* Use saved AAD */</span> 
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 输入认证附加数据
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">CRYPTO_gcm128_aad</span>(<span style="color:#f92672">&amp;</span>gctx<span style="color:#f92672">-&gt;</span>gcm, ctx<span style="color:#f92672">-&gt;</span>buf, gctx<span style="color:#f92672">-&gt;</span>tls_aad_len))
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">goto</span> err;
-</span></span><span style="display:flex;"><span>    in <span style="color:#f92672">+=</span> EVP_GCM_TLS_EXPLICIT_IV_LEN; (<span style="color:#ae81ff">8</span>)
-</span></span><span style="display:flex;"><span>    out <span style="color:#f92672">+=</span> EVP_GCM_TLS_EXPLICIT_IV_LEN;
-</span></span><span style="display:flex;"><span>    len <span style="color:#f92672">-=</span> EVP_GCM_TLS_EXPLICIT_IV_LEN <span style="color:#f92672">+</span> <span style="color:#a6e22e">EVP_GCM_TLS_TAG_LEN</span>(<span style="color:#ae81ff">16</span>);
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (ctx<span style="color:#f92672">-&gt;</span>encrypt) {
-</span></span><span style="display:flex;"><span>        <span style="color:#75715e">/* Encrypt payload  */</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 进行数据加密
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> (gctx<span style="color:#f92672">-&gt;</span>ctr) {
-</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">size_t</span> bulk <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
-</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> (len <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">32</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">AES_GCM_ASM</span>(gctx)) {
-</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">CRYPTO_gcm128_encrypt</span>(<span style="color:#f92672">&amp;</span>gctx<span style="color:#f92672">-&gt;</span>gcm, NULL, NULL, <span style="color:#ae81ff">0</span>))
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 输入认证附加数据 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (gctx<span style="color:#f92672">-&gt;</span>tls_aad_len <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">aes_gcm_tls_cipher</span>(ctx, out, in, len);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (in) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (ctx<span style="color:#f92672">-&gt;</span>encrypt) {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> (gctx<span style="color:#f92672">-&gt;</span>ctr) {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">size_t</span> bulk <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">//  AES_GCM加密
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">CRYPTO_gcm128_encrypt_ctr32</span>(<span style="color:#f92672">&amp;</span>gctx<span style="color:#f92672">-&gt;</span>gcm,
+</span></span><span style="display:flex;"><span>                                                in <span style="color:#f92672">+</span> bulk,
+</span></span><span style="display:flex;"><span>                                                out <span style="color:#f92672">+</span> bulk,
+</span></span><span style="display:flex;"><span>                                                len <span style="color:#f92672">-</span> bulk, gctx<span style="color:#f92672">-&gt;</span>ctr))
 </span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
-</span></span><span style="display:flex;"><span>                bulk <span style="color:#f92672">=</span> <span style="color:#a6e22e">AES_gcm_encrypt</span>(in, out, len,
-</span></span><span style="display:flex;"><span>                                       gctx<span style="color:#f92672">-&gt;</span>gcm.key,
-</span></span><span style="display:flex;"><span>                                       gctx<span style="color:#f92672">-&gt;</span>gcm.Yi.c, gctx<span style="color:#f92672">-&gt;</span>gcm.Xi.u);
-</span></span><span style="display:flex;"><span>                gctx<span style="color:#f92672">-&gt;</span>gcm.len.u[<span style="color:#ae81ff">1</span>] <span style="color:#f92672">+=</span> bulk;
-</span></span><span style="display:flex;"><span>            }
-</span></span><span style="display:flex;"><span>        } 
+</span></span><span style="display:flex;"><span>            } 
+</span></span><span style="display:flex;"><span>        } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> (gctx<span style="color:#f92672">-&gt;</span>ctr) {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">size_t</span> bulk <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">// AES_GCM解密
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">CRYPTO_gcm128_decrypt_ctr32</span>(<span style="color:#f92672">&amp;</span>gctx<span style="color:#f92672">-&gt;</span>gcm,
+</span></span><span style="display:flex;"><span>                                                in <span style="color:#f92672">+</span> bulk,
+</span></span><span style="display:flex;"><span>                                                out <span style="color:#f92672">+</span> bulk,
+</span></span><span style="display:flex;"><span>                                                len <span style="color:#f92672">-</span> bulk, gctx<span style="color:#f92672">-&gt;</span>ctr))
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>            } 
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> len;
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//数据加签，生成认证tag，防止数据被篡改。 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">CRYPTO_gcm128_tag</span>(<span style="color:#f92672">&amp;</span>gctx<span style="color:#f92672">-&gt;</span>gcm, ctx<span style="color:#f92672">-&gt;</span>buf, <span style="color:#ae81ff">16</span>);
+</span></span><span style="display:flex;"><span>        gctx<span style="color:#f92672">-&gt;</span>taglen <span style="color:#f92672">=</span> <span style="color:#ae81ff">16</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">/* Don&#39;t reuse the IV */</span>
+</span></span><span style="display:flex;"><span>        gctx<span style="color:#f92672">-&gt;</span>iv_set <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
 </span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>    out <span style="color:#f92672">+=</span> len;
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/* Finally write tag  */</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 数据加签，生成认证tag，防止数据被篡改。
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">CRYPTO_gcm128_tag</span>(<span style="color:#f92672">&amp;</span>gctx<span style="color:#f92672">-&gt;</span>gcm, out, EVP_GCM_TLS_TAG_LEN);
+</span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>}
 </span></span><span style="display:flex;"><span>        
 </span></span></code></pre></div>
