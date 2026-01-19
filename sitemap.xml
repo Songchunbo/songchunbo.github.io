@@ -2,71 +2,59 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://localhost:1313/post/</loc>
+    <loc>https://songchunbo.github.io/post/</loc>
     <lastmod>2024-07-18T21:00:50+08:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/post/openssl_tls13/</loc>
+    <loc>https://songchunbo.github.io/post/openssl_tls13/</loc>
     <lastmod>2024-07-18T21:00:50+08:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/</loc>
+    <loc>https://songchunbo.github.io/</loc>
     <lastmod>2024-07-18T21:00:50+08:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/post/openssl_tls12/</loc>
+    <loc>https://songchunbo.github.io/post/openssl_tls12/</loc>
     <lastmod>2024-07-14T16:59:44+08:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/post/android_packer/</loc>
+    <loc>https://songchunbo.github.io/post/android_packer/</loc>
     <lastmod>2023-03-15T20:25:09+08:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/post/andorid_file_io/</loc>
+    <loc>https://songchunbo.github.io/post/andorid_file_io/</loc>
     <lastmod>2022-10-15T15:56:45+08:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/post/apt_summary/</loc>
+    <loc>https://songchunbo.github.io/post/apt_summary/</loc>
     <lastmod>2022-02-10T15:56:45+08:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/post/dart_vm_lex_syntax/</loc>
+    <loc>https://songchunbo.github.io/post/dart_vm_lex_syntax/</loc>
     <lastmod>2021-09-14T09:57:43+08:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/post/dart_vm_how_compile_works/</loc>
+    <loc>https://songchunbo.github.io/post/dart_vm_how_compile_works/</loc>
     <lastmod>2021-09-12T20:37:39+08:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/post/dart_vm_quick_start/</loc>
+    <loc>https://songchunbo.github.io/post/dart_vm_quick_start/</loc>
     <lastmod>2021-09-10T15:30:24+08:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/about/</loc>
+    <loc>https://songchunbo.github.io/about/</loc>
     <lastmod>2021-03-10T00:13:27+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/post/art_commit_history/</loc>
+    <loc>https://songchunbo.github.io/post/art_commit_history/</loc>
     <lastmod>2020-12-16T15:55:19+08:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/post/x86_arm_callconvention/</loc>
+    <loc>https://songchunbo.github.io/post/x86_arm_callconvention/</loc>
     <lastmod>2020-08-10T16:02:03+08:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/post/galois_math/</loc>
+    <loc>https://songchunbo.github.io/post/galois_math/</loc>
     <lastmod>2017-09-03T18:10:00+08:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/post/primitive_poly/</loc>
+    <loc>https://songchunbo.github.io/post/primitive_poly/</loc>
     <lastmod>2017-08-23T10:29:02+08:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/post/dart_in_flutter/</loc>
-    <lastmod>2011-09-18T09:06:50+08:00</lastmod>
+    <loc>https://songchunbo.github.io/post/3npacker_jiagu.png/</loc>
   </url><url>
-    <loc>http://localhost:1313/post/dart_vm_base_draft/</loc>
-    <lastmod>2011-09-18T09:00:59+08:00</lastmod>
+    <loc>https://songchunbo.github.io/categories/</loc>
   </url><url>
-    <loc>http://localhost:1313/post/dart_vm_dart_invoke_details_draft/</loc>
-    <lastmod>2011-09-18T09:00:40+08:00</lastmod>
+    <loc>https://songchunbo.github.io/tags/</loc>
   </url><url>
-    <loc>http://localhost:1313/post/dart_vm_snapshot_kinds/</loc>
-    <lastmod>2011-09-18T08:58:56+08:00</lastmod>
+    <loc>https://songchunbo.github.io/archives/</loc>
   </url><url>
-    <loc>http://localhost:1313/post/3npacker_jiagu.png/</loc>
-  </url><url>
-    <loc>http://localhost:1313/categories/</loc>
-  </url><url>
-    <loc>http://localhost:1313/tags/</loc>
-  </url><url>
-    <loc>http://localhost:1313/archives/</loc>
-  </url><url>
-    <loc>http://localhost:1313/search/</loc>
+    <loc>https://songchunbo.github.io/search/</loc>
   </url>
 </urlset>
