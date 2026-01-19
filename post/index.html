@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en-us">
-<head>
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
 
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -16,7 +16,7 @@
     <meta name="description" content="Posts">
         
     <meta name="author" content="心在路上">
-    <meta property="og:url" content="https://songchunbo.github.io/post/">
+    <meta property="og:url" content="http://localhost:1313/post/">
     <link rel="shortcut icon" href='/favicon.ico'  type="image/x-icon">
 
     <link rel="stylesheet" href='/css/normalize.css'>
@@ -24,7 +24,7 @@
     
     
     
-    <link rel="alternate" type="application/rss+xml" href="https://songchunbo.github.io/post/index.xml" title="心在路上" />
+    <link rel="alternate" type="application/rss+xml" href="http://localhost:1313/post/index.xml" title="心在路上" />
     <script type="text/javascript" src="//cdn.bootcdn.net/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 
     
@@ -42,7 +42,7 @@
         <div class="col-group">
             <div class="site-name ">
                 
-                    <a id="logo" href="https://songchunbo.github.io/">
+                    <a id="logo" href="http://localhost:1313/">
                         心在路上
                     </a>
                 
@@ -50,11 +50,11 @@
             </div>
             <div>
                 <nav id="nav-menu" class="clearfix">
-                    <a class="current" href="https://songchunbo.github.io/">首页</a>
+                    <a class="current" href="http://localhost:1313/">首页</a>
                     
-                    <a  href="https://songchunbo.github.io/archives/" title="存档">存档</a>
+                    <a  href="http://localhost:1313/archives/" title="存档">存档</a>
                     
-                    <a  href="https://songchunbo.github.io/about/" title="关于">关于</a>
+                    <a  href="http://localhost:1313/about/" title="关于">关于</a>
                     
                 </nav>
             </div>
@@ -74,7 +74,7 @@
     <article class="post">
         <header>
             <h1 class="post-title">
-                <a href="https://songchunbo.github.io/post/openssl_tls13/" title="TLS 1.3 在 OpenSSL 中的实现(二）">TLS 1.3 在 OpenSSL 中的实现(二）</a>
+                <a href="http://localhost:1313/post/openssl_tls13/" title="TLS 1.3 在 OpenSSL 中的实现(二）">TLS 1.3 在 OpenSSL 中的实现(二）</a>
             </h1>
         </header>
         <date class="post-meta meta-date">
@@ -85,7 +85,7 @@
             本篇主要介绍TLS 1.3在 OpenSSL 中的实现，加密套件选取TLS_AES_256_GCM_SHA384
 1. 加密套件TLS_AES_256_GCM_SHA384 TLS_AES_256_GCM_SHA384基于 TLS 1.……
         </div>
-        <p class="readmore"><a href="https://songchunbo.github.io/post/openssl_tls13/">阅读全文</a></p>
+        <p class="readmore"><a href="http://localhost:1313/post/openssl_tls13/">阅读全文</a></p>
     </article>
     
     
@@ -93,7 +93,7 @@
     <article class="post">
         <header>
             <h1 class="post-title">
-                <a href="https://songchunbo.github.io/post/openssl_tls12/" title=" TLS 1.2 在 OpenSSL 中的实现(一） "> TLS 1.2 在 OpenSSL 中的实现(一） </a>
+                <a href="http://localhost:1313/post/openssl_tls12/" title=" TLS 1.2 在 OpenSSL 中的实现(一） "> TLS 1.2 在 OpenSSL 中的实现(一） </a>
             </h1>
         </header>
         <date class="post-meta meta-date">
@@ -104,7 +104,7 @@
             最近需要做一些加解密的事情，简单分析了一下TLS安全机制在OpenSSL中的实现，记录一下。
 上篇介绍 TLS 1.2， 加密套件选取ECDHE_RSA_AES128_GCM_SHA256.……
         </div>
-        <p class="readmore"><a href="https://songchunbo.github.io/post/openssl_tls12/">阅读全文</a></p>
+        <p class="readmore"><a href="http://localhost:1313/post/openssl_tls12/">阅读全文</a></p>
     </article>
     
     
@@ -112,7 +112,7 @@
     <article class="post">
         <header>
             <h1 class="post-title">
-                <a href="https://songchunbo.github.io/post/android_packer/" title="Android Packer">Android Packer</a>
+                <a href="http://localhost:1313/post/android_packer/" title="Android Packer">Android Packer</a>
             </h1>
         </header>
         <date class="post-meta meta-date">
@@ -120,10 +120,9 @@
         </date>
         
         <div class="post-content">
-            第一代壳 一代壳，这是最早的Android加壳技术，其主要方法是将原始的.dex文件进行加密，然后在应用中添加一个新的类（通常称为&quot;stub&quot;或&quot;loader&quot;）来在运行时解密和加载这个.dex文件。这种方法可以有效防止静态分析，但对动态分析的防护较弱。
-一代壳通常会对整个DEX进行加密，并把加密后的Payload嵌到APK中 安卓APK资源混淆加密重签名工具 ApkProtector 第二代壳 第二代Android壳采取了更复杂的策略来对抗逆向工程。在这个阶段，Dex Method的代码会被提取并存放在外部，而原始Method中则填充nop（无操作）指令。当需要加载或执行method时，系统会动态地解密这些字节码。这个解密逻辑通常存放在so（共享对象）文件中。为了进一步提高安全性，so文件也会进行代码混淆，使得逆向工程变得更为困难。……
+            第一代壳 （Dex 整体加密壳） 一代壳，这是最早的Android加壳技术，其主要方法是将原始的.dex文件进行加密，然后在应用中添加一个新的类（通常称为&quot;stub&quot;或&quot;loader&quot;）来在运行时解密和加载这个.dex文件。这种方法可以有效防止静态分析，但对动态分析的防护较弱。应用启动后，壳代码会在运行时将加密的 Dex 解密到内存中，再通过自定义 ClassLoader 或反射机制加载真实业务代码。……
         </div>
-        <p class="readmore"><a href="https://songchunbo.github.io/post/android_packer/">阅读全文</a></p>
+        <p class="readmore"><a href="http://localhost:1313/post/android_packer/">阅读全文</a></p>
     </article>
     
     
@@ -131,7 +130,7 @@
     <article class="post">
         <header>
             <h1 class="post-title">
-                <a href="https://songchunbo.github.io/post/andorid_file_io/" title="Android文件IO路径小记">Android文件IO路径小记</a>
+                <a href="http://localhost:1313/post/andorid_file_io/" title="Android文件IO路径小记">Android文件IO路径小记</a>
             </h1>
         </header>
         <date class="post-meta meta-date">
@@ -141,7 +140,7 @@
         <div class="post-content">
             Android文件IO路径小记 1 open创建文件 bionic libc. bionic/libc/bionic/open.……
         </div>
-        <p class="readmore"><a href="https://songchunbo.github.io/post/andorid_file_io/">阅读全文</a></p>
+        <p class="readmore"><a href="http://localhost:1313/post/andorid_file_io/">阅读全文</a></p>
     </article>
     
     
@@ -149,7 +148,7 @@
     <article class="post">
         <header>
             <h1 class="post-title">
-                <a href="https://songchunbo.github.io/post/apt_summary/" title="APT Summary">APT Summary</a>
+                <a href="http://localhost:1313/post/apt_summary/" title="APT Summary">APT Summary</a>
             </h1>
         </header>
         <date class="post-meta meta-date">
@@ -161,7 +160,7 @@
 <p>毒云藤，又名绿斑、APT-C-01等，是一个长期针对国内国防、政府、科技和教育领域的重要机构实施网络间谍攻击活动的APT团伙，最早可以追溯到2007年。该组织惯用鱼叉式钓鱼网络攻击，会选取与攻击目标贴合的诱饵内容进行攻击活动，惯用的主题包括通知、会议材料、研究报告等或是采用攻击时间段时事主题。除了附件投递木马外，毒云藤还惯用钓鱼网站钓鱼，窃取目标的账户密码，进而获得更多重要信息。该组织主要关注方向包括：海事、军工、涉台两岸关系、中美关系等。
 别名： APT-C-01、GreenSpot、毒云藤、绿斑、穷奇、白海豚</p>……
         </div>
-        <p class="readmore"><a href="https://songchunbo.github.io/post/apt_summary/">阅读全文</a></p>
+        <p class="readmore"><a href="http://localhost:1313/post/apt_summary/">阅读全文</a></p>
     </article>
     
     
@@ -169,7 +168,7 @@
     <article class="post">
         <header>
             <h1 class="post-title">
-                <a href="https://songchunbo.github.io/post/dart_vm_lex_syntax/" title="Dart VM源码分析之CFE">Dart VM源码分析之CFE</a>
+                <a href="http://localhost:1313/post/dart_vm_lex_syntax/" title="Dart VM源码分析之CFE">Dart VM源码分析之CFE</a>
             </h1>
         </header>
         <date class="post-meta meta-date">
@@ -179,7 +178,7 @@
         <div class="post-content">
             CFE全称Common Front End, 主要把负责dart源码翻译成kernel AST，中间会经过词法分析，语法分析和语义分析，最终把分析结果写入dill文件，CFE使用Dart开发的，运行在kernel isolate中，由于生成的dill与平台无关，在x86上生成的dill在arm平台上可以加载运行……
         </div>
-        <p class="readmore"><a href="https://songchunbo.github.io/post/dart_vm_lex_syntax/">阅读全文</a></p>
+        <p class="readmore"><a href="http://localhost:1313/post/dart_vm_lex_syntax/">阅读全文</a></p>
     </article>
     
     
@@ -187,7 +186,7 @@
     <article class="post">
         <header>
             <h1 class="post-title">
-                <a href="https://songchunbo.github.io/post/dart_vm_how_compile_works/" title="Dart VM源码分析之编译dill">Dart VM源码分析之编译dill</a>
+                <a href="http://localhost:1313/post/dart_vm_how_compile_works/" title="Dart VM源码分析之编译dill">Dart VM源码分析之编译dill</a>
             </h1>
         </header>
         <date class="post-meta meta-date">
@@ -198,7 +197,7 @@
             Dart VM是运行dart的虚拟机，由多个isolate组成，每个isolate提供dart的运行环境，类似Android/ART中Zygote提供的Java运行环境，Dart VM包含下面几个重要的isolate
 一、Dart VM概述 Dart VM是运行dart的虚拟机，由多个isolate组成，每个isolate提供dart的运行环境，类似Android/ART中Zygote提供的Java运行环境，Dart VM包含下面几个重要的isolate……
         </div>
-        <p class="readmore"><a href="https://songchunbo.github.io/post/dart_vm_how_compile_works/">阅读全文</a></p>
+        <p class="readmore"><a href="http://localhost:1313/post/dart_vm_how_compile_works/">阅读全文</a></p>
     </article>
     
     
@@ -206,7 +205,7 @@
     <article class="post">
         <header>
             <h1 class="post-title">
-                <a href="https://songchunbo.github.io/post/dart_vm_quick_start/" title="Dart VM命令行工具">Dart VM命令行工具</a>
+                <a href="http://localhost:1313/post/dart_vm_quick_start/" title="Dart VM命令行工具">Dart VM命令行工具</a>
             </h1>
         </header>
         <date class="post-meta meta-date">
@@ -216,7 +215,7 @@
         <div class="post-content">
             Dart命令支持JIT和AOT模式 1. JIT模式支持两种方式， 直接在dart VM中运行dart source code……
         </div>
-        <p class="readmore"><a href="https://songchunbo.github.io/post/dart_vm_quick_start/">阅读全文</a></p>
+        <p class="readmore"><a href="http://localhost:1313/post/dart_vm_quick_start/">阅读全文</a></p>
     </article>
     
     
@@ -224,7 +223,7 @@
     <article class="post">
         <header>
             <h1 class="post-title">
-                <a href="https://songchunbo.github.io/post/art_commit_history/" title="ART Commit History">ART Commit History</a>
+                <a href="http://localhost:1313/post/art_commit_history/" title="ART Commit History">ART Commit History</a>
             </h1>
         </header>
         <date class="post-meta meta-date">
@@ -234,7 +233,7 @@
         <div class="post-content">
             1 runtime雏形 ART inital code……
         </div>
-        <p class="readmore"><a href="https://songchunbo.github.io/post/art_commit_history/">阅读全文</a></p>
+        <p class="readmore"><a href="http://localhost:1313/post/art_commit_history/">阅读全文</a></p>
     </article>
     
     
@@ -242,7 +241,7 @@
     <article class="post">
         <header>
             <h1 class="post-title">
-                <a href="https://songchunbo.github.io/post/x86_arm_callconvention/" title="X86 and ARM Call Convention">X86 and ARM Call Convention</a>
+                <a href="http://localhost:1313/post/x86_arm_callconvention/" title="X86 and ARM Call Convention">X86 and ARM Call Convention</a>
             </h1>
         </header>
         <date class="post-meta meta-date">
@@ -253,7 +252,7 @@
             ARM64 call convention
 https://android.googlesource.com/platform/art/+/refs/tags/android-11.0.0_r35/runtime/interpreter/mterp/arm64/main.S……
         </div>
-        <p class="readmore"><a href="https://songchunbo.github.io/post/x86_arm_callconvention/">阅读全文</a></p>
+        <p class="readmore"><a href="http://localhost:1313/post/x86_arm_callconvention/">阅读全文</a></p>
     </article>
     
     
@@ -266,17 +265,17 @@ https://android.googlesource.com/platform/art/+/refs/tags/android-11.0.0_r35/run
 
     
     <li  class="current">
-        <a href="https://songchunbo.github.io/post/">1</a>
+        <a href="http://localhost:1313/post/">1</a>
     </li>
     
     <li >
-        <a href="https://songchunbo.github.io/post/page/2/">2</a>
+        <a href="http://localhost:1313/post/page/2/">2</a>
     </li>
     
 
     
     <li class="next">
-        <a href="https://songchunbo.github.io/post/page/2/">下一页</a>
+        <a href="http://localhost:1313/post/page/2/">下一页</a>
     </li>
     
 </ol>
@@ -287,7 +286,7 @@ https://android.googlesource.com/platform/art/+/refs/tags/android-11.0.0_r35/run
 
                     <footer id="footer">
     <div>
-        &copy; 2024 <a href="https://songchunbo.github.io/">心在路上 By 心在路上</a>
+        &copy; 2026 <a href="http://localhost:1313/">心在路上 By 心在路上</a>
         
     </div>
     <br />
@@ -318,10 +317,10 @@ https://android.googlesource.com/platform/art/+/refs/tags/android-11.0.0_r35/run
 
                 <div id="secondary">
     <section class="widget">
-        <form id="search" action='https://songchunbo.github.io/search/' method="get" accept-charset="utf-8" target="_blank" _lpchecked="1">
+        <form id="search" action='http://localhost:1313/search/' method="get" accept-charset="utf-8" target="_blank" _lpchecked="1">
       
       <input type="text" name="q" maxlength="20" placeholder="Search">
-      <input type="hidden" name="sitesearch" value="https://songchunbo.github.io/">
+      <input type="hidden" name="sitesearch" value="http://localhost:1313/">
       <button type="submit" class="submit icon-search"></button>
 </form>
     </section>
@@ -331,43 +330,43 @@ https://android.googlesource.com/platform/art/+/refs/tags/android-11.0.0_r35/run
 <ul class="widget-list">
     
     <li>
-        <a href="https://songchunbo.github.io/post/openssl_tls13/" title="TLS 1.3 在 OpenSSL 中的实现(二）">TLS 1.3 在 OpenSSL 中的实现(二）</a>
+        <a href="http://localhost:1313/post/openssl_tls13/" title="TLS 1.3 在 OpenSSL 中的实现(二）">TLS 1.3 在 OpenSSL 中的实现(二）</a>
     </li>
     
     <li>
-        <a href="https://songchunbo.github.io/post/openssl_tls12/" title=" TLS 1.2 在 OpenSSL 中的实现(一） "> TLS 1.2 在 OpenSSL 中的实现(一） </a>
+        <a href="http://localhost:1313/post/openssl_tls12/" title=" TLS 1.2 在 OpenSSL 中的实现(一） "> TLS 1.2 在 OpenSSL 中的实现(一） </a>
     </li>
     
     <li>
-        <a href="https://songchunbo.github.io/post/android_packer/" title="Android Packer">Android Packer</a>
+        <a href="http://localhost:1313/post/android_packer/" title="Android Packer">Android Packer</a>
     </li>
     
     <li>
-        <a href="https://songchunbo.github.io/post/andorid_file_io/" title="Android文件IO路径小记">Android文件IO路径小记</a>
+        <a href="http://localhost:1313/post/andorid_file_io/" title="Android文件IO路径小记">Android文件IO路径小记</a>
     </li>
     
     <li>
-        <a href="https://songchunbo.github.io/post/apt_summary/" title="APT Summary">APT Summary</a>
+        <a href="http://localhost:1313/post/apt_summary/" title="APT Summary">APT Summary</a>
     </li>
     
     <li>
-        <a href="https://songchunbo.github.io/post/dart_vm_lex_syntax/" title="Dart VM源码分析之CFE">Dart VM源码分析之CFE</a>
+        <a href="http://localhost:1313/post/dart_vm_lex_syntax/" title="Dart VM源码分析之CFE">Dart VM源码分析之CFE</a>
     </li>
     
     <li>
-        <a href="https://songchunbo.github.io/post/dart_vm_how_compile_works/" title="Dart VM源码分析之编译dill">Dart VM源码分析之编译dill</a>
+        <a href="http://localhost:1313/post/dart_vm_how_compile_works/" title="Dart VM源码分析之编译dill">Dart VM源码分析之编译dill</a>
     </li>
     
     <li>
-        <a href="https://songchunbo.github.io/post/dart_vm_quick_start/" title="Dart VM命令行工具">Dart VM命令行工具</a>
+        <a href="http://localhost:1313/post/dart_vm_quick_start/" title="Dart VM命令行工具">Dart VM命令行工具</a>
     </li>
     
     <li>
-        <a href="https://songchunbo.github.io/post/art_commit_history/" title="ART Commit History">ART Commit History</a>
+        <a href="http://localhost:1313/post/art_commit_history/" title="ART Commit History">ART Commit History</a>
     </li>
     
     <li>
-        <a href="https://songchunbo.github.io/post/x86_arm_callconvention/" title="X86 and ARM Call Convention">X86 and ARM Call Convention</a>
+        <a href="http://localhost:1313/post/x86_arm_callconvention/" title="X86 and ARM Call Convention">X86 and ARM Call Convention</a>
     </li>
     
 </ul>
@@ -409,7 +408,7 @@ https://android.googlesource.com/platform/art/+/refs/tags/android-11.0.0_r35/run
     <section class="widget">
         <h3 class="widget-title">其它</h3>
         <ul class="widget-list">
-            <li><a href="https://songchunbo.github.io/index.xml">文章 RSS</a></li>
+            <li><a href="http://localhost:1313/index.xml">文章 RSS</a></li>
         </ul>
     </section>
 </div>

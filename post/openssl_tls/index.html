@@ -7,8 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
 
-    <title> TLS 1.2 在 OpenSSL 中的实现(一）  | 心在路上</title>
-    <meta property="og:title" content=" TLS 1.2 在 OpenSSL 中的实现(一）  - 心在路上">
+    <title> OpenSSL 源码分析（一）  | 心在路上</title>
+    <meta property="og:title" content=" OpenSSL 源码分析（一）  - 心在路上">
     <meta property="og:type" content="article">
         
     <meta property="article:published_time" content='2024-07-14T16:59:44&#43;08:00'>
@@ -17,7 +17,7 @@
     <meta property="article:modified_time" content='2024-07-14T16:59:44&#43;08:00'>
         
     <meta name="Keywords" content="">
-    <meta name="description" content=" TLS 1.2 在 OpenSSL 中的实现(一） ">
+    <meta name="description" content=" OpenSSL 源码分析（一） ">
         
     <meta name="author" content="心在路上">
     <meta property="og:url" content="http://localhost:1313/post/openssl_tls/">
@@ -75,7 +75,7 @@
     
     <article class="post">
         <header>
-            <h1 class="post-title"> TLS 1.2 在 OpenSSL 中的实现(一） </h1>
+            <h1 class="post-title"> OpenSSL 源码分析（一） </h1>
         </header>
         <date class="post-meta meta-date">
             2024年7月14日
@@ -86,9 +86,8 @@
         <div class="post-content">
             <!-- # 解析 OpenSSL 源码，深入理解 TLS 安全通信协议 -->
 <p>最近需要做一些加解密的事情，简单分析了一下TLS安全机制在OpenSSL中的实现，记录一下。</p>
-<p>分为两篇介绍，本篇主要介绍TLS 1.2，加密套件选取ECDHE_RSA_AES128_GCM_SHA256；下篇介绍TLS 1.3加密套件选取TLS_AES_256_GCM_SHA384，这两种协议及其加密套件覆盖了主流网站采用的 TLS 安全机制。</p>
 <h2 id="1-tls-安全机制介绍">1. <strong>TLS 安全机制介绍</strong></h2>
-<p>TLS 是一种用于在互联网上进行安全通信的协议，其主要功能包括：</p>
+<p>TLS（传输层安全协议）是一种用于在互联网上进行安全通信的协议。它通过加密和身份验证来保护数据传输的安全性，它的主要功能包括：</p>
 <ul>
 <li>身份验证：使用数字证书和公钥基础设施（PKI）来验证通信双方的身份。</li>
 <li>密钥交换：使用非对称加密算法（如ECDHE, RSA）来交换对称加密算法的密钥。</li>
@@ -231,57 +230,50 @@
 <p><strong>热门网站数据来源</strong>： <a href="https://top.chinaz.com/all/">https://top.chinaz.com/all/</a></p>
 </li>
 </ul>
-<p>统计信息显示主流网站主要采用如下TLS的安全机制：</p>
-<ul>
-<li>基于TLS 1.2的加密套件ECDHE_RSA_AES128_GCM_SHA256</li>
-<li>基于TLS 1.3的加密套件TLS_AES_256_GCM_SHA384</li>
-</ul>
-<p>以下分析主要基于这两个加密套件。</p>
+<p>从统计信息可以看出大多数网站采用加密套件TLS_AES_256_GCM_SHA384和ECDHE_RSA_AES128_GCM_SHA256<br>
+以下分析主要基于这两个加密套件。</p>
 <h3 id="21-加密套件ecdhe_rsa_aes128_gcm_sha256">2.1 加密套件ECDHE_RSA_AES128_GCM_SHA256</h3>
-<p>ECDHE_RSA_AES128_GCM_SHA256主要用于 TLS 1.2，可以提供较好的性能和安全性平衡，主要交互流程如下。</p>
+<p>加密套件ECDHE_RSA_AES128_GCM_SHA256 主要用于 TLS 1.2，可以提供较好的性能和安全性平衡，主要交互流程如下。</p>
 <pre tabindex="0"><code> Client                          Server
    |                               |
    |------- ClientHello ----------&gt;|
    |                               |
    |&lt;------ ServerHello -----------|
-   |&lt;------ Server Certificate ----|  身份认证, 对服务端证书签名进行校验
+   |&lt;------ Server Certificate ----|    // 身份认证, 对服务端证书签名进行校验
    |&lt;------ ServerKeyExchange -----|    
    |&lt;------ ServerHelloDone -------|
    |                               |
-   |------ ClientKeyExchange -----&gt;|  密钥交换，默认采用 ECDHE 进行密钥交换，椭圆曲线选用 secp256r1
-   |------ CertificateVerify -----&gt;| 
-   |------ ChangeCipherSpec ------&gt;|  通过PRF算法派生出pre-master-key, master-key,
-   |                               |  最终派生出client_secret和server_secret分别用于客户端和服务端数据加密
+   |------ ClientKeyExchange -----&gt;|   // 密钥交换，默认采用 ECDHE 进行密钥交换，椭圆曲线选用 secp256r1
+   |------ CertificateVerify -----&gt;|  (if needed)
+   |------ ChangeCipherSpec ------&gt;|   // 通过PRF算法派生出pre-master-key, master-key，最终派生出client_secret和server_secret分别用于客户端和服务端数据加密
    |------ Finished --------------&gt;|
    |                               |
    |&lt;------ ChangeCipherSpec ------|
    |&lt;------ Finished --------------|
    |                               |
    |&lt;------Application  Data ----&gt; | 
-   |&lt;------Application  Data ----&gt; | 使用AES128-GCM对数据包进行加密加签
-   |                               | 注：在TLS 1.2协议中仅数据包有加密加签，握手消息未加密加签
+   |&lt;------Application  Data ----&gt; |  // 使用AES128-GCM对数据包进行加密加签(备注：在TLS 1.2仅数据包有加密加签，握手消息未加密)
+   |                               |
 </code></pre><h3 id="22-加密套件tls_aes_256_gcm_sha384">2.2 加密套件TLS_AES_256_GCM_SHA384</h3>
-<p>TLS_AES_256_GCM_SHA384基于 TLS 1.3， 提供更强的加密和哈希安全性，适合需要高安全性的场景, 主要交互流程如下：</p>
+<p>加密套件TLS_AES_256_GCM_SHA384 主要用于 TLS 1.3， 提供更强的加密和哈希安全性，适合需要高安全性的场景, 主要交互流程如下：</p>
 <pre tabindex="0"><code>Client                            Server
   |                                 |
   |------ ClientHello -------------&gt;|
   |                                 |
-  |&lt;------ ServerHello -------------|  密钥交换, 默认采用 ECDHE 进行密钥交换，椭圆曲线选用 x25519
-  |                                 |  密钥交换完成生成pre-master-secret 
-  |&lt;------ ChangeCipherSpec --------|  使用HKDF算法，根据pre-master-secret派生出【握手密钥】对握手消息加密
-  |                                 |  握手密钥分为client_handshake_traffic_secret和server_handshake_traffic_secret分别用于客户端和服务端握手消息加密
+  |&lt;------ ServerHello -------------|  // 密钥交换, 默认采用 ECDHE 进行密钥交换，椭圆曲线选用 x25519
+  |&lt;------ ChangeCipherSpec --------|  // 通过HKDF算法，派生出pre-master-secret, handshake secret用于握手消息加密
+  |                                 |   // handshake secret分为client_handshake_traffic_secret和server_handshake_traffic_secret分别用于客户端和服务端握手消息加密
   |                                 |  
-  |                                 |  以下握手消息都是用handshake secret进行加密的
-  |&lt;------ Application Data --------|  Server EncryptedExtensions消息
-  |&lt;------ Application Data --------|  Server Certificate消息，用于身份认证，验证服务端证书签名
-  |&lt;------ Application Data --------|  Server CertificateVerify消息，用于对握手消息进行验签
-  |&lt;------ Application Data --------|  Server Finished消息 , TLS 1.3 密钥派生：https://datatracker.ietf.org/doc/html/rfc8446#section-7.1
+  |                                 |  // 以下握手消息都是用handshake secret进行加密的
+  |&lt;------ Application Data --------|  // Server EncryptedExtensions消息
+  |&lt;------ Application Data --------|  // Server Certificate消息，用于身份认证，验证服务端证书签名
+  |&lt;------ Application Data --------|  // Server CertificateVerify消息，用于对握手消息进行验签
+  |&lt;------ Application Data --------|  // Server Finished消息 , TLS 1.3 密钥派生：https://datatracker.ietf.org/doc/html/rfc8446#section-7.1
   |                                 |
-  |------ ChangeCipherSpec  -------&gt;|  通过HKDF算法派生出master secret
-  |                                 |  最终派生出client_app_traffic_secret, server_app_traffic_secret分别用于客户端和服务端数据加密
-  |------ Application Data --------&gt;|  Client Finished消息
+  |------ ChangeCipherSpec  -------&gt;|  // 通过HKDF算法派生出master secret, 最终派生出client_app_traffic_secret, server_app_traffic_secret分别用于客户端和服务端数据加密
+  |------ Application Data --------&gt;|  // Client Finished消息
   |                                 |
-  |&lt;------Application  Data ------&gt; |  使用AES256-GCM对数据包进行加密加签
+  |&lt;------Application  Data ------&gt; |  // 使用AES256-GCM对数据包进行加密加签
   |&lt;------Application  Data ------&gt; | 
   |                                 |
 </code></pre><p>接下来，我们以 ECDHE_RSA_AES128_GCM_SHA256 加密套件为例，分析 TLS 1.2 安全通信协议的实现。下一篇将分析基于 TLS 1.3 的加密套件 TLS_AES_256_GCM_SHA384。
@@ -407,11 +399,11 @@
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        } 
 </span></span><span style="display:flex;"><span>    }
 </span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><ul>
-<li>证书验签过程依赖DER格式证书，使用ASN.1编码。<br>
-DER证书主要由【header(4) + tbsCertificate + signatureAlgorithm + signature】字段组成，其中tbsCertificate是待签名证书的主体内容，signature是证书签名信息</li>
-</ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C" data-lang="C"><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">int_rsa_verify</span>(<span style="color:#66d9ef">int</span> type, <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>m, <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> m_len,
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 证书验签过程依赖DER格式证书，使用ASN.1编码, DER证书主要由【4字节头 + tbsCertificate（待签名的证书主体内容） +  signatureAlgorithm + signature】字段组成
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 其中tbsCertificate时待签名的证书主体内容，signature是证书签名信息
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">int_rsa_verify</span>(<span style="color:#66d9ef">int</span> type, <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>m, <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> m_len,
 </span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>rm, <span style="color:#66d9ef">size_t</span> <span style="color:#f92672">*</span>prm_len,
 </span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>sigbuf, <span style="color:#66d9ef">size_t</span> siglen, RSA <span style="color:#f92672">*</span>rsa) {
 </span></span><span style="display:flex;"><span>
@@ -422,15 +414,49 @@ DER证书主要由【header(4) + tbsCertificate + signatureAlgorithm + signature
 </span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 输入的m为证书签名主体tbsCertificate的sha256哈希值，对m进行ASN.1编码
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">encode_pkcs1</span>(<span style="color:#f92672">&amp;</span>encoded, <span style="color:#f92672">&amp;</span>encoded_len, type, m, m_len))     <span style="color:#75715e">// 对m（hash）进行ASN.1编码
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
-</span></span><span style="display:flex;"><span>     
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 签名验证
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// 比较encode和decrypt_buf ,都是ASN.1编码的sha256(tbsCertificate)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 比较encode和decrypt_buf ,都是ASN.1编码的sha256(tbsCertificate)
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">memcmp</span>(encoded, decrypt_buf, encoded_len) <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span>)
 </span></span><span style="display:flex;"><span>}    
-</span></span></code></pre></div><h3 id="32-密钥交换">3.2 密钥交换</h3>
-<p>客户端收到服务端发送的 Server Key Exchange 消息后，会提取服务端 EC 公钥，并生成一对本地 EC 公私钥，再将客户端 EC 公钥发送回服务器。双方随后使用各自的私钥和对方的公钥生成共享的对称密钥，用于后续的加密通信。</p>
+</span></span></code></pre></div><h3 id="32-密钥交换-server-key-exchange">3.2 密钥交换 Server Key Exchange</h3>
+<p>使用非对称加密算法ECDHE来交换对称加密算法的密钥，非对称加密算法 ECDHE（Elliptic Curve Diffie-Hellman Ephemeral）用于安全地交换对称加密的密钥，从而确保数据传输的机密性和安全性。以下是 ECDHE 交换对称加密密钥的实现原理：</p>
+<ul>
+<li>
+<p><strong>初始阶段</strong>：</p>
+<ul>
+<li>客户端和服务器生成密钥对：客户端和服务器分别生成各自的椭圆曲线密钥对（私钥和对应的公钥）。这个密钥对是临时的，仅用于当前会话，因此被称为“临时”（Ephemeral）。</li>
+</ul>
+</li>
+<li>
+<p><strong>公钥交换</strong>：</p>
+<ul>
+<li>客户端发送公钥：客户端将它的公钥发送给服务器。</li>
+<li>服务器发送公钥：服务器将它的公钥发送给客户端。</li>
+</ul>
+</li>
+<li>
+<p><strong>计算共享密钥</strong>：</p>
+<ul>
+<li>客户端计算共享密钥：客户端使用自己的私钥和服务器的公钥，通过 ECDHE 算法计算出一个共享的对称密钥。</li>
+<li>服务器计算共享密钥：服务器使用自己的私钥和客户端的公钥，通过相同的 ECDHE 算法计算出同一个共享的对称密钥。</li>
+</ul>
+</li>
+<li>
+<p><strong>使用对称密钥加密通信</strong>：</p>
+<ul>
+<li>加密数据传输：一旦共享密钥被计算出来，客户端和服务器就可以使用这个对称密钥进行后续的数据加密传输。常见的对称加密算法包括 AES，这里具体使用 AES-128-GCM。</li>
+</ul>
+</li>
+<li>
+<p><strong>ECDHE 密钥交换的安全优势</strong></p>
+<ul>
+<li>抵御中间人攻击：即使攻击者截获了公钥，无法通过公钥推导出私钥，因此无法计算出共享密钥。</li>
+<li>前向保密：每次会话使用不同的临时密钥对，即使某次会话的密钥被泄露，也不会影响其他会话的安全性。</li>
+</ul>
+</li>
+</ul>
 <h4 id="321-ecdhe密钥交换过程中对服务端ec公钥进行验签">3.2.1 ECDHE密钥交换过程中对服务端EC公钥进行验签</h4>
-<p>客户端收到服务端EC公钥后，利用服务端证书中的公钥对服务端EC公钥等信息进行验签，以签名算法rsa_pkcs1_sha512为例</p>
+<p>服务端在Server Key Exchange消息中发送自己的EC公钥，客户端收到后，利用服务端证书中的公钥对EC公钥等信息进行验签，以签名算法rsa_pkcs1_sha512为例</p>
 <pre tabindex="0"><code>输入：
     cert_pubkey = server_cert_pubkey
     tbs = 【client-random(32) + server-random(32) + Pubkey Length(4) + Pubkey(65)】
@@ -543,9 +569,9 @@ DER证书主要由【header(4) + tbsCertificate + signatureAlgorithm + signature
 </span></span><span style="display:flex;"><span>}    
 </span></span></code></pre></div><h2 id="4计算会话密码">4、计算会话密码</h2>
 <ul>
-<li>根据 ECDHE 生成的 pre-master secret 派生出 master secret。</li>
-<li>从 master secret 派生出会话密钥块，并从中提取客户端密钥（client-secret）和服务器密钥（server-secret），分别用于数据加密和签名。</li>
-<li>数据发送使用 client-secret，数据接收使用 server-secret，以防止攻击者利用已知的明文和密文推导出密钥流。TLS 协议通过不同的密钥和 IV 来确保每个方向的密钥流独立，从而提高通信安全性。</li>
+<li>首先根据ECHDE中生成的pre master secret派生出 master secret</li>
+<li>根据master secret派生出会话密钥块，从会话密钥块从提取出客户端密钥client-secret和服务端密钥server-secret，分别用于客户端和服务端数据的加密加签。</li>
+<li>以客户端为例，数据发送使用client-secret, 数据接收使用server-secret。原因是如果客户端和服务器使用相同的密钥和IV，攻击者可以利用已知的明文和密文来推导出密钥流，从而解密其他数据。这种风险在TLS协议中通过使用不同的密钥和IV来消除，确保每个方向的密钥流是独立的，从而提高通信的安全性。</li>
 </ul>
 <h3 id="411-计算主密钥master-secret">4.1.1 计算主密钥master secret</h3>
 <p>s-&gt;session-&gt;master_key = tls1_PRF(&ldquo;master key&rdquo;, client_random, server_random, pre-master-key)</p>
@@ -603,25 +629,22 @@ DER证书主要由【header(4) + tbsCertificate + signatureAlgorithm + signature
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>   s<span style="color:#f92672">-&gt;</span>write_hash
 </span></span><span style="display:flex;"><span>   s<span style="color:#f92672">-&gt;</span>read_hash
 </span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><ul>
-<li>key block 实例以及生成的密钥和IV 以AES128-GCM为例</li>
-</ul>
-<pre tabindex="0"><code>key block
-61 94 D6 2E 3A 34 83 1D F9 90 4C F4 29 43 F3 B2
-E9 E4 49 26 A1 DF 2F ED 6C 6A 2A 98 FB 45 CF 0B
-A7 2E E8 4A E8 01 F4 B7 75 0B 91 B1 83 8B AF 2E
-0D 32 49 DF 0A 3A 50 28   
-</code></pre><ul>
-<li>数据发送密钥 以及 IV的前4字节</li>
-</ul>
-<pre tabindex="0"><code>KEY = 61 94 D6 2E 3A 34 83 1D F9 90 4C F4 29 43 F3 B2 
-IV(4) = A7 2E E8 4A
-</code></pre><ul>
-<li>数据接收密钥 以及 IV的前4字节</li>
-</ul>
-<pre tabindex="0"><code>KEY = E9 E4 49 26 A1 DF 2F ED 6C 6A 2A 98 FB 45 CF 0B
-IV(4) = E8 01 F4 B7
-</code></pre><h2 id="5-数据加密加签">5. 数据加密加签</h2>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// key block 实例以及生成的密钥和IV 以AES128-GCM为例
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>key block
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">61</span> <span style="color:#ae81ff">94</span> D6 <span style="color:#ae81ff">2</span>E <span style="color:#ae81ff">3</span>A <span style="color:#ae81ff">34</span> <span style="color:#ae81ff">83</span> <span style="color:#ae81ff">1</span>D F9 <span style="color:#ae81ff">90</span> <span style="color:#ae81ff">4</span>C F4 <span style="color:#ae81ff">29</span> <span style="color:#ae81ff">43</span> F3 B2
+</span></span><span style="display:flex;"><span>E9 E4 <span style="color:#ae81ff">49</span> <span style="color:#ae81ff">26</span> A1 DF <span style="color:#ae81ff">2F</span> ED <span style="color:#ae81ff">6</span>C <span style="color:#ae81ff">6</span>A <span style="color:#ae81ff">2</span>A <span style="color:#ae81ff">98</span> FB <span style="color:#ae81ff">45</span> CF <span style="color:#ae81ff">0</span>B
+</span></span><span style="display:flex;"><span>A7 <span style="color:#ae81ff">2</span>E E8 <span style="color:#ae81ff">4</span>A E8 <span style="color:#ae81ff">01</span> F4 B7 <span style="color:#ae81ff">75</span> <span style="color:#ae81ff">0</span>B <span style="color:#ae81ff">91</span> B1 <span style="color:#ae81ff">83</span> <span style="color:#ae81ff">8</span>B AF <span style="color:#ae81ff">2</span>E
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">0</span>D <span style="color:#ae81ff">32</span> <span style="color:#ae81ff">49</span> DF <span style="color:#ae81ff">0</span>A <span style="color:#ae81ff">3</span>A <span style="color:#ae81ff">50</span> <span style="color:#ae81ff">28</span>   
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">数据发送密钥</span> <span style="color:#960050;background-color:#1e0010">以及</span> <span style="color:#a6e22e">IV的前4字节</span>( <span style="color:#960050;background-color:#1e0010">注意：</span>IV后4字节在随机生成<span style="color:#960050;background-color:#1e0010">，其中最后一个字节会递增，第二个加密包</span><span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>, <span style="color:#960050;background-color:#1e0010">第三个加密包</span><span style="color:#f92672">+</span><span style="color:#ae81ff">2</span><span style="color:#960050;background-color:#1e0010">，依次类推。</span>)
+</span></span><span style="display:flex;"><span>KEY <span style="color:#f92672">=</span> <span style="color:#ae81ff">61</span> <span style="color:#ae81ff">94</span> D6 <span style="color:#ae81ff">2</span>E <span style="color:#ae81ff">3</span>A <span style="color:#ae81ff">34</span> <span style="color:#ae81ff">83</span> <span style="color:#ae81ff">1</span>D F9 <span style="color:#ae81ff">90</span> <span style="color:#ae81ff">4</span>C F4 <span style="color:#ae81ff">29</span> <span style="color:#ae81ff">43</span> F3 B2 
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">IV</span>(<span style="color:#ae81ff">4</span>) <span style="color:#f92672">=</span> A7 <span style="color:#ae81ff">2</span>E E8 <span style="color:#ae81ff">4</span>A
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">数据接收密钥</span>
+</span></span><span style="display:flex;"><span>KEY <span style="color:#f92672">=</span> E9 E4 <span style="color:#ae81ff">49</span> <span style="color:#ae81ff">26</span> A1 DF <span style="color:#ae81ff">2F</span> ED <span style="color:#ae81ff">6</span>C <span style="color:#ae81ff">6</span>A <span style="color:#ae81ff">2</span>A <span style="color:#ae81ff">98</span> FB <span style="color:#ae81ff">45</span> CF <span style="color:#ae81ff">0</span>B
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">IV</span>(<span style="color:#ae81ff">4</span>) <span style="color:#f92672">=</span> E8 <span style="color:#ae81ff">01</span> F4 B7
+</span></span></code></pre></div><h2 id="5-数据加密加签">5. 数据加密加签</h2>
 <p>为了保证数据的保密性和完整性，在发送数据之前会使用会话密钥对数据加密加签，AES-GCM可支持在加密的同时生成认证标签。</p>
 <p>对加密套件ECDHE_RSA_AES128_GCM_SHA256来说，加密加签在aes_gcm_tls_cipher中实现：</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C" data-lang="C"><span style="display:flex;"><span>libcrypto<span style="color:#ae81ff">.1.1</span>.dylib                 <span style="color:#ae81ff">0x0000000107b00220</span> aes_gcm_tls_cipher <span style="color:#f92672">+</span> <span style="color:#ae81ff">192</span>
@@ -673,19 +696,20 @@ IV(4) = E8 01 F4 B7
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">CRYPTO_gcm128_tag</span>(<span style="color:#f92672">&amp;</span>gctx<span style="color:#f92672">-&gt;</span>gcm, out, EVP_GCM_TLS_TAG_LEN);
 </span></span><span style="display:flex;"><span>}
 </span></span></code></pre></div><ul>
-<li>发送到服务端的加密数据格式为：</li>
+<li>发送到服务端的加密数据格式为：
+Encrypted Application Data = IV (8) + Encrypted DATA (15) + TAG (16)</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C" data-lang="C"><span style="display:flex;"><span>   Encrypted Application Data <span style="color:#f92672">=</span> <span style="color:#a6e22e">IV</span> (<span style="color:#ae81ff">8</span>) <span style="color:#f92672">+</span> Encrypted <span style="color:#a6e22e">DATA</span> (<span style="color:#ae81ff">15</span>) <span style="color:#f92672">+</span> <span style="color:#a6e22e">TAG</span> (<span style="color:#ae81ff">16</span>)
-</span></span></code></pre></div><ul>
-<li>第一个数据包： GET / HTTP/1.1 (15)</li>
-</ul>
-<pre tabindex="0"><code>    附加认证数据AAD：
+<pre tabindex="0"><code>加密数据包实例如下：
+
+第一个数据包： GET / HTTP/1.1 (15)
+
+    附加认证数据AAD：
     AAD: 00 00 00 00 00 00 00 01          sequence
                                 17       Content Type: Application Data (23)
                                 03 03    Version: TLS 1.2 (0x0303)
                                 00 0F    Length:   39 - (IVLen:8 + TagLen:16) = 15
-    TAG计算方法 = F(AAD, 密文， IV)
     
+    TAG计算方法 = F(AAD, 密文， IV)
 
     before encryption len = 15
     47 45 54 20 2F 20 48 54 54 50 2F 31 2E 31 0A  == &#34;GET / HTTP/1.1\n&#34;
@@ -701,17 +725,12 @@ IV(4) = E8 01 F4 B7
             Content Type: Application Data (23)
             Version: TLS 1.2 (0x0303)
             Length: 39
-
-            Encrypted Application Data: 
-                e06c9f63 7ea28030(IV) 
-                417bce29aff8276dcfd925f64339eb(Encrypted DATA)   
-                f9d95ac4f783d6f04e8419ada4577555(TAG)
-
+            Encrypted Application Data: e06c9f63 7ea28030(IV) 417bce29aff8276dcfd925f64339eb(Encrypted DATA)   f9d95ac4f783d6f04e8419ada4577555(TAG)
             [Application Data Protocol: Hypertext Transfer Protocol]
-</code></pre><ul>
-<li>第二个数据包： HOST: <a href="https://www.baidu.com">www.baidu.com</a> (20)</li>
-</ul>
-<pre tabindex="0"><code>    附加认证数据AAD：
+
+第二个数据包： HOST: www.baidu.com (20)
+
+    附加认证数据AAD：
     AAD: 00 00 00 00 00 00 00 02          sequence
                                 17       Content Type: Application Data (23)
                                 03 03    Version: TLS 1.2 (0x0303)
@@ -736,12 +755,7 @@ IV(4) = E8 01 F4 B7
             Content Type: Application Data (23)
             Version: TLS 1.2 (0x0303)
             Length: 44
-
-            Encrypted Application Data: 
-                e06c9f63 7ea28031(IV)  
-                317d370bc49e08f25ed68563904e7e2dc2e02811(Encrypted DATA)   
-                d905aa05ad72c24837696fde2131fd1f(TAG)
-
+            Encrypted Application Data: e06c9f63 7ea28031(IV)  317d370bc49e08f25ed68563904e7e2dc2e02811(Encrypted DATA)   d905aa05ad72c24837696fde2131fd1f(TAG)
             [Application Data Protocol: Hypertext Transfer Protocol]
 </code></pre><h2 id="总结">总结</h2>
 <p>本文通过解析 OpenSSL 源码，详细介绍了 TLS 安全通信协议的实现机制。文章首先简要概述了 TLS 的核心安全功能，包括身份验证、密钥交换、数据加密和数据完整性保护。接着，通过对热门网站加密套件的统计分析，选取了 ECDHE_RSA_AES128_GCM_SHA256 加密套件作为重点解析对象。随后，文章深入剖析了基于该加密套件的 TLS 通信过程，包括数字证书验证、ECDHE 算法密钥交换、AES128-GCM 数据加密以及 SHA256 数据签名。通过这些分析，读者可以更清晰地理解 TLS 协议如何在实际应用中保障通信安全。</p>
@@ -779,7 +793,7 @@ IV(4) = E8 01 F4 B7
 
                     <footer id="footer">
     <div>
-        &copy; 2024 <a href="http://localhost:1313/">心在路上 By 心在路上</a>
+        &copy; 2026 <a href="http://localhost:1313/">心在路上 By 心在路上</a>
         
     </div>
     <br />
@@ -837,7 +851,11 @@ IV(4) = E8 01 F4 B7
     </li>
     
     <li>
-        <a href="http://localhost:1313/post/openssl_tls/" title=" TLS 1.2 在 OpenSSL 中的实现(一） "> TLS 1.2 在 OpenSSL 中的实现(一） </a>
+        <a href="http://localhost:1313/post/openssl_tls/" title=" OpenSSL 源码分析（一） "> OpenSSL 源码分析（一） </a>
+    </li>
+    
+    <li>
+        <a href="http://localhost:1313/post/openssl_tls12/" title=" TLS 1.2 在 OpenSSL 中的实现(一） "> TLS 1.2 在 OpenSSL 中的实现(一） </a>
     </li>
     
     <li>
@@ -866,10 +884,6 @@ IV(4) = E8 01 F4 B7
     
     <li>
         <a href="http://localhost:1313/post/art_commit_history/" title="ART Commit History">ART Commit History</a>
-    </li>
-    
-    <li>
-        <a href="http://localhost:1313/post/x86_arm_callconvention/" title="X86 and ARM Call Convention">X86 and ARM Call Convention</a>
     </li>
     
 </ul>
